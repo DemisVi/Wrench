@@ -56,7 +56,7 @@
         <StatusBar Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">
             <ProgressBar Height="20" MaxWidth="200" Value="{Binding Counter}" Width="200"/>
             <TextBlock Text="Status Text Block"/>
-            <Button Width="20" Height="20"/>
+            <Button Command="{Binding DoCommand}" Width="20" Height="20"/>
         </StatusBar>
     </Grid>
 </Window>

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Wrench
 {
-    internal class Worker : INotifyPropertyChanged
+    internal class Worker //: INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
+        //public  event PropertyChangedEventHandler? PropertyChanged;
 
 
     }

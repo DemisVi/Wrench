@@ -22,7 +22,7 @@ namespace Wrench.ViewModels
 
         public int Counter
         {
-            get { return _counter % 101; }
+            get { return _counter; }
             set
             {
                 _counter = value;
@@ -34,10 +34,17 @@ namespace Wrench.ViewModels
         {
             get
             {
-                return new Command((obj) =>
-                {
-                    Counter += 10;
-                });
+                return new Command((obj) => Counter += 10,
+                                   (obj) => Counter < 100);
+            }
+        }
+
+        public ICommand UndoCommand
+        {
+            get
+            {
+                return new Command((obj) => Counter -= 10,
+                                   (obj) => Counter > 0);
             }
         }
     }

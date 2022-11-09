@@ -14,12 +14,7 @@ namespace Wrench.ViewModels
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private void OnPropertyChanged([CallerMemberName] string property = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
-
-        protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string? propertyName = null)
         {
             if (!Equals(field, newValue))
             {
@@ -36,35 +31,30 @@ namespace Wrench.ViewModels
         public int Counter
         {
             get { return _counter; }
-            set
-            {
-                _counter = value;
-                OnPropertyChanged(nameof(Counter));
-            }
+            set { SetProperty(ref _counter, value); }
         }
 
-        public ICommand DoCommand
+        private ICommand? _doCommand;
+        public ICommand DoCommand => _doCommand ??= new Command(PerformDoCommand, (obj) => Counter < 100);
+
+        private void PerformDoCommand(object? commandParameter)
         {
-            get
-            {
-                return new Command((obj) => Counter += 10,
-                                   (obj) => Counter < 100);
-            }
+            Counter += 10;
+            OperationStatus += "+";
         }
 
-        public ICommand UndoCommand
+        private ICommand? _undoCommand;
+        public ICommand UndoCommand => _undoCommand ??= new Command(PerformUndoCommand, (obj) => Counter > 0);
+        private void PerformUndoCommand(object? commandParameter)
         {
-            get
-            {
-                return new Command((obj) => Counter -= 10,
-                                   (obj) => Counter > 0);
-            }
+            Counter -= 10;
+            OperationStatus = OperationStatus.Remove(OperationStatus.LastIndexOf("+"));
         }
 
-        private Command? exit;
+        private ICommand? exit;
         public ICommand Exit => exit ??= new Command(PerformExit);
 
-        private void PerformExit(object commandParameter)
+        private void PerformExit(object? commandParameter)
         {
             Environment.Exit(0);
         }

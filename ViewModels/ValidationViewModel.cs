@@ -34,9 +34,9 @@ namespace Wrench.ViewModels
         private Command? validate;
         public ICommand Validate => validate ??= new Command(PerformValidate);
 
-        private void PerformValidate(object commandParameter)
+        private void PerformValidate(object? commandParameter)
         {
-            MessageBox.Show((string)commandParameter, "Ololo!");
+            MessageBox.Show(commandParameter as string, "Ololo!");
             PasswordText = string.Empty;
         }
     }

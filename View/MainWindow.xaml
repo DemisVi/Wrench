@@ -1,9 +1,9 @@
-﻿<Window x:Class="Wrench.MainWindow"
+﻿<Window x:Class="Wrench.View.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Wrench"
+        xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="800" WindowStyle="ToolWindow">
@@ -56,19 +56,29 @@
         <ListBox Grid.Row="2" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=4}"/>
         <ListBox Grid.Row="3" Grid.Column="0" d:ItemsSource="{d:SampleData ItemCount=5}"/>
         <ListBox Grid.Row="3" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=6}"/>
-        <StatusBar Grid.Row="4" Grid.ColumnSpan="2">
+        <StatusBar Grid.Row="4" Grid.ColumnSpan="2" HorizontalContentAlignment="Right">
+            <StatusBar.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Settings"/>
+                </ContextMenu>
+            </StatusBar.ContextMenu>
+
             <TextBlock Text="{Binding OperationStatus}"/>
-            <ProgressBar Value="{Binding Counter}" HorizontalAlignment="Stretch" Width="100" Height="18"/>
-            <Button Command="{Binding DoCommand}" Width="18" Height="18"/>
-            <Button Command="{Binding UndoCommand}" Width="18" Height="18"/>
-            <TextBox x:Name="textBox" Grid.Row="4" VerticalAlignment="Center" Width="100" Text="{Binding PasswordText }">
-                <TextBox.DataContext>
-                    <vm:ValidationViewModel/>
-                </TextBox.DataContext>
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Enter" Command="{Binding Validate}" CommandParameter="{Binding Text, ElementName=textBox}"/>
-                </TextBox.InputBindings>
-            </TextBox>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <ProgressBar Value="{Binding Counter}" Width="100" Height="18" Margin="4,0"/>
+                    <Button Command="{Binding DoCommand}" Width="18" Height="18" Margin="4,0"/>
+                    <Button Command="{Binding UndoCommand}" Width="18" Height="18" Margin="4,0"/>
+                    <TextBox x:Name="passwordTextBox" Text="{Binding PasswordText}" Grid.Row="4" Width="50">
+                        <TextBox.DataContext>
+                            <vm:ValidationViewModel/>
+                        </TextBox.DataContext>
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding Validate}" CommandParameter="{Binding Text, ElementName=passwordTextBox}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+                </StackPanel>
+            </StatusBarItem>
         </StatusBar>
     </Grid>
 </Window>

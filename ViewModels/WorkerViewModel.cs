@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Wrench.ViewModels;
 
 namespace Wrench.ViewModels
 {
@@ -46,6 +47,14 @@ namespace Wrench.ViewModels
                 return new Command((obj) => Counter -= 10,
                                    (obj) => Counter > 0);
             }
+        }
+
+        private Command? exit;
+        public ICommand Exit => exit ??= new Command(PerformExit);
+
+        private void PerformExit(object commandParameter)
+        {
+            Environment.Exit(0);
         }
     }
 }

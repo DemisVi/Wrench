@@ -10,7 +10,7 @@ namespace Wrench.ViewModels
     internal class Command : ICommand
     {
         private Action<object> _execute;
-        private Func<object, bool> _canExecute;
+        private Func<object, bool>? _canExecute;
 
         public event EventHandler? CanExecuteChanged
         {
@@ -18,7 +18,7 @@ namespace Wrench.ViewModels
             remove { CommandManager.RequerySuggested -= value; }
         }
 
-        public Command(Action<object> execute, Func<object, bool> canExecute = null)
+        public Command(Action<object> execute, Func<object, bool>? canExecute = null)
         {
             _execute = execute;
             _canExecute = canExecute;
@@ -29,7 +29,7 @@ namespace Wrench.ViewModels
             return _canExecute == null || _canExecute(parameter);
         }
 
-        public void Execute(object? parameter) 
+        public void Execute(object? parameter)
         {
             _execute(parameter);
         }

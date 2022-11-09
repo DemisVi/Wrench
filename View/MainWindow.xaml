@@ -11,7 +11,10 @@
     <Window.DataContext>
         <vm:WorkerViewModel/>
     </Window.DataContext>
-    
+    <Window.InputBindings>
+        <KeyBinding Key="Esc" Command="{Binding Exit}"/>
+    </Window.InputBindings>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="4*" MinHeight="48"/>
@@ -53,11 +56,19 @@
         <ListBox Grid.Row="2" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=4}"/>
         <ListBox Grid.Row="3" Grid.Column="0" d:ItemsSource="{d:SampleData ItemCount=5}"/>
         <ListBox Grid.Row="3" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=6}"/>
-        <StatusBar Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <ProgressBar Height="20" MaxWidth="200" Value="{Binding Counter}" Width="200"/>
+        <StatusBar Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Center">
             <TextBlock Text="Status Text Block"/>
+            <ProgressBar Value="{Binding Counter}" HorizontalAlignment="Stretch" Width="100" Height="20"/>
             <Button Command="{Binding DoCommand}" Width="20" Height="20"/>
             <Button Command="{Binding UndoCommand}" Width="20" Height="20"/>
+            <TextBox x:Name="textBox" Grid.Row="4" VerticalAlignment="Center" Width="100" Text="{Binding PasswordText }">
+                <TextBox.DataContext>
+                    <vm:ValidationViewModel/>
+                </TextBox.DataContext>
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding Validate}" CommandParameter="{Binding Text, ElementName=textBox}"/>
+                </TextBox.InputBindings>
+            </TextBox>
         </StatusBar>
     </Grid>
 </Window>

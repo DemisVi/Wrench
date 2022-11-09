@@ -14,9 +14,21 @@ namespace Wrench.ViewModels
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public void OnPropertyChanged([CallerMemberName] string property = "")
+        private void OnPropertyChanged([CallerMemberName] string property = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        }
+
+        protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null)
+        {
+            if (!Equals(field, newValue))
+            {
+                field = newValue;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                return true;
+            }
+
+            return false;
         }
 
         private int _counter;
@@ -56,5 +68,9 @@ namespace Wrench.ViewModels
         {
             Environment.Exit(0);
         }
+
+        private string _operationStatus = "Operation status";
+
+        public string OperationStatus { get => _operationStatus; set => SetProperty(ref _operationStatus, value); }
     }
 }

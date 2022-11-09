@@ -21,7 +21,7 @@
             <RowDefinition Height="10*"/>
             <RowDefinition Height="10*"/>
             <RowDefinition Height="10*"/>
-            <RowDefinition Height="2*" MinHeight="22" MaxHeight="28"/>
+            <RowDefinition Height="1*" MinHeight="24" MaxHeight="28"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
@@ -56,11 +56,11 @@
         <ListBox Grid.Row="2" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=4}"/>
         <ListBox Grid.Row="3" Grid.Column="0" d:ItemsSource="{d:SampleData ItemCount=5}"/>
         <ListBox Grid.Row="3" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=6}"/>
-        <StatusBar Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-            <TextBlock Text="Status Text Block"/>
-            <ProgressBar Value="{Binding Counter}" HorizontalAlignment="Stretch" Width="100" Height="20"/>
-            <Button Command="{Binding DoCommand}" Width="20" Height="20"/>
-            <Button Command="{Binding UndoCommand}" Width="20" Height="20"/>
+        <StatusBar Grid.Row="4" Grid.ColumnSpan="2">
+            <TextBlock Text="{Binding OperationStatus}"/>
+            <ProgressBar Value="{Binding Counter}" HorizontalAlignment="Stretch" Width="100" Height="18"/>
+            <Button Command="{Binding DoCommand}" Width="18" Height="18"/>
+            <Button Command="{Binding UndoCommand}" Width="18" Height="18"/>
             <TextBox x:Name="textBox" Grid.Row="4" VerticalAlignment="Center" Width="100" Text="{Binding PasswordText }">
                 <TextBox.DataContext>
                     <vm:ValidationViewModel/>

@@ -6,11 +6,12 @@
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800" WindowStyle="ToolWindow">
+        Title="MainWindow" Height="600" Width="800">
 
     <Window.DataContext>
-        <vm:WorkerViewModel/>
+        <vm:MainViewModel/>
     </Window.DataContext>
+    
     <Window.InputBindings>
         <KeyBinding Key="Esc" Command="{Binding Exit}"/>
     </Window.InputBindings>
@@ -59,24 +60,25 @@
         <StatusBar Grid.Row="4" Grid.ColumnSpan="2" HorizontalContentAlignment="Right">
             <StatusBar.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Settings"/>
+                    <MenuItem Header="Settings" IsEnabled="{Binding IsAccessed}" Command="{Binding ShowSettings}"/>
                 </ContextMenu>
             </StatusBar.ContextMenu>
 
             <TextBlock Text="{Binding OperationStatus}"/>
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal">
-                    <ProgressBar Value="{Binding Counter}" Width="100" Height="18" Margin="4,0"/>
-                    <Button Command="{Binding DoCommand}" Width="18" Height="18" Margin="4,0"/>
-                    <Button Command="{Binding UndoCommand}" Width="18" Height="18" Margin="4,0"/>
-                    <TextBox x:Name="passwordTextBox" Text="{Binding PasswordText}" Grid.Row="4" Width="50">
-                        <TextBox.DataContext>
-                            <vm:ValidationViewModel/>
-                        </TextBox.DataContext>
+                    <ProgressBar Value="{Binding Counter}" 
+                                 Width="100" Height="18" Margin="4,0"/>
+                    <TextBox x:Name="passwordTextBox" Background="{Binding IndicatorColor}" Text="{Binding PasswordText}" 
+                             Grid.Row="4" Width="50" Margin="4,0">
                         <TextBox.InputBindings>
                             <KeyBinding Key="Enter" Command="{Binding Validate}" CommandParameter="{Binding Text, ElementName=passwordTextBox}"/>
                         </TextBox.InputBindings>
                     </TextBox>
+                    <Button Command="{Binding Invalidate}" CommandParameter="{Binding Text, ElementName=passwordTextBox}" 
+                            Width="18" Height="18" Margin="4,0"/>
+                    <Button Command="{Binding ShowSettings}" IsEnabled="{Binding IsAccessed}" 
+                            Width="18" Height="18" Margin="4,0"/>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>

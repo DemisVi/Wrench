@@ -3,7 +3,7 @@ using System.IO.Ports;
 using System.Threading;
 using System;
 
-namespace Wrench.Model
+namespace Wrench.Extensions
 {
     public static class SerialExtensions
     {

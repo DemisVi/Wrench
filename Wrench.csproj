@@ -10,15 +10,19 @@
   <ItemGroup>
     <Compile Remove="Services.Tests\**" />
     <Compile Remove="Services\bin\**" />
+    <Compile Remove="Services\Common\**" />
     <Compile Remove="Services\obj\**" />
     <EmbeddedResource Remove="Services.Tests\**" />
     <EmbeddedResource Remove="Services\bin\**" />
+    <EmbeddedResource Remove="Services\Common\**" />
     <EmbeddedResource Remove="Services\obj\**" />
     <None Remove="Services.Tests\**" />
     <None Remove="Services\bin\**" />
+    <None Remove="Services\Common\**" />
     <None Remove="Services\obj\**" />
     <Page Remove="Services.Tests\**" />
     <Page Remove="Services\bin\**" />
+    <Page Remove="Services\Common\**" />
     <Page Remove="Services\obj\**" />
   </ItemGroup>
 

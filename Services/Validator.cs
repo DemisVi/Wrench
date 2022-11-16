@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 
-namespace Wrench.Model
+namespace Wrench.Services
 {
     internal class Validator
     {

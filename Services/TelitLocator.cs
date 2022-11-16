@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
 using System.Text;
 using System.IO.Ports;
-using ROOT.CIMV2.Win32;
 using System.Threading;
+using System.Threading.Tasks;
+using Wrench.Model;
+using Wrench.Extensions;
+using ROOT.CIMV2.Win32;
+using Wrench.Services;
 
-namespace Wrench.Model
+namespace Wrench.Services
 {
     public class TelitLocator
     {

@@ -1,3 +1,5 @@
+using System.Security.Cryptography.X509Certificates;
+
 namespace Wrench.Services;
 
 public class AdapterLocatorTest
@@ -21,6 +23,12 @@ public class AdapterLocatorTest
     {
         foreach (var i in loc.AdapterSerials)
             Assert.NotEmpty(i);
+    }
+
+    [Fact]
+    public void ShouldAdapterCountEqualsSerialsCount()
+    {
+        Assert.True(loc.AdapterCount == loc.AdapterSerials.Count);
     }
 
     [Fact]

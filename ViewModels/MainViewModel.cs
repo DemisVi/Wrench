@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Wrench.View;
-using Wrench.Model;
+using Wrench.Services;
 
 namespace Wrench.ViewModels
 {

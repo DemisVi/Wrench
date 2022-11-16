@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using FTD2XX_NET;
 
-namespace Wrench.Service
+namespace Wrench.Services
 {
     public class AdapterLocator
     {

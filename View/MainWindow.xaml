@@ -72,7 +72,7 @@
                     <TextBox x:Name="passwordTextBox" Background="{Binding IndicatorColor}" Text="{Binding PasswordText}" 
                              Grid.Row="4" Width="50" Margin="4,0">
                         <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding Validate}" CommandParameter="{Binding Text, ElementName=passwordTextBox}"/>
+                            <KeyBinding Key="Enter" Command="{Binding Validate}" CommandParameter="{Binding Text, ElementName=passwordTextBox, Mode=OneWay}"/>
                         </TextBox.InputBindings>
                     </TextBox>
                     <Button Command="{Binding Invalidate}" CommandParameter="{Binding Text, ElementName=passwordTextBox}" 

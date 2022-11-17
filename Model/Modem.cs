@@ -1,3 +1,5 @@
+using System;
+
 namespace Wrench.Model
 {
     public class Modem

@@ -16,7 +16,7 @@ namespace Wrench.ViewModels
     internal class MainViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
-        private readonly Validator _validator = new Validator();
+        private readonly Validator _validator = new();
 
         protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string? propertyName = null)
         {
@@ -46,8 +46,7 @@ namespace Wrench.ViewModels
         private void PerformValidate(object? commandParameter)
         {
             IsAccessed = _validator.IsValidationPassed(commandParameter as string);
-            PasswordText = null;
-            IndicatorColor = Brushes.GreenYellow;
+            if (IsAccessed) IndicatorColor = Brushes.GreenYellow;
         }
 
         private ICommand? _invalidate;

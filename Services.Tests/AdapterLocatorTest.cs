@@ -5,6 +5,7 @@ namespace Wrench.Services;
 public class AdapterLocatorTest
 {
     AdapterLocator loc = new();
+
     [Fact]
     public void ShouldContainNumberOfAdapters()
     {
@@ -28,7 +29,7 @@ public class AdapterLocatorTest
     [Fact]
     public void ShouldAdapterCountEqualsSerialsCount()
     {
-        Assert.True(loc.AdapterCount == loc.AdapterSerials.Count);
+        Assert.Equal((int)loc.AdapterCount, loc.AdapterSerials.Count);
     }
 
     [Fact]

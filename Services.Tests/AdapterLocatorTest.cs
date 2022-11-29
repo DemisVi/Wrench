@@ -1,6 +1,4 @@
-using System.Security.Cryptography.X509Certificates;
-
-namespace Wrench.Services;
+namespace Wrench.Services.Tests;
 
 public class AdapterLocatorTest
 {
@@ -37,5 +35,7 @@ public class AdapterLocatorTest
     {
         Assert.Contains("USBCOM17A", loc.AdapterSerials);
         Assert.Contains("USBCOM17B", loc.AdapterSerials);
+        //Assert.Contains("USBCOM20A", loc.AdapterSerials);
+        //Assert.Contains("USBCOM20B", loc.AdapterSerials);
     }
 }

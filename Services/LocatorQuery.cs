@@ -5,6 +5,8 @@ using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
+#pragma warning disable CA1416 // Disable platform compatibility warning
+
 namespace Wrench.Services
 {
     public class LocatorQuery

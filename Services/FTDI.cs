@@ -5473,7 +5473,7 @@ namespace FTD2XX_NET
                 {
                     result = tFT_GetDeviceInfo(ftHandle, ref pftType, ref lpdwID, pcSerialNumber, array, IntPtr.Zero);
                     Description = Encoding.ASCII.GetString(array);
-                    Description = Description.Substring(0, Description.IndexOf("\0"));
+                    Description = Description.Substring(0, Description.IndexOf("\0", StringComparison.Ordinal));
                 }
             }
             else if (pFT_GetDeviceInfo == IntPtr.Zero)
@@ -5514,7 +5514,7 @@ namespace FTD2XX_NET
                 {
                     result = tFT_GetDeviceInfo(ftHandle, ref pftType, ref lpdwID, array, pcDescription, IntPtr.Zero);
                     SerialNumber = Encoding.ASCII.GetString(array);
-                    SerialNumber = SerialNumber.Substring(0, SerialNumber.IndexOf("\0"));
+                    SerialNumber = SerialNumber.Substring(0, SerialNumber.IndexOf("\0", StringComparison.Ordinal));
                 }
             }
             else if (pFT_GetDeviceInfo == IntPtr.Zero)

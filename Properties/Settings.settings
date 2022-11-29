@@ -2,41 +2,41 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Wrench.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="AdapterKU1" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="AdapterKU1" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USBCOM10A</Value>
     </Setting>
-    <Setting Name="AdapterKU2" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="AdapterKU2" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USBCOM10A</Value>
     </Setting>
-    <Setting Name="AdapterKU3" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="AdapterKU3" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USBCOM10A</Value>
     </Setting>
-    <Setting Name="AdapterKU4" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="AdapterKU4" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USBCOM10A</Value>
     </Setting>
-    <Setting Name="AdapterKU5" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="AdapterKU5" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USBCOM10A</Value>
     </Setting>
-    <Setting Name="AdapterKU6" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="AdapterKU6" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USBCOM10A</Value>
     </Setting>
-    <Setting Name="SerialKU1" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="SerialKU1" Type="System.String" Scope="User">
+      <Value Profile="(Default)">COM1</Value>
     </Setting>
-    <Setting Name="SerialKU2" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="SerialKU2" Type="System.String" Scope="User">
+      <Value Profile="(Default)">COM1</Value>
     </Setting>
-    <Setting Name="SerialKU3" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="SerialKU3" Type="System.String" Scope="User">
+      <Value Profile="(Default)">COM1</Value>
     </Setting>
-    <Setting Name="SerialKU4" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="SerialKU4" Type="System.String" Scope="User">
+      <Value Profile="(Default)">COM1</Value>
     </Setting>
-    <Setting Name="SerialKU5" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="SerialKU5" Type="System.String" Scope="User">
+      <Value Profile="(Default)">COM1</Value>
     </Setting>
-    <Setting Name="SerialKU6" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+    <Setting Name="SerialKU6" Type="System.String" Scope="User">
+      <Value Profile="(Default)">COM1</Value>
     </Setting>
   </Settings>
 </SettingsFile>

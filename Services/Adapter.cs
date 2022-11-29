@@ -68,7 +68,8 @@ public class Adapter : IDisposable
     protected bool disposed = false;
     protected LogFunction? _logger;
     protected byte FBits = 0;
-    public string SerialNum { get; private set; }
+    public string? SerialNum { get; private set; } = "";
+    public bool IsOpen => myFtdiDevice.IsOpen;
 
     // Constructor 
     public Adapter(LogFunction? log = null) => _logger = log;
@@ -77,9 +78,11 @@ public class Adapter : IDisposable
     // Methods --------------------------
     //
 
-    public virtual bool OpenAdapter(string serial)
+    public virtual bool OpenAdapter(string? serial)
     {
+        if (serial == null) throw new("Adapter serial can not be null");
         SerialNum = serial;
+        var status = FTDI.FT_STATUS.FT_OTHER_ERROR;
 
         status = myFtdiDevice.OpenBySerialNumber(SerialNum);
 
@@ -122,7 +125,7 @@ public class Adapter : IDisposable
 
     public bool ResetCAN()
     {
-        if (SerialNum[SerialNum.Length - 1] != 'B')
+        if (SerialNum.EndsWith('B'))
         {
             Log("ResetCAN() недопустим для порта " + SerialNum);
             return false;

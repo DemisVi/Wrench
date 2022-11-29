@@ -891,12 +891,14 @@ namespace FTD2XX_NET
             //
             // Summary:
             //     The device serial number
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
             public string SerialNumber;
 
             //
             // Summary:
             //     The device description
             public string Description;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
             //
             // Summary:
@@ -3843,10 +3845,12 @@ namespace FTD2XX_NET
                     fT_PROGRAM_DATA.Description = Marshal.AllocHGlobal(64);
                     fT_PROGRAM_DATA.SerialNumber = Marshal.AllocHGlobal(16);
                     fT_STATUS = tFT_EE_Read(ftHandle, fT_PROGRAM_DATA);
+#pragma warning disable CS8601 // Possible null reference assignment.
                     ee232b.Manufacturer = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Manufacturer);
                     ee232b.ManufacturerID = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.ManufacturerID);
                     ee232b.Description = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Description);
                     ee232b.SerialNumber = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.SerialNumber);
+#pragma warning restore CS8601 // Possible null reference assignment.
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Manufacturer);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.ManufacturerID);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Description);
@@ -3916,10 +3920,12 @@ namespace FTD2XX_NET
                     fT_PROGRAM_DATA.Description = Marshal.AllocHGlobal(64);
                     fT_PROGRAM_DATA.SerialNumber = Marshal.AllocHGlobal(16);
                     fT_STATUS = tFT_EE_Read(ftHandle, fT_PROGRAM_DATA);
+#pragma warning disable CS8601 // Possible null reference assignment.
                     ee2232.Manufacturer = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Manufacturer);
                     ee2232.ManufacturerID = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.ManufacturerID);
                     ee2232.Description = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Description);
                     ee2232.SerialNumber = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.SerialNumber);
+#pragma warning restore CS8601 // Possible null reference assignment.
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Manufacturer);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.ManufacturerID);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Description);
@@ -3996,10 +4002,12 @@ namespace FTD2XX_NET
                     fT_PROGRAM_DATA.Description = Marshal.AllocHGlobal(64);
                     fT_PROGRAM_DATA.SerialNumber = Marshal.AllocHGlobal(16);
                     fT_STATUS = tFT_EE_Read(ftHandle, fT_PROGRAM_DATA);
+#pragma warning disable CS8601 // Possible null reference assignment.
                     ee232r.Manufacturer = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Manufacturer);
                     ee232r.ManufacturerID = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.ManufacturerID);
                     ee232r.Description = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Description);
                     ee232r.SerialNumber = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.SerialNumber);
+#pragma warning restore CS8601 // Possible null reference assignment.
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Manufacturer);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.ManufacturerID);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Description);
@@ -4084,10 +4092,12 @@ namespace FTD2XX_NET
                     fT_PROGRAM_DATA.Description = Marshal.AllocHGlobal(64);
                     fT_PROGRAM_DATA.SerialNumber = Marshal.AllocHGlobal(16);
                     fT_STATUS = tFT_EE_Read(ftHandle, fT_PROGRAM_DATA);
+#pragma warning disable CS8601 // Possible null reference assignment.
                     ee2232h.Manufacturer = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Manufacturer);
                     ee2232h.ManufacturerID = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.ManufacturerID);
                     ee2232h.Description = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Description);
                     ee2232h.SerialNumber = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.SerialNumber);
+#pragma warning restore CS8601 // Possible null reference assignment.
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Manufacturer);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.ManufacturerID);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Description);
@@ -4176,10 +4186,12 @@ namespace FTD2XX_NET
                     fT_PROGRAM_DATA.Description = Marshal.AllocHGlobal(64);
                     fT_PROGRAM_DATA.SerialNumber = Marshal.AllocHGlobal(16);
                     fT_STATUS = tFT_EE_Read(ftHandle, fT_PROGRAM_DATA);
+#pragma warning disable CS8601 // Possible null reference assignment.
                     ee4232h.Manufacturer = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Manufacturer);
                     ee4232h.ManufacturerID = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.ManufacturerID);
                     ee4232h.Description = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Description);
                     ee4232h.SerialNumber = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.SerialNumber);
+#pragma warning restore CS8601 // Possible null reference assignment.
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Manufacturer);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.ManufacturerID);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Description);
@@ -4267,10 +4279,12 @@ namespace FTD2XX_NET
                     fT_PROGRAM_DATA.Description = Marshal.AllocHGlobal(64);
                     fT_PROGRAM_DATA.SerialNumber = Marshal.AllocHGlobal(16);
                     fT_STATUS = tFT_EE_Read(ftHandle, fT_PROGRAM_DATA);
+#pragma warning disable CS8601 // Possible null reference assignment.
                     ee232h.Manufacturer = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Manufacturer);
                     ee232h.ManufacturerID = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.ManufacturerID);
                     ee232h.Description = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.Description);
                     ee232h.SerialNumber = Marshal.PtrToStringAnsi(fT_PROGRAM_DATA.SerialNumber);
+#pragma warning restore CS8601 // Possible null reference assignment.
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Manufacturer);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.ManufacturerID);
                     Marshal.FreeHGlobal(fT_PROGRAM_DATA.Description);
@@ -4368,7 +4382,9 @@ namespace FTD2XX_NET
                     fT_STATUS = tFT_EEPROM_Read(ftHandle, intPtr, (uint)num, array, array2, array3, array4);
                     if (fT_STATUS == FT_STATUS.FT_OK)
                     {
+#pragma warning disable CS8605 // Unboxing a possibly null value.
                         fT_XSERIES_DATA = (FT_XSERIES_DATA)Marshal.PtrToStructure(intPtr, typeof(FT_XSERIES_DATA));
+#pragma warning restore CS8605 // Unboxing a possibly null value.
                         UTF8Encoding uTF8Encoding = new UTF8Encoding();
                         eeX.Manufacturer = uTF8Encoding.GetString(array);
                         eeX.ManufacturerID = uTF8Encoding.GetString(array2);

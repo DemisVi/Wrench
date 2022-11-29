@@ -41,11 +41,13 @@ namespace Wrench.Services;
 /// </summary>
 //-------------------------------------------------------------------------
 // делегат для сообщений об ошибках
-public delegate void logFunction(string msg);
 
 // Клас-оболочка адаптера программирования БЭГ (использованы функции портов "A" и "B")
 public class Adapter : IDisposable
 {
+    public delegate void LogFunction(string msg);
+
+    [Flags]
     enum PortBits
     {
         KL30 = 1,
@@ -56,36 +58,30 @@ public class Adapter : IDisposable
         Pgm = 32,
         Red = 64
     }
+
     //
     // Members
     //
-    public FTDI.FT_STATUS ftStatus;
-    protected FTDI myFtdiDevice = new FTDI();
 
-    //private ListBox logList;
-    private logFunction? sendLog; // внешняя проседура
-    private byte FBits = 0;
-    private string SerNum = "";
-    private bool disposed = false;
+    protected FTDI.FT_STATUS ftStatus = FTDI.FT_STATUS.FT_OTHER_ERROR;
+    protected FTDI myFtdiDevice = new();
+    protected bool disposed = false;
+    protected LogFunction? _logger;
+    protected byte FBits = 0;
+    public string SerialNum { get; private set; }
+
+    // Constructor 
+    public Adapter(LogFunction? log = null) => _logger = log;
 
     //
     // Methods --------------------------
     //
 
-    // Constructor 
-    public Adapter(logFunction? log = null)
-    {
-
-        sendLog = log;
-    } // Adapter(string SerialNum)
-    //--------------------------------------------------
-
     public virtual bool OpenAdapter(string serial)
     {
-        FTDI.FT_STATUS status = FTDI.FT_STATUS.FT_OTHER_ERROR;
-        SerNum = serial;
+        SerialNum = serial;
 
-        status = myFtdiDevice.OpenBySerialNumber(SerNum);
+        status = myFtdiDevice.OpenBySerialNumber(SerialNum);
 
         if (status != FTDI.FT_STATUS.FT_OK)
         {
@@ -104,7 +100,6 @@ public class Adapter : IDisposable
     } // void OpenAdapter(string serial)
     //----------------------------------------------------
 
-
     public void CloseAdapter()
     {
         myFtdiDevice.Close();
@@ -112,14 +107,7 @@ public class Adapter : IDisposable
     //----------------------------------------------------
 
 
-    protected void Log(String Msg)
-    {
-        if (sendLog == null) return;
-        string sOut = SerNum + ": " + Msg;
-        sendLog(sOut);
-    } // Log(String Msg)
-    //---------------------------------------
-
+    protected void Log(String message) => _logger?.Invoke(SerialNum + ": " + message);
 
     // close connection
     public void Disconnect()
@@ -134,9 +122,9 @@ public class Adapter : IDisposable
 
     public bool ResetCAN()
     {
-        if (SerNum[SerNum.Length - 1] != 'B')
+        if (SerialNum[SerialNum.Length - 1] != 'B')
         {
-            Log("ResetCAN() недопустим для порта " + SerNum);
+            Log("ResetCAN() недопустим для порта " + SerialNum);
             return false;
         }
         ftStatus = myFtdiDevice.SetRTS(true);

@@ -24,7 +24,7 @@ namespace Wrench.ViewModels
             _canExecute = canExecute;
         }
         
-        public Command(Action<object?> execute, object? isActive)
+        public Command(Action<object?> execute, object isActive)
         {
             _execute = execute;
             _canExecute = (obj) => (bool)isActive;

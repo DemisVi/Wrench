@@ -16,7 +16,7 @@ namespace Wrench.Services
 
         public AdapterLocator() => Rescan();
 
-        public List<string> AdapterSerials { get { return _ftdiDeviceList.Select(x => x.SerialNumber).ToList(); } }
+        public List<string> AdapterSerials { get => _ftdiDeviceList.Select(x => x.SerialNumber).ToList(); }
 
         public uint AdapterCount => _devCount;
 

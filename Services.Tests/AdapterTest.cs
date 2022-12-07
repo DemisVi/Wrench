@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Services.Tests
+namespace Wrench.Services.Tests
 {
     public class AdapterTest
     {
         public Adapter adapter = new("USBCOM17A");
-        ConcurrentQueue<bool> result = new ConcurrentQueue<bool>();
+        List<bool> result = new List<bool>();
 
         public AdapterTest()
         {
@@ -18,7 +18,7 @@ namespace Services.Tests
 
         }
 
-        private void StoreResult(object sender, AdapterSensorEventArgs e) => result.Enqueue(e.SensorState);
+        private void StoreResult(object sender, AdapterSensorEventArgs e) => result.Add(e.SensorState);
 
         [Fact]
         public void ShouldThrow()
@@ -34,7 +34,7 @@ namespace Services.Tests
 
             while (result.Count < 6) { await Task.Delay(10); }
 
-            Assert.Same(result, new ConcurrentQueue<bool>(new[] { true, false, true, false, true, false }));
+            Assert.Equal(result, new List<bool> { true, false, true, false, true, false });
         }
     }
 }

@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Timers;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Win32;
 using FTD2XX_NET;
 
-// Версия 2: доработана настройка порта для UART
 namespace Wrench.Services;
 
 /// <summary>
@@ -40,9 +41,7 @@ namespace Wrench.Services;
 ///     public void LEDsOff() 
 /// </summary>
 //-------------------------------------------------------------------------
-// делегат для сообщений об ошибках
 
-// Клас-оболочка адаптера программирования БЭГ (использованы функции портов "A" и "B")
 public class Adapter : IDisposable
 {
     public delegate void LogFunction(string msg);
@@ -65,25 +64,40 @@ public class Adapter : IDisposable
     protected FTDI _myFtdiDevice = new();
     protected bool _disposed = false;
     protected byte _fBits = 0;
+    protected bool _oldSensorState;
     protected LogFunction? _logger;
-    protected byte FBits = 0;
+    protected System.Timers.Timer _sensorTimer;
     public string SerialNum { get; private set; }
     public bool IsOpen => _myFtdiDevice.IsOpen;
 
     // Constructor 
     public Adapter(string adapterSerial, LogFunction? log = null)
     {
-        SerialNum = adapterSerial;
         _logger = log;
+        _sensorTimer = new()
+        {
+            Interval = 1_000D,
+            Enabled = false,
+            AutoReset = true,
+        };
+        SerialNum = adapterSerial;
+        _sensorTimer.Elapsed += OnSensorStateChanged;
+        _oldSensorState = SetInitialSensorState();
     }
+
+    private bool SetInitialSensorState()
+    {
+        OpenAdapter();
+        var state = GetSensorState();
+        CloseAdapter();
+        return state;
+    }
+
+    public event AdapterSensorEventHandler? SensorStateChanged;
 
     public virtual bool OpenAdapter()
     {
         var status = _myFtdiDevice.OpenBySerialNumber(SerialNum);
-
-        if (SerialNum == null ) throw new InvalidOperationException("Adapter serial can not be null"); 
-
-        var status = myFtdiDevice.OpenBySerialNumber(SerialNum);
 
         if (status != FTDI.FT_STATUS.FT_OK)
         {
@@ -132,7 +146,7 @@ public class Adapter : IDisposable
         _ftStatus = _myFtdiDevice.SetRTS(true);
         if (_ftStatus == FTDI.FT_STATUS.FT_OK)
         {
-            Thread.Sleep(50);
+            Task.Delay(50).Wait();
             _ftStatus = _myFtdiDevice.SetRTS(false);
         }
         return (_ftStatus == FTDI.FT_STATUS.FT_OK);
@@ -335,6 +349,25 @@ public class Adapter : IDisposable
         UpdateBitsInvert();
         if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка выключения светофора");
+    }
+
+    public void BeginWatchSensorState()
+    {
+        if (!IsOpen) throw new InvalidOperationException("Adapter port closed and cannot report sensor state");
+        _oldSensorState = GetSensorState();
+        _sensorTimer?.Start();
+    }
+
+    public void EndWatchSensorState() => _sensorTimer?.Stop();
+
+    private void OnSensorStateChanged(object? sender, ElapsedEventArgs e)
+    {
+        var state = GetSensorState();
+        if (state != _oldSensorState)
+        {
+            _oldSensorState = state;
+            SensorStateChanged?.Invoke(this, new AdapterSensorEventArgs(state));
+        }
     }
 
     public void Dispose()

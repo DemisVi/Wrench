@@ -8,7 +8,7 @@ public class AdapterLocatorTest
     public void ShouldContainNumberOfAdapters()
     {
         Assert.True(loc.AdapterCount > 0);
-        Assert.Equal<uint>(2, loc.AdapterCount);
+        Assert.Equal<uint>(4, loc.AdapterCount);
     }
 
     [Fact]

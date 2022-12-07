@@ -47,6 +47,7 @@ public class Adapter : IDisposable
 {
     public delegate void LogFunction(string msg);
 
+
     [Flags]
     enum PortBits
     {
@@ -59,28 +60,26 @@ public class Adapter : IDisposable
         Red = 64
     }
 
-    //
-    // Members
-    //
 
-    protected FTDI.FT_STATUS ftStatus = FTDI.FT_STATUS.FT_OTHER_ERROR;
-    protected FTDI myFtdiDevice = new();
-    protected bool disposed = false;
+    protected FTDI.FT_STATUS _ftStatus = FTDI.FT_STATUS.FT_OTHER_ERROR;
+    protected FTDI _myFtdiDevice = new();
+    protected bool _disposed = false;
+    protected byte _fBits = 0;
     protected LogFunction? _logger;
     protected byte FBits = 0;
-    public string? SerialNum { get; private set; }
-    public bool IsOpen => myFtdiDevice.IsOpen;
+    public string SerialNum { get; private set; }
+    public bool IsOpen => _myFtdiDevice.IsOpen;
 
     // Constructor 
-    public Adapter(string? adapterSerial = null, LogFunction? log = null)
+    public Adapter(string adapterSerial, LogFunction? log = null)
     {
         SerialNum = adapterSerial;
         _logger = log;
     }
 
-    public virtual bool OpenAdapter(string? serial = null)
+    public virtual bool OpenAdapter()
     {
-        SerialNum ??= serial;
+        var status = _myFtdiDevice.OpenBySerialNumber(SerialNum);
 
         if (SerialNum == null ) throw new InvalidOperationException("Adapter serial can not be null"); 
 
@@ -96,7 +95,7 @@ public class Adapter : IDisposable
         if (SerialNum.EndsWith('A'))
         {
             // обнулть все выходы
-            FBits = 0;
+            _fBits = 0;
             UpdateBitsInvert();
         }
         return status == FTDI.FT_STATUS.FT_OK;
@@ -105,7 +104,7 @@ public class Adapter : IDisposable
 
     public void CloseAdapter()
     {
-        myFtdiDevice.Close();
+        _myFtdiDevice.Close();
     } // void CloseAdapter()
     //----------------------------------------------------
 
@@ -115,10 +114,10 @@ public class Adapter : IDisposable
     // close connection
     public void Disconnect()
     {
-        FBits = 0;
+        _fBits = 0;
         // обнулть все выходы
         UpdateBitsInvert();
-        myFtdiDevice.Close();
+        _myFtdiDevice.Close();
     } // void Disconnect()
     //---------------------------------------
 
@@ -130,61 +129,61 @@ public class Adapter : IDisposable
             Log("ResetCAN() недопустим для порта " + SerialNum);
             return false;
         }
-        ftStatus = myFtdiDevice.SetRTS(true);
-        if (ftStatus == FTDI.FT_STATUS.FT_OK)
+        _ftStatus = _myFtdiDevice.SetRTS(true);
+        if (_ftStatus == FTDI.FT_STATUS.FT_OK)
         {
             Thread.Sleep(50);
-            ftStatus = myFtdiDevice.SetRTS(false);
+            _ftStatus = _myFtdiDevice.SetRTS(false);
         }
-        return (ftStatus == FTDI.FT_STATUS.FT_OK);
+        return (_ftStatus == FTDI.FT_STATUS.FT_OK);
     } // void ResetCAN()
     //---------------------------------------
 
 
     public bool SetBaudRate(UInt32 BaudRate)
     {
-        ftStatus = myFtdiDevice.SetBaudRate(BaudRate);
-        return (ftStatus == FTDI.FT_STATUS.FT_OK);
+        _ftStatus = _myFtdiDevice.SetBaudRate(BaudRate);
+        return (_ftStatus == FTDI.FT_STATUS.FT_OK);
     } // SetBaudRate
       //---------------------------------------
 
 
     public bool SetDataCharacteristics(byte DataBits, byte StopBits, byte Parity)
     {
-        ftStatus = myFtdiDevice.SetDataCharacteristics(DataBits, StopBits, Parity);
-        return (ftStatus == FTDI.FT_STATUS.FT_OK);
+        _ftStatus = _myFtdiDevice.SetDataCharacteristics(DataBits, StopBits, Parity);
+        return (_ftStatus == FTDI.FT_STATUS.FT_OK);
     } // SetDataCharacteristics
     //--------------------------------------
 
 
     public bool SetFlowControl(UInt16 FlowControl, byte Xon, byte Xoff)
     {
-        ftStatus = myFtdiDevice.SetFlowControl(FlowControl, Xon, Xoff);
-        return (ftStatus == FTDI.FT_STATUS.FT_OK);
+        _ftStatus = _myFtdiDevice.SetFlowControl(FlowControl, Xon, Xoff);
+        return (_ftStatus == FTDI.FT_STATUS.FT_OK);
     } // SetFlowControl
     //----------------------------------------------------------
 
 
     public bool SetTimeouts(UInt32 ReadTimeout, UInt32 WriteTimeout)
     {
-        ftStatus = myFtdiDevice.SetTimeouts(ReadTimeout, WriteTimeout);
-        return (ftStatus == FTDI.FT_STATUS.FT_OK);
+        _ftStatus = _myFtdiDevice.SetTimeouts(ReadTimeout, WriteTimeout);
+        return (_ftStatus == FTDI.FT_STATUS.FT_OK);
     } // SetTimeouts
       //-----------------------------------------------------------
 
 
     public bool PurgeRx()
     {
-        ftStatus = myFtdiDevice.Purge(FTDI.FT_PURGE.FT_PURGE_RX);
-        return (ftStatus == FTDI.FT_STATUS.FT_OK);
+        _ftStatus = _myFtdiDevice.Purge(FTDI.FT_PURGE.FT_PURGE_RX);
+        return (_ftStatus == FTDI.FT_STATUS.FT_OK);
     } // bool Purge
     //----------------------------------------
 
 
     public bool PurgeUART()
     {
-        ftStatus = myFtdiDevice.Purge(FTDI.FT_PURGE.FT_PURGE_RX + FTDI.FT_PURGE.FT_PURGE_TX);
-        return (ftStatus == FTDI.FT_STATUS.FT_OK);
+        _ftStatus = _myFtdiDevice.Purge(FTDI.FT_PURGE.FT_PURGE_RX + FTDI.FT_PURGE.FT_PURGE_TX);
+        return (_ftStatus == FTDI.FT_STATUS.FT_OK);
     } // bool Purge
     //----------------------------------------
 
@@ -193,8 +192,8 @@ public class Adapter : IDisposable
     public bool GetSensorState()
     {
         Byte bits = 0;
-        ftStatus = myFtdiDevice.GetPinStates(ref bits);
-        if (ftStatus == FTDI.FT_STATUS.FT_OK)
+        _ftStatus = _myFtdiDevice.GetPinStates(ref bits);
+        if (_ftStatus == FTDI.FT_STATUS.FT_OK)
             return (bits & (byte)PortBits.Sensor) == 0;
         else return false;
     } // bool GetSensorState()
@@ -206,14 +205,14 @@ public class Adapter : IDisposable
     {
         UInt32 nb = 0;
         byte[] buff = new byte[3];
-        ftStatus = myFtdiDevice.SetBitMode(0x00, FTDI.FT_BIT_MODES.FT_BIT_MODE_MPSSE);
-        if (ftStatus == FTDI.FT_STATUS.FT_OK)
+        _ftStatus = _myFtdiDevice.SetBitMode(0x00, FTDI.FT_BIT_MODES.FT_BIT_MODE_MPSSE);
+        if (_ftStatus == FTDI.FT_STATUS.FT_OK)
         {
             // buff[1] - data, buff[2] - DIR
             buff[0] = 0x80;   // ID ADBUS
-            buff[1] = (byte)~FBits;   //  data values
+            buff[1] = (byte)~_fBits;   //  data values
             buff[2] = 0xFD;  // bit 1 - sensor input, other - outputs
-            ftStatus = myFtdiDevice.Write(buff, 3, ref nb);
+            _ftStatus = _myFtdiDevice.Write(buff, 3, ref nb);
         }
         else Log("Ошибка инициализаци битового порта");
     } // void UpdateBitsInvert()
@@ -223,9 +222,9 @@ public class Adapter : IDisposable
     // Power control
     public void KL15_On()
     {
-        FBits |= (byte)PortBits.KL15;
+        _fBits |= (byte)PortBits.KL15;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка включения питания устройства.");
     } // void KL15_On()
     //---------------------------------------
@@ -234,9 +233,9 @@ public class Adapter : IDisposable
     public void KL15_Off()
     {
         int mask = (int)PortBits.KL15;
-        FBits &= (byte)~mask;
+        _fBits &= (byte)~mask;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка выключения питания устройства.");
     } // KL15_Off()
     //---------------------------------------
@@ -244,9 +243,9 @@ public class Adapter : IDisposable
     // Power control
     public void KL30_On()
     {
-        FBits |= (byte)PortBits.KL30;
+        _fBits |= (byte)PortBits.KL30;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка включения питания устройства.");
     } // void KL30_On()
     //---------------------------------------
@@ -255,9 +254,9 @@ public class Adapter : IDisposable
     public void KL30_Off()
     {
         int mask = (int)PortBits.KL30;
-        FBits &= (byte)~mask;
+        _fBits &= (byte)~mask;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка выключения питания устройства.");
     } // KL30_Off()
     //---------------------------------------
@@ -268,9 +267,9 @@ public class Adapter : IDisposable
     //
     public void GreenOn()
     {
-        FBits |= (byte)PortBits.Green;
+        _fBits |= (byte)PortBits.Green;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка включения зеленого светофора");
     } // void GreenOn()
       //---------------------------------------
@@ -279,9 +278,9 @@ public class Adapter : IDisposable
     public void GreenOff()
     {
         uint mask = ~(uint)PortBits.Green;
-        FBits &= (byte)mask;
+        _fBits &= (byte)mask;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка выключения зеленого светофора");
     } // void GreenOff()
     //---------------------------------------
@@ -289,9 +288,9 @@ public class Adapter : IDisposable
 
     public void YellowOn()
     {
-        FBits |= (byte)PortBits.Yellow;
+        _fBits |= (byte)PortBits.Yellow;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка включения желтого светофора");
     }
     //---------------------------------------
@@ -300,9 +299,9 @@ public class Adapter : IDisposable
     public void YellowOff()
     {
         uint mask = ~(uint)PortBits.Yellow;
-        FBits &= (byte)mask;
+        _fBits &= (byte)mask;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка выключения желтого светофора");
     } // void YellowOn()
     //---------------------------------------
@@ -310,9 +309,9 @@ public class Adapter : IDisposable
 
     public void RedOn()
     {
-        FBits |= (byte)PortBits.Red;
+        _fBits |= (byte)PortBits.Red;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка включения красного светофора");
     } // void RedOn()
     //---------------------------------------
@@ -321,9 +320,9 @@ public class Adapter : IDisposable
     public void RedOff()
     {
         uint mask = (uint)PortBits.Red;
-        FBits &= (byte)~mask;
+        _fBits &= (byte)~mask;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка выключения крастного светофора");
     } // void RedOff()
     //---------------------------------------
@@ -332,9 +331,9 @@ public class Adapter : IDisposable
     public void LEDsOff()
     {
         uint mask = ((Byte)PortBits.Green + (Byte)PortBits.Red + (Byte)PortBits.Yellow);
-        FBits &= (byte)~mask;
+        _fBits &= (byte)~mask;
         UpdateBitsInvert();
-        if (ftStatus != FTDI.FT_STATUS.FT_OK)
+        if (_ftStatus != FTDI.FT_STATUS.FT_OK)
             Log("Ошибка выключения светофора");
     }
 
@@ -346,11 +345,11 @@ public class Adapter : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (disposed) return;
+        if (_disposed) return;
 
-        myFtdiDevice.Close();
+        _myFtdiDevice.Close();
 
-        disposed = true;
+        _disposed = true;
     }
     //---------------------------------------
 

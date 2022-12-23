@@ -6,23 +6,33 @@
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800">
+        Title="Wrench" Height="400" Width="400">
+
+    <Window.Resources>
+        <ResourceDictionary Source="/Resources/Resources.xaml"/>
+    </Window.Resources>
+    <Window.Icon>
+        <Binding Mode="OneWay" Source="{StaticResource svg_wrench_adjustable_circle_fillDrawingImage}"/>
+    </Window.Icon>
 
     <Window.DataContext>
         <vm:MainViewModel/>
     </Window.DataContext>
-    
+
     <Window.InputBindings>
-        <KeyBinding Key="Esc" Command="{Binding Exit}"/>
+        <KeyBinding Key="Esc" Modifiers="Ctrl" Command="{Binding Exit}"/>
     </Window.InputBindings>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="4*" MinHeight="48"/>
+            <RowDefinition Height="4*" MinHeight="54"/>
+            <RowDefinition Height="10*" MinHeight="86"/>
             <RowDefinition Height="10*"/>
             <RowDefinition Height="10*"/>
             <RowDefinition Height="10*"/>
-            <RowDefinition Height="1*" MinHeight="24" MaxHeight="28"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="8*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
@@ -38,49 +48,64 @@
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="0"  Grid.Column="2" HorizontalAlignment="Right"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="0"  Grid.Column="2" HorizontalAlignment="Left"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="1"  Grid.Column="2" HorizontalAlignment="Right"/>
-            <Label Content="Label" VerticalAlignment="Center" Grid.Row="1"  Grid.Column="2" HorizontalAlignment="Left"/>
+            <Label Content="Изделие:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left"/>
+            <Label Content="DeviceLabel" x:Name="deviceLabel" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right"/>
+            <Label Content="Версия ПО:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left"/>
+            <Label Content="VersionLabel" x:Name="versionLabel" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"/>
+            <Label Content="Годных:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"/>
+            <Label Content="PL" x:Name="passLabel" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right"/>
+            <Label Content="Сбойных:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"/>
+            <Label Content="FL" x:Name="failLabel" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right"/>
+            <Label Content="FPY:" VerticalAlignment="Center" Grid.Row="0"  Grid.Column="2" HorizontalAlignment="Left"/>
+            <Label Content="FPYL" x:Name="fpyLabel" VerticalAlignment="Center" Grid.Row="0"  Grid.Column="2" HorizontalAlignment="Right"/>
+            <Label Content="Cycle:" VerticalAlignment="Center" Grid.Row="1"  Grid.Column="2" HorizontalAlignment="Left"/>
+            <Label Content="CL" x:Name="cycleLabel" VerticalAlignment="Center" Grid.Row="1"  Grid.Column="2" HorizontalAlignment="Right"/>
         </Grid>
-        <ListBox Grid.Row="1" Grid.Column="0" d:ItemsSource="{d:SampleData ItemCount=1}"/>
-        <ListBox Grid.Row="1" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=2}"/>
-        <ListBox Grid.Row="2" Grid.Column="0" d:ItemsSource="{d:SampleData ItemCount=3}"/>
-        <ListBox Grid.Row="2" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=4}"/>
-        <ListBox Grid.Row="3" Grid.Column="0" d:ItemsSource="{d:SampleData ItemCount=5}"/>
-        <ListBox Grid.Row="3" Grid.Column="1" d:ItemsSource="{d:SampleData ItemCount=6}"/>
-        <StatusBar Grid.Row="4" Grid.ColumnSpan="2" HorizontalContentAlignment="Right">
+        <Grid Grid.Row="1" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="KU1" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="12"/>
+            <Label Content="100%" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="48"/>
+            <CheckBox Grid.Column="1" Content="Базовое ПО" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Top" FontSize="14"/>
+            <CheckBox Grid.Column="1" Content="Пакет БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
+            <CheckBox Grid.Column="1" Content="Что-нибудь еще..." HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>
+        </Grid>
+        
+        <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="5" ItemsSource="{Binding KU1LogList}"/>
+        
+        <StatusBar Grid.Row="7" Grid.ColumnSpan="2" HorizontalContentAlignment="Right">
             <StatusBar.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Settings" IsEnabled="{Binding IsAccessed}" Command="{Binding ShowSettings}"/>
                 </ContextMenu>
             </StatusBar.ContextMenu>
-
-            <TextBlock Text="{Binding OperationStatus}"/>
+            <StatusBarItem HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal">
+                    <Button Command="{Binding StartWriters}"
+                            Width="24" Height="24" Margin="1,0">
+                        <Image Width="16" Height="16" Source="{Binding Mode=OneWay, Source={StaticResource svg_folder_plusDrawingImage}}"/>
+                    </Button>
+                    <Button Command="{Binding StopWriters}"
+                            Width="24" Height="24" Margin="1,0">
+                        <Image Height="16" Width="16" Source="{Binding Mode=OneWay, Source={StaticResource svg_lightningDrawingImage}}"/>
+                    </Button>
+                    <TextBlock Text="{Binding OperationStatus}"/>
+                </StackPanel>
+            </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal">
-                    <ProgressBar Value="{Binding Counter}" 
-                                 Width="100" Height="18" Margin="4,0"/>
-                    <TextBox x:Name="passwordTextBox" Background="{Binding IndicatorColor}" Text="{Binding PasswordText}" 
-                             Grid.Row="4" Width="50" Margin="4,0">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding Validate}" CommandParameter="{Binding Text, ElementName=passwordTextBox, Mode=OneWay}"/>
-                        </TextBox.InputBindings>
+                    <TextBox Background="{Binding IndicatorColor}" Text="{Binding PasswordText, UpdateSourceTrigger=PropertyChanged}"
+                             Grid.Row="4" Width="50" Height="18" Margin="4,0">
                     </TextBox>
-                    <Button Command="{Binding Invalidate}" CommandParameter="{Binding Text, ElementName=passwordTextBox}" 
-                            Width="18" Height="18" Margin="4,0"/>
-                    <Button Command="{Binding ShowSettings}" IsEnabled="{Binding IsAccessed}" 
-                            Width="18" Height="18" Margin="4,0"/>
+                    <Button Command="{Binding ShowSettings}" 
+                            Width="24" Height="24" Margin="1,0">
+                        <Image Height="16" Width="16" Source="{Binding Mode=OneWay, Source={StaticResource svg_gearDrawingImage}}"/>
+                    </Button>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
+        
     </Grid>
 </Window>

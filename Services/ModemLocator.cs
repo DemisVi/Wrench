@@ -71,6 +71,19 @@ public class ModemLocator
         return serials;
     }
 
+    public List<string> GetModemATPorts()
+    {
+        using var searcher = new ManagementObjectSearcher(DeviceQuery);
+
+        var serials = new List<string>();
+
+        var resultStrings = searcher.Get().Cast<ManagementObject>().Select(x => ((string)x["Caption"]).ToString().ToLower());
+
+        serials.AddRange(string.Join(' ', resultStrings).Split(new char[]{'(', ')'}).Where(x => x.Contains("com")));
+
+        return serials;
+    }
+
     public List<SerialPort> GetModemSerialPorts()
     {
         using var searcher = new ManagementObjectSearcher(DeviceQuery);

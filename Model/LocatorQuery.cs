@@ -30,10 +30,13 @@ namespace Wrench.Model
             + "OR TargetInstance.DeviceID LIKE '%VID_1E0E&PID_9001%') "
             + "GROUP WITHIN 4");
 
-        public static readonly WqlObjectQuery queryTelitModem = new("SELECT AttachedTo FROM Win32_POTSModem WHERE"
-            + " (Caption LIKE '%Telit%' OR ProviderName LIKE '%Telit%' OR DeviceID LIKE '%VID_1BC7&PID_1201%')");
+        public static readonly WqlObjectQuery queryTelitModem = new("SELECT AttachedTo FROM Win32_POTSModem WHERE "
+            + "(Caption LIKE '%Telit%' OR ProviderName LIKE '%Telit%' OR DeviceID LIKE '%VID_1BC7&PID_1201%')");
 
-        public static readonly WqlObjectQuery querySimcomModem = new("SELECT AttachedTo FROM Win32_POTSModem WHERE"
-            + " (Caption LIKE '%SimTech%' OR ProviderName LIKE '%SimTech%' OR DeviceID LIKE '%VID_1E0E&PID_9001%')");
+        public static readonly WqlObjectQuery querySimcomModem = new("SELECT AttachedTo FROM Win32_POTSModem WHERE "
+            + "(Caption LIKE '%SimTech%' OR ProviderName LIKE '%SimTech%' OR DeviceID LIKE '%VID_1E0E&PID_9001%')");
+
+        public static readonly WqlObjectQuery querySimcomATPort = new("SELECT Caption FROM Win32_PNPEntity WHERE "
+        + "(Description LIKE '%USB AT%' AND DeviceID LIKE '%VID_1E0E&PID_9001%') ");
     }
 }

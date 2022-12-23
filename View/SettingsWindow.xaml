@@ -17,7 +17,7 @@
         <KeyBinding Key="Esc" Command="{Binding Close}" CommandParameter="{Binding Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:SettingsWindow}}}"/>
     </Window.InputBindings>
 
-    <Grid x:Name="mainGrid" Margin="4">
+    <Grid x:Name="mainGrid" Margin="4" MinHeight="300" VerticalAlignment="Top">
         <Grid.RowDefinitions>
             <RowDefinition Height="1.4*"/>
             <RowDefinition Height="2*"/>

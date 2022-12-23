@@ -69,8 +69,8 @@
             <Label Content="KU1" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="12"/>
             <Label Content="100%" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="48"/>
             <CheckBox Grid.Column="1" Content="Базовое ПО" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Top" FontSize="14"/>
-            <CheckBox Grid.Column="1" Content="Пакет БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
-            <CheckBox Grid.Column="1" Content="Что-нибудь еще..." HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>
+            <CheckBox Grid.Column="1" Content="Пакет файлов БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
+            <CheckBox Grid.Column="1" Content="Конфигурация АТ" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>
         </Grid>
         
         <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="5" ItemsSource="{Binding KU1LogList}"/>

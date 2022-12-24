@@ -11,8 +11,10 @@ public static class Base34Extensions
 
     public static Base34 ToBase34(this string value)
     {
-        if (!value.StartsWith("T7G84178")) throw new ArgumentException("String is not in DeviceSerial format");
-        return new Base34(value.Substring(value.IndexOf("000", StringComparison.Ordinal)));
+        if (!value.StartsWith("T7G84178") && !string.IsNullOrEmpty(value)) throw new ArgumentException("String is not in DeviceSerial format");
+        if (value.Contains("000", StringComparison.Ordinal))
+            return new Base34(value.Substring(value.IndexOf("000", StringComparison.Ordinal)));
+        else return new Base34(string.Empty);
     }
     public static int ToInt32(this char value) => ToInt32(value.ToString());
     public static int ToInt32(this string value)

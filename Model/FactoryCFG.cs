@@ -19,6 +19,12 @@ namespace Wrench.Model
             set => this["SERIAL_NUMBER"] = value;
         }
 
+        public string this[string parameter]
+        {
+            get => _factory[parameter];
+            set => _factory[parameter] = value;
+        }
+
         public FactoryCFG(string path = "./") => _path = Path.Combine(path, _baseName);
 
         public void ReadFactory()
@@ -35,12 +41,6 @@ namespace Wrench.Model
         {
             var lines = _factory.Select(x => string.Join('=', x.Key, x.Value)).ToArray();
             File.WriteAllLines(_path, lines);
-        }
-
-        public string this[string parameter]
-        {
-            get => _factory[parameter];
-            set => _factory[parameter] = value;
         }
     }
 }

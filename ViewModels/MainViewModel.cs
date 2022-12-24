@@ -37,9 +37,9 @@ namespace Wrench.ViewModels
             WriterKU1.PropertyChanged += WriterKU1_PropertyChanged;
         }
 
-        private void WriterKU1_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>
-                this.GetType().GetProperty(e.PropertyName)?.SetValue(this, (sender as Writer)
-                .GetType()?.GetProperty(e.PropertyName)?.GetValue(sender));
+        private void WriterKU1_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>  ///experimental crap
+                this.GetType().GetProperty(e.PropertyName!)?.SetValue(this, (sender as Writer)!
+                .GetType()?.GetProperty(e.PropertyName!)?.GetValue(sender));
 
         private void Wrkr_DoWork(object? sender, DoWorkEventArgs e)
         {

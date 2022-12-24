@@ -5,24 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Wrench.Model
-{
-    internal class FactoryCFG
+namespace Wrench.Model;
+
+    public class FactoryCFG
     {
         private const string _baseName = "factory.cfg";
         private readonly string _path;
         private Dictionary<string, string> _factory = new();
         public string ModelId => this["MODEL_ID"];
-        public string SerialNumber
+        public Base34 SerialNumber
         {
-            get => this["SERIAL_NUMBER"];
-            set => this["SERIAL_NUMBER"] = value;
-        }
-
-        public string this[string parameter]
-        {
-            get => _factory[parameter];
-            set => _factory[parameter] = value;
+            get => this["SERIAL_NUMBER"].ToBase34();
+            set => this["SERIAL_NUMBER"] = value.ToDeviceSerial();
         }
 
         public FactoryCFG(string path = "./") => _path = Path.Combine(path, _baseName);
@@ -42,5 +36,10 @@ namespace Wrench.Model
             var lines = _factory.Select(x => string.Join('=', x.Key, x.Value)).ToArray();
             File.WriteAllLines(_path, lines);
         }
+
+        public string this[string parameter]
+        {
+            get => _factory[parameter];
+            set => _factory[parameter] = value;
+        }
     }
-}

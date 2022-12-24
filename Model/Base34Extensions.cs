@@ -2,8 +2,18 @@ using System;
 using System.Linq;
 using System.Text;
 
+namespace Wrench.Model;
+
 public static class Base34Extensions
 {
+    public static string ToDeviceSerial(this Base34 value) =>
+        $"T7G84178{DateTime.Now.DayOfYear.ToString("D3")}{DateTime.Now.ToString("yy")}0000{value.ToString()}";
+
+    public static Base34 ToBase34(this string value)
+    {
+        if (!value.StartsWith("T7G84178")) throw new ArgumentException("String is not in DeviceSerial format");
+        return new Base34(value.Substring(value.IndexOf("000", StringComparison.Ordinal)));
+    }
     public static int ToInt32(this char value) => ToInt32(value.ToString());
     public static int ToInt32(this string value)
     {
@@ -23,7 +33,7 @@ public static class Base34Extensions
         return integer;
     }
 
-    public static string ToBase34(this int value, int rank = 0)
+    public static string ToBase34(this int value, int rank = 4)
     {
         StringBuilder result = new();
         int targetBase = (int)Base34.Base.Length;
@@ -35,7 +45,7 @@ public static class Base34Extensions
         }
         while (value > 0);
 
-        if (rank > 0) result.Insert(0, "0", rank);
+        if (rank > 0) result.Insert(0, "0", rank - result.Length);
 
         return result.ToString();
     }

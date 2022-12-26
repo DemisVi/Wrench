@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Wrench.View;
+using Wrench.Model;
 using Wrench.Services;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
@@ -22,17 +23,7 @@ namespace Wrench.ViewModels
         {
             wrkr.DoWork += Wrkr_DoWork;
             WriterKU1 = new Writer(KU1LogList);
-            WriterKU2 = new Writer(KU2LogList);
-            WriterKU3 = new Writer(KU3LogList);
-            WriterKU4 = new Writer(KU4LogList);
-            WriterKU5 = new Writer(KU5LogList);
-            WriterKU6 = new Writer(KU6LogList);
             BindingOperations.EnableCollectionSynchronization(KU1LogList, _synclock1);
-            BindingOperations.EnableCollectionSynchronization(KU2LogList, _synclock2);
-            BindingOperations.EnableCollectionSynchronization(KU3LogList, _synclock3);
-            BindingOperations.EnableCollectionSynchronization(KU4LogList, _synclock4);
-            BindingOperations.EnableCollectionSynchronization(KU5LogList, _synclock5);
-            BindingOperations.EnableCollectionSynchronization(KU6LogList, _synclock6);
 
             WriterKU1.PropertyChanged += WriterKU1_PropertyChanged;
         }
@@ -51,25 +42,10 @@ namespace Wrench.ViewModels
         private readonly Validator _validator = new();
 
         private object _synclock1 = new();
-        private object _synclock2 = new();
-        private object _synclock3 = new();
-        private object _synclock4 = new();
-        private object _synclock5 = new();
-        private object _synclock6 = new();
 
         private Writer WriterKU1;
-        private Writer WriterKU2;
-        private Writer WriterKU3;
-        private Writer WriterKU4;
-        private Writer WriterKU5;
-        private Writer WriterKU6;
 
         public ObservableCollection<string> KU1LogList { get; set; } = new();
-        public ObservableCollection<string> KU2LogList { get; set; } = new();
-        public ObservableCollection<string> KU3LogList { get; set; } = new();
-        public ObservableCollection<string> KU4LogList { get; set; } = new();
-        public ObservableCollection<string> KU5LogList { get; set; } = new();
-        public ObservableCollection<string> KU6LogList { get; set; } = new();
 
         protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string? propertyName = null)
         {

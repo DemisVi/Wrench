@@ -13,11 +13,13 @@ using Wrench.Model;
 using Wrench.Services;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
+using System.IO;
 
 namespace Wrench.ViewModels
 {
     internal class MainViewModel : INotifyPropertyChanged
     {
+        private const string _dataDir = "Data";
         private Writer WriterKU1;
         private object _synclock1 = new();
         private readonly Validator _validator = new();
@@ -27,21 +29,15 @@ namespace Wrench.ViewModels
 
         public MainViewModel()
         {
-            WriterKU1 = new Writer(KU1LogList);
             BindingOperations.EnableCollectionSynchronization(KU1LogList, _synclock1);
-
+            WriterKU1 = new Writer(KU1LogList);
+            DeviceType = new Dictionary<string, List<string>>();
             WriterKU1.PropertyChanged += WriterKU1_PropertyChanged;
 
-            DeviceType = new List<string>() {"18.3879600 - 54 АВЭОС", "18.3879600-54 АВЭОС 24В",
-                                             "18.3879600-70 ГАЗ",
-                                             "18.3879600-75 УАЗ",
-                                             "1824.3879600-42_БЭГ_ЛИАЗ 24В",
-                                             "1824_3879600-40 ПАЗ",
-                                             "1824_3879600-41 КАВЗ 24В",
-                                             "8450092997 Ларгус",
-                                             "8450110539 Гранта" };
+            var dir = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), _dataDir)).EnumerateDirectories();
+            foreach (var i in dir)
+                DeviceType.Add(i.Name, new List<string>());
         }
-
 
         protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string? propertyName = null)
         {
@@ -92,7 +88,7 @@ namespace Wrench.ViewModels
             }
         }
 
-        private bool? _isWriterRunning;
+        private bool? _isWriterRunning = false;
         public bool? IsWriterRunning
         {
             get => _isWriterRunning; set
@@ -109,12 +105,10 @@ namespace Wrench.ViewModels
         private bool _isAccessGranted;
         public bool IsAccessGranted { get => _isAccessGranted; set => SetProperty(ref _isAccessGranted, value); }
 
-        private List<string>? deviceType;
-
-        public List<string>? DeviceType { get => deviceType; set => SetProperty(ref deviceType, value); }
+        private Dictionary<string, List<string>>? deviceType;
+        public Dictionary<string, List<string>>? DeviceType { get => deviceType; set => SetProperty(ref deviceType, value); }
 
         private List<string>? deviceVersion;
-
         public List<string>? DeviceVersion { get => deviceVersion; set => SetProperty(ref deviceVersion, value); }
     }
 }

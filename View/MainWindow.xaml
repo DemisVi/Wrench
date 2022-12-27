@@ -66,13 +66,8 @@
         </Grid>
         
         <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding KU1LogList}"/>
-        
+
         <StatusBar Grid.Row="7" Grid.ColumnSpan="2" HorizontalContentAlignment="Right">
-            <StatusBar.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Settings" IsEnabled="{Binding IsAccessed}" Command="{Binding ShowSettings}"/>
-                </ContextMenu>
-            </StatusBar.ContextMenu>
             <StatusBarItem HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal">
                     <Button Command="{Binding ShowPackageSelector}"

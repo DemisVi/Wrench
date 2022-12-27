@@ -22,7 +22,7 @@
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
         <Button Content="Загрузить" Grid.Row="1" Grid.ColumnSpan="2"/>
-        <ListBox ItemsSource="{Binding DeviceType}"/>
+        <ListBox ItemsSource="{Binding DeviceType.Keys}"/>
         <ListBox Grid.Column="1" d:ItemsSource="{Binding DeviceVersion}"/>
     </Grid>
 </Window>

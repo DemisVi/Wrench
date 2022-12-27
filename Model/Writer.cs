@@ -14,13 +14,18 @@ namespace Wrench.Model;
 internal class Writer : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
-
     private readonly ObservableCollection<string> _kuLogList;
 
-    public Writer(ObservableCollection<string> kULogList)
-    {
-        _kuLogList = kULogList;
-    }
+    private bool? _isWriterRunning;
+    public bool? IsWriterRunning { get => _isWriterRunning; set => ChangeProperty(ref _isWriterRunning, value); }
+
+    private string? _status = null;
+    public string? OperationStatus { get => _status; set => ChangeProperty(ref _status, value, nameof(OperationStatus)); }
+
+    private string? _passwordText = null;
+    public string? PasswordText { get => _passwordText; set => ChangeProperty(ref _passwordText, value, nameof(PasswordText)); }
+
+    public Writer(ObservableCollection<string> kULogList) => _kuLogList = kULogList;
 
     private bool ChangeProperty<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
     {
@@ -33,23 +38,11 @@ internal class Writer : INotifyPropertyChanged
         return false;
     }
 
-    public void Reset()
+    public void Run()
     {
-        OperationStatus = OperationStatus?.Remove(OperationStatus.IndexOf("-", StringComparison.Ordinal), 1);
-        PasswordText = OperationStatus;
+        IsWriterRunning = !(IsWriterRunning ?? false);
+        Task.Factory.StartNew(() => LogMsg("message"));
     }
 
-    public void Set()
-    {
-        OperationStatus += "-";
-        PasswordText = OperationStatus;
-    }
-
-    public void Prop() => Task.Run(() => _kuLogList.Add("123123123"));
-
-    private string? _status = null;
-    public string? OperationStatus { get => _status; set => ChangeProperty(ref _status, value, nameof(OperationStatus)); }
-
-    private string? _passwordText = null;
-    public string? PasswordText { get => _passwordText; set => ChangeProperty(ref _passwordText, value, nameof(PasswordText)); }
+    public void LogMsg(string? message) => _kuLogList.Insert(0, message ?? string.Empty);
 }

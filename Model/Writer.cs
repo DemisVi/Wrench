@@ -41,7 +41,8 @@ internal class Writer : INotifyPropertyChanged
     public void Run()
     {
         IsWriterRunning = !(IsWriterRunning ?? false);
-        Task.Factory.StartNew(() => LogMsg("message"));
+        Task.Factory.StartNew((opst) => LogMsg("message" + opst), OperationStatus, new CancellationToken());
+        OperationStatus += "-";
     }
 
     public void LogMsg(string? message) => _kuLogList.Insert(0, message ?? string.Empty);

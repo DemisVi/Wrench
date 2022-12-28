@@ -19,8 +19,9 @@ namespace Wrench.View
     /// </summary>
     public partial class PackageSelectorWindow : Window
     {
-        public PackageSelectorWindow()
+        public PackageSelectorWindow(ViewModels.MainViewModel mainViewModel)
         {
+            DataContext = mainViewModel;
             InitializeComponent();
         }
     }

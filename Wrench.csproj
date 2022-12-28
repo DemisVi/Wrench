@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\**" />
     <Compile Remove="Model.Tests\**" />
     <Compile Remove="Model\bin\**" />
     <Compile Remove="Model\obj\**" />
@@ -16,6 +17,7 @@
     <Compile Remove="Services\bin\**" />
     <Compile Remove="Services\Common\**" />
     <Compile Remove="Services\obj\**" />
+    <EmbeddedResource Remove="Data\**" />
     <EmbeddedResource Remove="Model.Tests\**" />
     <EmbeddedResource Remove="Model\bin\**" />
     <EmbeddedResource Remove="Model\obj\**" />
@@ -23,6 +25,7 @@
     <EmbeddedResource Remove="Services\bin\**" />
     <EmbeddedResource Remove="Services\Common\**" />
     <EmbeddedResource Remove="Services\obj\**" />
+    <None Remove="Data\**" />
     <None Remove="Model.Tests\**" />
     <None Remove="Model\bin\**" />
     <None Remove="Model\obj\**" />
@@ -30,6 +33,7 @@
     <None Remove="Services\bin\**" />
     <None Remove="Services\Common\**" />
     <None Remove="Services\obj\**" />
+    <Page Remove="Data\**" />
     <Page Remove="Model.Tests\**" />
     <Page Remove="Model\bin\**" />
     <Page Remove="Model\obj\**" />

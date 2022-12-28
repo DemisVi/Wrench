@@ -8,9 +8,13 @@
         mc:Ignorable="d"
         Title="PackageSelectorWindow" Height="200" Width="400">
 
-    <Window.DataContext>
+    <!--<Window.DataContext>
         <vm:MainViewModel/>
-    </Window.DataContext>
+    </Window.DataContext>-->
+
+    <Window.InputBindings>
+        <KeyBinding Key="Esc" Command="{Binding Exit}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+    </Window.InputBindings>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -21,8 +25,9 @@
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
-        <Button Content="Загрузить" Grid.Row="1" Grid.ColumnSpan="2"/>
-        <ListBox ItemsSource="{Binding DeviceType.Keys}"/>
-        <ListBox Grid.Column="1" d:ItemsSource="{Binding DeviceVersion}"/>
+        <Button Command="{Binding LoadSelected}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" 
+                Content="Загрузить" Grid.Row="1" Grid.ColumnSpan="2"/>
+        <ListBox ItemsSource="{Binding DeviceType.Keys}" SelectedValue="{Binding SelectedDevice}" d:SelectedIndex="0"/>
+        <ListBox ItemsSource="{Binding DeviceVersion}" SelectedValue="{Binding SelectedVersion}" d:SelectedIndex="0" Grid.Column="1"/>
     </Grid>
 </Window>

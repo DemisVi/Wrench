@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
         mc:Ignorable="d"
-        Title="Wrench" Height="400" Width="400">
+        Title="Wrench" Height="400" Width="400" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
         <ResourceDictionary Source="/Resources/Resources.xaml"/>
@@ -75,7 +75,7 @@
                             Width="24" Height="24" Margin="1,0">
                         <Image Width="16" Height="16" Source="{Binding Mode=OneWay, Source={StaticResource svg_folder_plusDrawingImage}}"/>
                     </Button>
-                    <Button Command="{Binding ToggleWriter}"
+                    <Button Command="{Binding ToggleWriter}" Background="{Binding FlashButtonColor}"
                             Width="24" Height="24" Margin="1,0">
                         <Image Height="16" Width="16" Source="{Binding Mode=OneWay, Source={StaticResource svg_lightningDrawingImage}}"/>
                     </Button>

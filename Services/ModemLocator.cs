@@ -25,13 +25,14 @@ public class ModemLocator
         DeviceQuery = objectQuery;
     }
 
-    public ManagementBaseObject WaitDeviceConnect()
+    public ManagementObjectCollection WaitDeviceConnect()
     {
         using ManagementEventWatcher watcher = new(EventQuery);
-        return watcher.WaitForNextEvent();
+        watcher.WaitForNextEvent();
+        return new ManagementObjectSearcher(DeviceQuery).Get();
     }
 
-    public async Task<List<Modem>> LocateDevicesAsync()
+    public async Task<List<Modem>> LocateDevicesAsync(ModemType type)
     {
         var modemInfo = new List<string[]>();
 
@@ -42,7 +43,7 @@ public class ModemLocator
 
             if (item.IsOpen) { throw new InvalidOperationException($"SerialPort {item.PortName} opened somewhere else"); }
             if (!item.IsOpen) item.Open();
-            await item.WaitModemStartAsync();
+            await item.WaitModemStartAsync(type);
 
             item.WriteLine("AT+GSN=0");
 
@@ -58,7 +59,7 @@ public class ModemLocator
         return Distinct(modemInfo).GroupBy(x => x.SerialNumber).Select(x => x.First()).ToList<Modem>();
     }
 
-    public List<Modem> LocateDevices() => LocateDevicesAsync().GetAwaiter().GetResult();
+    public List<Modem> LocateDevices(ModemType type) => LocateDevicesAsync(type).GetAwaiter().GetResult();
 
     public List<string> GetModemPortNames()
     {

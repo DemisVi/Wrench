@@ -72,15 +72,28 @@ public class MainViewModel : INotifyPropertyChanged
     private void PerformExit(object? commandParameter) => (commandParameter as Window)?.Close();
 
     private Command? _showPackageSelector;
-    public ICommand ShowPackageSelector => _showPackageSelector ??= new Command(PerformShowPackageSelector, x => !(_isWriterRunning ?? false));
+    public ICommand ShowPackageSelector => _showPackageSelector ??= new Command(PerformShowPackageSelector, x => !IsWriterRunning);
     private void PerformShowPackageSelector(object? commandParameter)
     {
         new PackageSelectorWindow(this).Show();
     }
 
     private Command? _toggleWriter;
-    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter, x => (EnableWriterToggle ?? false));
-    private void PerformToggleWriter(object? commandParameter) => WriterKU1?.Run();
+    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter, x => PackageDir.Length > 0);
+    private void PerformToggleWriter(object? commandParameter)
+    {
+        if (!IsWriterRunning)
+        {
+            WriterKU1?.Start();
+            FlashButtonColor = Brushes.IndianRed;
+        }
+        else
+        {
+            WriterKU1.Stop();
+            FlashButtonColor = Brushes.Beige;
+        }
+        IsWriterRunning = !IsWriterRunning;
+    }
 
     private Command? loadSelected;
     public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected);
@@ -90,11 +103,12 @@ public class MainViewModel : INotifyPropertyChanged
         var msg = new StringBuilder().AppendJoin(' ', new[] { "Загружен пакет", SelectedDevice });
         if (SelectedVersion?.Length > 0) msg.AppendJoin(' ', new[] { " /", "версия", SelectedVersion });
         KU1LogList.Add(msg.ToString());
+        KU1LogList.Add(PackageDir);
         (commandParameter as Window)?.Close();
     }
 
-    private string? _passwordText;
-    public string? PasswordText
+    private string _passwordText = string.Empty;
+    public string PasswordText
     {
         get => _passwordText; set
         {
@@ -105,8 +119,8 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private bool? _isWriterRunning = false;
-    public bool? IsWriterRunning
+    private bool _isWriterRunning = false;
+    public bool IsWriterRunning
     {
         get => _isWriterRunning; set
         {
@@ -126,23 +140,26 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private bool? _enableWriterToggle = true;
-    public bool? EnableWriterToggle { get => _enableWriterToggle; set => SetProperty(ref _enableWriterToggle, value); }
+    private bool _enableWriterToggle = true;
+    public bool EnableWriterToggle { get => _enableWriterToggle; set => SetProperty(ref _enableWriterToggle, value); }
 
-    private string? _packageDir;
-    public string? PackageDir { get => _packageDir; set => SetProperty(ref _packageDir, value); }
+    private string _packageDir = string.Empty;
+    public string PackageDir { get => _packageDir; set => SetProperty(ref _packageDir, value); }
 
     private string _selectedVersion = string.Empty;
     public string SelectedVersion { get => _selectedVersion; set => SetProperty(ref _selectedVersion, value); }
 
-    private string? _operationStatus = "";
-    public string? OperationStatus { get => _operationStatus; set => SetProperty(ref _operationStatus, value); }
+    private string _operationStatus = string.Empty;
+    public string OperationStatus { get => _operationStatus; set => SetProperty(ref _operationStatus, value); }
 
-    private bool _isAccessGranted;
+    private bool _isAccessGranted = false;
     public bool IsAccessGranted { get => _isAccessGranted; set => SetProperty(ref _isAccessGranted, value); }
 
     private Brush _indicatorColor = Brushes.Beige;
     public Brush IndicatorColor { get => _indicatorColor; set => SetProperty(ref _indicatorColor, value); }
+
+    private Brush _flashButtonColor = Brushes.Beige;
+    public Brush FlashButtonColor { get => _flashButtonColor; set => SetProperty(ref _flashButtonColor, value); }
 
     private Dictionary<string, List<string>> _deviceType = new Dictionary<string, List<string>>();
     public Dictionary<string, List<string>> DeviceType { get => _deviceType; set => SetProperty(ref _deviceType, value); }

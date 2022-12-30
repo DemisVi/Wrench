@@ -78,9 +78,9 @@ public class ModemLocator
 
         var serials = new List<string>();
 
-        var resultStrings = searcher.Get().Cast<ManagementObject>().Select(x => ((string)x["Caption"]).ToString().ToLower());
+        var resultStrings = searcher.Get().Cast<ManagementObject>().Select(x => ((string)x["Caption"]).ToString());
 
-        serials.AddRange(string.Join(' ', resultStrings).Split(new char[]{'(', ')'}).Where(x => x.Contains("com")));
+        serials.AddRange(string.Join(' ', resultStrings).Split(new char[]{'(', ')'}).Where(x => x.Contains("COM", StringComparison.OrdinalIgnoreCase)));
 
         return serials;
     }

@@ -23,11 +23,11 @@ public class MainViewModel : INotifyPropertyChanged
 {
     private const string _dataDirName = "Data";
     private readonly string _dataDir;
-    private Writer WriterKU1;
+    private Writer WriterCU1;
     private object _synclock1 = new();
     private readonly Validator _validator = new();
 
-    public ObservableCollection<string> KU1LogList { get; set; } = new();
+    public ObservableCollection<string> CU1LogList { get; set; } = new();
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public MainViewModel()
@@ -43,10 +43,12 @@ public class MainViewModel : INotifyPropertyChanged
                 DeviceType[i.Name].Add(j.Name);
         }
 
-        WriterKU1 = new Writer(KU1LogList);
-        WriterKU1.PropertyChanged += WriterKU1_PropertyChanged;
+        WriterCU1 = new Writer(CU1LogList);
+        WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
 
-        BindingOperations.EnableCollectionSynchronization(KU1LogList, _synclock1);
+        ContactUnit = new AdapterLocator().AdapterSerials.First();
+
+        BindingOperations.EnableCollectionSynchronization(CU1LogList, _synclock1);
     }
 
     protected bool SetProperty<T>(ref T field, T newValue, [CallerMemberName] string? propertyName = null)
@@ -79,17 +81,17 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private Command? _toggleWriter;
-    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter, x => PackageDir.Length > 0);
+    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter/*, x => PackageDir.Length > 0*/);
     private void PerformToggleWriter(object? commandParameter)
     {
         if (!IsWriterRunning)
         {
-            WriterKU1?.Start();
+            WriterCU1?.Start();
             FlashButtonColor = Brushes.IndianRed;
         }
         else
         {
-            WriterKU1.Stop();
+            WriterCU1.Stop();
             FlashButtonColor = Brushes.Beige;
         }
         IsWriterRunning = !IsWriterRunning;
@@ -102,10 +104,12 @@ public class MainViewModel : INotifyPropertyChanged
         PackageDir = Path.Combine(_dataDir, SelectedDevice ?? string.Empty, SelectedVersion ?? string.Empty);
         var msg = new StringBuilder().AppendJoin(' ', new[] { "Загружен пакет", SelectedDevice });
         if (SelectedVersion?.Length > 0) msg.AppendJoin(' ', new[] { " /", "версия", SelectedVersion });
-        KU1LogList.Add(msg.ToString());
-        KU1LogList.Add(PackageDir);
+        CU1LogList.Insert(0, msg.ToString() + Environment.NewLine + PackageDir);
         (commandParameter as Window)?.Close();
     }
+
+    private string? _contactUnit = null;
+    public string? ContactUnit { get => _contactUnit; set => SetProperty(ref _contactUnit, value, nameof(ContactUnit)); }
 
     private string _passwordText = string.Empty;
     public string PasswordText

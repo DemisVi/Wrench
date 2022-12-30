@@ -370,6 +370,13 @@ public class Adapter : IDisposable
         }
     }
 
+    internal void WaitForSensor(bool state)
+    {
+        if (!IsOpen) throw new InvalidOperationException("Adapter is closed and can't report sensor state");
+        while (state != GetSensorState())
+            Thread.Sleep(100);
+    }
+
     public void Dispose()
     {
         Dispose(true);
@@ -384,11 +391,9 @@ public class Adapter : IDisposable
 
         _disposed = true;
     }
-    //---------------------------------------
 
     ~Adapter()
     {
         Dispose(false);
-    } // ~Adapter()
-      //--------------------------------------------------------
+    }
 }

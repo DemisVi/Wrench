@@ -1,5 +1,11 @@
 ﻿using System;
 
+public enum AdapterSensorState
+{
+    Close,
+    Open,
+}
+
 namespace Wrench.Services
 {
     public class AdapterSensorEventArgs : EventArgs

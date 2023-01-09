@@ -55,7 +55,7 @@ internal class Writer : INotifyPropertyChanged
 
     public void Start()
     {
-        if (_cts.Token.IsCancellationRequested) _cts = new();
+        if (_cts.IsCancellationRequested) _cts = new();
 
         Task.Factory.StartNew(SimComQuery);
     }
@@ -67,41 +67,47 @@ internal class Writer : INotifyPropertyChanged
 
     void SimComQuery()
     {
-        ContactUnit = new AdapterLocator().AdapterSerials.First() + " типа работа с адаптером";
-        // Task starting sequence
-
-        //Wait for CU
-        //AwaitCUClose(ContactUnit); //looks done
-
-        // wait for device
-        AwaitDeviceAttach(out var portName); //looks done
-
-        //var ser = new SerialPort(portName, 9600)
-        //{
-        //    NewLine = "\r",
-        //};
-        //ser.Open();
-        //ser.DataReceived += (s, e) => LogMsg((s as SerialPort)?.ReadExisting());
-        
-        // find modem or AT com port
-        AwaitDeviceReady(portName); //looks done
-
-        // turn on adb and reboot
-        TurnAdbModeOn(portName);
-
-        // execute fastboot flash sequence / batch flash (with subsequent reboot?)
-        //ExecuteFastbootBatch();
-
-        // execute adb upload sequence / batch file upload
-        //ExecuteAdbBatch();
-
-        // turn off adb and reboot
-        //TurnAdbModeOff();
-
-        LogMsg("started");
-
+        var counter = 0;
         while (true)
         {
+            ContactUnit = new AdapterLocator().AdapterSerials.First() + $" типа {counter++}";
+            // Task starting sequence
+
+            //Wait for CU
+            //AwaitCUClose(ContactUnit); //looks done
+
+            // wait for device
+            LogMsg("Awaiting device attach...");
+            var modemPort = AwaitDeviceAttach(); //looks done
+            LogMsg($"Modem at {modemPort}");
+            // find modem or AT com port
+            LogMsg("Awaiting device start...");
+            AwaitDeviceReady(modemPort); //looks done
+
+            // turn on adb and reboot
+            LogMsg("Turning ADB mode....");
+            TurnAdbModeOn(modemPort);
+
+            // wait for device
+            LogMsg("Awaiting device attach...");
+            modemPort = AwaitDeviceAttach(); //looks done
+            LogMsg($"Modem at {modemPort}");
+
+            // find modem or AT com port
+            LogMsg("Awaiting device start...");
+            AwaitDeviceReady(modemPort); //looks done
+
+            // execute fastboot flash sequence / batch flash (with subsequent reboot?)
+            //ExecuteFastbootBatch();
+
+            // execute adb upload sequence / batch file upload
+            //ExecuteAdbBatch();
+
+            // turn off adb and reboot
+            //TurnAdbModeOff();
+
+            LogMsg("Started");
+
             Thread.Sleep(100);
             if (!_cts.IsCancellationRequested) continue;
             // Task ending sequence
@@ -114,7 +120,7 @@ internal class Writer : INotifyPropertyChanged
         }
     }
 
-    private void TurnAdbModeOn(string portName)
+    private bool TurnAdbModeOn(string portName)
     {
         var serial = new SerialPort(portName)
         {
@@ -122,14 +128,23 @@ internal class Writer : INotifyPropertyChanged
             NewLine = localNewLine,
         };
         serial.Open();
-        serial.DiscardInBuffer();
-        serial.DiscardOutBuffer();
         serial.WriteLine("at+cusbadb=1");
-        LogMsg(serial.ReadExisting());
+        if (false == ParseAnswer()) return false;
         serial.WriteLine("at+creset");
-        LogMsg(serial.ReadExisting());
+        if (false == ParseAnswer()) return false;
         Thread.Sleep(1000);
         serial.Close();
+
+        return true;
+
+        bool ParseAnswer()
+        {
+            string ans;
+            ans = serial.ReadLine();
+            ans += serial.ReadExisting();
+
+            return ans.Contains("OK", StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     private void AwaitDeviceReady(string portName)
@@ -140,16 +155,17 @@ internal class Writer : INotifyPropertyChanged
             NewLine = localNewLine,
         };
         serial.Open();
-        LogMsg(serial.WaitModemStart(new SimComModem()));
+        serial.WaitModemStart(new SimComModem());
         serial.Close();
     }
 
-    private void AwaitDeviceAttach(out string portName)
+    private string AwaitDeviceAttach()
     {
         var modemLocator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.querySimcomModem);
-        LogMsg(string.Join(' ', modemLocator.WaitDeviceConnect().Cast<ManagementObject>().Select(x => x.GetText(TextFormat.Mof))) + localNewLine);
-        portName = modemLocator.GetModemPortNames().First();
-        LogMsg(portName);
+        //LogMsg(string.Join(' ', modemLocator.WaitDeviceConnect().Cast<ManagementObject>().Select(x => x.GetText(TextFormat.Mof))) + localNewLine);
+        modemLocator.WaitDeviceConnect();
+        return modemLocator.GetModemPortNames().First();
+        //LogMsg(portName);
     }
 
     private void AwaitCUClose(string adapterSerial)

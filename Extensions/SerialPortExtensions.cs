@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Threading;
 using System;
+using System.Linq;
 
 namespace Wrench.Extensions;
 
@@ -21,10 +22,13 @@ public static class SerialExtensions
             }
             catch (TimeoutException) { }
             await Task.Delay(500);
-            res = port.ReadExisting();
+            res = port.ReadLine();
+            res += port.ReadExisting();
         } while (!res.Contains("OK"));
-        return res;
+        await Task.Delay(1500);
+        port.DiscardInBuffer();
+        return new string(res.Where(Char.IsDigit).ToArray());
     }
 
-    public static string WaitModemStart(this SerialPort port, ModemType modemType) => port.WaitModemStartAsync(modemType).GetAwaiter().GetResult();
+    public static string WaitModemStart(this SerialPort port, ModemType modemType, int timeout = 10) => port.WaitModemStartAsync(modemType).GetAwaiter().GetResult();
 }

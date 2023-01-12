@@ -25,7 +25,7 @@ public static class SerialExtensions
             res = port.ReadLine();
             res += port.ReadExisting();
         } while (!res.Contains("OK"));
-        await Task.Delay(1500);
+        await Task.Delay(2500);
         port.DiscardInBuffer();
         return new string(res.Where(Char.IsDigit).ToArray());
     }

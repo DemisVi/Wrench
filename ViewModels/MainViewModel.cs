@@ -102,6 +102,7 @@ public class MainViewModel : INotifyPropertyChanged
     private void PerformLoadSelected(object? commandParameter)
     {
         PackageDir = Path.Combine(_dataDir, SelectedDevice ?? string.Empty, SelectedVersion ?? string.Empty);
+        WriterCU1.WorkingDir = PackageDir;
         var msg = new StringBuilder().AppendJoin(' ', new[] { "Загружен пакет", SelectedDevice });
         if (SelectedVersion?.Length > 0) msg.AppendJoin(' ', new[] { " /", "версия", SelectedVersion });
         CU1LogList.Insert(0, msg.ToString() + Environment.NewLine + PackageDir);

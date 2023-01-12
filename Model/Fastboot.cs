@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
+namespace Wrench.Model;
 public class Fastboot
 {
     private const string _fbExe = "fastboot.exe";
@@ -27,6 +28,7 @@ public class Fastboot
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             UseShellExecute = false,
+            CreateNoWindow = true,
         };
         using var process = Process.Start(startInfo);
         LastStdOut = process?.StandardOutput.ReadToEnd();

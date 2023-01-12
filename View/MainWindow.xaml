@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
-        mc:Ignorable="d" Topmost="True" MaxWidth="400"
+        mc:Ignorable="d" Topmost="True"
         Title="Wrench" Height="400" Width="400" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
@@ -42,9 +42,9 @@
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
             <Label Content="Изделие:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left"/>
-            <Label Content="DeviceLabel" x:Name="deviceLabel" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right"/>
+            <Label Content="{Binding SelectedDevice}" x:Name="deviceLabel" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right"/>
             <Label Content="Версия ПО:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left"/>
-            <Label Content="VersionLabel" x:Name="versionLabel" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"/>
+            <Label Content="{Binding SelectedVersion}" x:Name="versionLabel" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"/>
             <Label Content="Годных:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"/>
             <Label Content="PL" x:Name="passLabel" VerticalAlignment="Center" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right"/>
             <Label Content="Сбойных:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"/>
@@ -60,7 +60,7 @@
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
             <Label Content="{Binding ContactUnit}" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="12"/>
-            <Label Content="100%" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="36"/>
+            <Label Content="---%" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="36"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Базовое ПО" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Top" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Пакет файлов БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Конфигурация АТ" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>

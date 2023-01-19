@@ -1,0 +1,140 @@
+using System;
+using System.Linq;
+using System.Management;
+using System.Threading.Tasks;
+using System.Timers;
+using System.IO.Ports;
+using Wrench.Services;
+
+namespace Wrench.Model;
+
+public class ContactUnit
+{
+    private static readonly object _lock = new();
+    protected const int _baseBoudRate = 115200;
+    protected const string _cuSerialPrefix = "A";
+    protected const int _readBufferLength = 3;
+    protected readonly byte[] _readCommand = new byte[] { 0x33, 0xCC };
+    protected readonly byte[] _writeCommand = new byte[] { 0xCC, 0x33 };
+    protected string _ftSerialPort;
+    protected Adapter _adapter;
+    protected TaskCompletionSource<byte> _tcs;
+
+#pragma warning disable CS8618 // singleton
+    private static ContactUnit _cu;
+#pragma warning restore CS8618 // singleton
+
+    private ContactUnit(string serial, Action<string>? logMethod = null)
+    {
+        _adapter = new(serial + _cuSerialPrefix, logMethod);
+        _ftSerialPort = GetFtSerialName();
+        _tcs = new();
+    }
+
+    public static ContactUnit GetInstance(string serial, Action<string>? logMethod = null) => _cu ??= new ContactUnit(serial, logMethod);
+
+    protected string GetFtSerialName()
+    {
+
+#pragma warning disable CA1416
+
+        using var searcher = new ManagementObjectSearcher(FtdiQueries.ftdiSerial);
+        using var queryResult = searcher.Get();
+        var ftdiSerialCollection = new ManagementBaseObject[queryResult.Count];
+        searcher.Get().CopyTo(ftdiSerialCollection, 0);
+        var text = ftdiSerialCollection.First().GetText(TextFormat.Mof);
+        var portName = text.Split(new char[] { '(', ')' })
+                           .Where(x => x.Contains("COM", StringComparison.OrdinalIgnoreCase))
+                           .First();
+
+#pragma warning restore CA1416
+
+        return portName;
+    }
+
+    internal bool PowerOn()
+    {
+        if (!_adapter.OpenAdapter()) return false;
+        else if (!_adapter.KL15_On()) return false;
+        else if (!_adapter.KL30_On()) return false;
+        else if (!_adapter.CloseAdapter()) return false;
+        else return true;
+    }
+    internal bool PowerOff()
+    {
+        if (!_adapter.OpenAdapter()) return false;
+        else if (!_adapter.KL15_Off()) return false;
+        else if (!_adapter.KL30_Off()) return false;
+        else if (!_adapter.CloseAdapter()) return false;
+        else return true;
+    }
+
+    internal Sensors GetSensors()
+    {
+        var result = new byte();
+        lock (_lock)
+        {
+            _tcs = new TaskCompletionSource<byte>();
+            var serial = new SerialPort(_ftSerialPort, _baseBoudRate);
+            serial.DataReceived += ReceiveData;
+            serial.Open();
+            serial.Write(_readCommand, 0, _readCommand.Length);
+
+            result = _tcs.Task.Result;
+
+            serial.DataReceived -= ReceiveData;
+            serial.Close();
+        }
+        return (Sensors)result;
+    }
+
+    internal Outs SetOuts(Outs outs)
+    {
+        var result = new byte();
+        lock (_lock)
+        {
+            var request = _writeCommand.Concat(new byte[] { (byte)outs }).ToArray();
+            _tcs = new TaskCompletionSource<byte>();
+            var serial = new SerialPort(_ftSerialPort, _baseBoudRate);
+            serial.DataReceived += ReceiveData;
+            serial.Open();
+            serial.Write(request, 0, request.Length);
+
+            result = _tcs.Task.Result;
+
+            serial.DataReceived -= ReceiveData;
+            serial.Close();
+        }
+        return (Outs)result;
+    }
+
+    internal Sensors WaitForState(Sensors sensors)
+    {
+        var tcs = new TaskCompletionSource<Sensors>();
+        using var timer = new Timer(1000D)
+        {
+            Enabled = true,
+            AutoReset = true,
+        };
+        timer.Elapsed += (s, _) =>
+        {
+            var timer = s as Timer;
+            var sens = GetSensors();
+            if (sens == sensors)
+            {
+                tcs.SetResult(sens);
+                timer?.Stop();
+            }
+        };
+
+        return tcs.Task.Result;
+    }
+
+    private void ReceiveData(object? sender, SerialDataReceivedEventArgs args)
+    {
+        var port = sender as SerialPort;
+        var readBuffer = new byte[_readBufferLength];
+        port?.Read(readBuffer, 0, _readBufferLength);
+        _tcs.SetResult(readBuffer.Last());
+    }
+}

@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using Wrench.Extensions;
 using Wrench.Services;
 
@@ -19,13 +20,13 @@ namespace Wrench.Model;
 internal class Writer : INotifyPropertyChanged
 {
     private const string localNewLine = "\r";
+    private const Handshake localHandshake = Handshake.RequestToSend;
     private const string fastbootBatch = "flash_most.bat";
     private const string adbBatch = "transfer_to_modem.bat";
-    private const Handshake localHandshake = Handshake.RequestToSend;
     public event PropertyChangedEventHandler? PropertyChanged;
     private readonly ObservableCollection<string> _kuLogList;
     private CancellationTokenSource _cts = new();
-    Adapter _adapter;
+    ContactUnit _cu;
     //SerialPort _modemPort;
 
     private bool _isWriterRunning = false;
@@ -43,10 +44,13 @@ internal class Writer : INotifyPropertyChanged
     private string _workingDir = string.Empty;
     public string WorkingDir { get => _workingDir; set => SetProperty(ref _workingDir, value, nameof(WorkingDir)); }
 
+    private Brush _logBgColor = Brushes.White;
+    public Brush LogBgColor { get => _logBgColor; set => SetProperty(ref _logBgColor, value); }
+
     public Writer(ObservableCollection<string> cULogList)
     {
         _kuLogList = cULogList;
-        _adapter = new Adapter(new AdapterLocator().AdapterSerials.First());
+        _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim('A'));
     }
 
     private bool SetProperty<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
@@ -63,7 +67,7 @@ internal class Writer : INotifyPropertyChanged
     public void Start()
     {
         if (_cts.IsCancellationRequested) _cts = new();
-        ContactUnit = new AdapterLocator().AdapterSerials.First();
+        ContactUnit = new AdapterLocator().AdapterSerials.First().Trim('A');
         Task.Factory.StartNew(SimComQuery);
     }
 
@@ -76,57 +80,78 @@ internal class Writer : INotifyPropertyChanged
     {
         // Task starting sequence
 
-        var start = DateTime.Now;
-
-        //Wait for CU
-        LogMsg("1. Awaiting CU ready...");
-        AwaitCUClose(ContactUnit); //looks done
-
-        ////Turn ON modem power
-        //LogMsg("2. Powering board up...");
-        //TurnModemPowerOn(ContactUnit);
-
-        // wait for device
-        LogMsg("3. Awaiting device attach...");
-        var modemPort = AwaitDeviceAttach(); //looks done
-        LogMsg($"Modem at {modemPort}");
-
-        // find modem or AT com port
-        LogMsg("4. Awaiting device start...");
-        AwaitDeviceReady(modemPort); //looks done
-
-        // turn on adb and reboot
-        LogMsg("5. Turning ADB mode....");
-        LogMsg(TurnAdbModeOn(modemPort).ToString());
-
-        // wait for device
-        LogMsg("6. Awaiting device attach...");
-        modemPort = AwaitDeviceAttach(); //looks done
-        LogMsg($"Modem at {modemPort}");
-
-        //// find modem or AT com port
-        //LogMsg("7. Awaiting device start...");
-        //AwaitDeviceReady(modemPort); //looks done
-
-        //// execute fastboot flash sequence / batch flash (with subsequent reboot?)
-        //LogMsg("8. Fastboot batch...");
-        //ExecuteFastbootBatch(WorkingDir); // testing
-
-        // execute adb upload sequence / batch file upload
-        ExecuteAdbBatch(WorkingDir);
-
-        // turn off adb and reboot
-        //TurnAdbModeOff();
-
-        LogMsg($"Done in {DateTime.Now - start}");
-
         while (!_cts.IsCancellationRequested)
         {
-            Thread.Sleep(1111);
+            var start = DateTime.Now;
+
+
+            _cu.SetOuts(Outs.None);
+
+            //Wait for CU
+            LogMsg("Awaiting CU ready...");
+            LogMsg($"{nameof(AwaitCUClose)} returned {AwaitCUClose()}"); //looks done
+
+            _cu.SetOuts(Outs.Pn1);
+
+            //Turn ON modem power
+            LogMsg("2. Powering board up...");
+            LogMsg($"{nameof(TurnModemPowerOn)} returned { TurnModemPowerOn()}"); //looks done
+
+            // wait for device
+            LogMsg("Awaiting device attach...");
+            var modemPort = AwaitDeviceAttach(); //looks done
+            LogMsg($"Modem at {modemPort}");
+
+            // find modem or AT com port
+            LogMsg("Awaiting device start...");
+            LogMsg($"{nameof(AwaitDeviceReady)} returned {AwaitDeviceReady(modemPort)}"); //looks done
+
+            // turn on adb and reboot
+            LogMsg("Reboot for ADB mode....");
+            LogMsg($"{nameof(RebootForAdb)} returned {RebootForAdb(modemPort)}");
+
+            // wait for device
+            //LogMsg("6. Awaiting device attach...");
+            //modemPort = AwaitDeviceAttach(); //looks done
+            //LogMsg($"Modem at {modemPort}");
+
+            //// find modem or AT com port
+            //LogMsg("7. Awaiting device start...");
+            //AwaitDeviceReady(modemPort); //looks done
+
+            // execute fastboot flash sequence / batch flash (with subsequent reboot?)
+            LogMsg("Fastboot batch...");
+            LogMsg($"{nameof(ExecuteFastbootBatch)} returned {ExecuteFastbootBatch(WorkingDir)}"); // testing
+
+            // wait for device
+            LogMsg("Awaiting device attach...");
+            modemPort = AwaitDeviceAttach(); //looks done
+            LogMsg($"Modem at {modemPort}");
+
+            // find modem or AT com port
+            LogMsg("Awaiting device start...");
+            LogMsg($"{nameof(AwaitDeviceReady)} returned {AwaitDeviceReady(modemPort)}"); //looks done
+
+            // turn on adb and reboot
+            LogMsg("Reboot for ADB mode....");
+            LogMsg($"{nameof(RebootForAdb)} returned {RebootForAdb(modemPort)}");
+
+            // execute adb upload sequence / batch file upload
+            LogMsg("Adb batch...");
+            LogMsg($"{nameof(ExecuteAdbBatch)} returned {ExecuteAdbBatch(WorkingDir)}");
+
+            // turn off adb and reboot / option: finalizing AT sequence
+            //TurnAdbModeOff();
+
+            LogMsg($"Done in {DateTime.Now - start}");
+
+
             if (!_cts.IsCancellationRequested) continue;
-            // Task ending sequence
-            if (_adapter is not null && _adapter is { IsOpen: true })
-                _adapter.CloseAdapter();
+
+            LogBgColor = Brushes.White;
+            
+            //if (_cu is not null && _cu is { IsOpen: true })
+            //    _cu.CloseAdapter();
             //if (_modemPort is not null && _modemPort is { IsOpen: true })
             //    _modemPort.Close();
             LogMsg("Stopped");
@@ -134,37 +159,23 @@ internal class Writer : INotifyPropertyChanged
         }
     }
 
-    private void ExecuteAdbBatch(string workingDir)
+    private bool ExecuteAdbBatch(string workingDir)
     {
         if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not ampty value");
 
-        var batchFile = Path.Combine(Directory.GetCurrentDirectory(), adbBatch);
+        var batchFile = Path.Combine(workingDir, adbBatch);
         if (!File.Exists(batchFile)) throw new FileNotFoundException("adb batch file not found");
 
         var dataDir = Path.GetDirectoryName(batchFile)!;
 
         var batch = new Batch(batchFile, dataDir);
 
-        ParseStdout(batch.Run(), LogMsg);
+        batch.Run();
 
-        bool ParseStdout(string text, Action<string> logMethod)
-        {
-            var lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var l in lines) logMethod(l);
-            return true;
-        }
+        return batch.ExitCode == 0;
     }
 
-    private void TurnModemPowerOn(string contactUnit)
-    {
-        var adapter = new Adapter(contactUnit);
-        adapter.OpenAdapter();
-        adapter.KL30_On();
-        adapter.KL15_On();
-        adapter.CloseAdapter();
-    }
-
-    private void ExecuteFastbootBatch(string workingDir)
+    private bool ExecuteFastbootBatch(string workingDir)
     {
         if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not ampty value");
 
@@ -178,17 +189,12 @@ internal class Writer : INotifyPropertyChanged
 
         var batch = new Batch(batchFile, systemImageDir);
 
-        ParseStdout(batch.Run(), LogMsg);
+        batch.Run();
 
-        bool ParseStdout(string text, Action<string> logMethod)
-        {
-            var lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var l in lines) logMethod(l);
-            return true;
-        }
+        return batch.ExitCode == 0;
     }
 
-    private bool TurnAdbModeOn(string portName)
+    private bool RebootForAdb(string portName)
     {
         var serial = new SerialPort(portName)
         {
@@ -198,25 +204,22 @@ internal class Writer : INotifyPropertyChanged
         serial.Open();
         Thread.Sleep(1000);
         serial.DiscardOutBuffer();
-        serial.WriteLine("at+cusbadb=1");
-        if (false == ParseAnswer()) return false;
         serial.WriteLine("at+creset");
-        if (false == ParseAnswer()) return false;
+        var res = ParseAnswer();
         serial.Close();
 
-        return true;
+        return res;
 
         bool ParseAnswer()
         {
             string ans;
             ans = serial.ReadLine();
             ans += serial.ReadExisting();
-            LogMsg(ans);
             return ans.Contains("OK", StringComparison.OrdinalIgnoreCase);
         }
     }
 
-    private void AwaitDeviceReady(string portName)
+    private bool AwaitDeviceReady(string portName)
     {
         var serial = new SerialPort(portName)
         {
@@ -225,27 +228,28 @@ internal class Writer : INotifyPropertyChanged
         };
         serial.Open();
         //serial.WaitModemStart(new TelitModem());
-        serial.WaitModemStart(new SimComModem());
+        var res = serial.WaitModemStart(new SimComADB());
         serial.Close();
+        return res;
     }
 
     private string AwaitDeviceAttach()
     {
         var modemLocator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.querySimcomModem);
         //LogMsg(string.Join(' ', modemLocator.WaitDeviceConnect().Cast<ManagementObject>().Select(x => x.GetText(TextFormat.Mof))) + localNewLine);
-        modemLocator.WaitDeviceConnect();
+        modemLocator.WaitDeviceConnect(new TimeSpan(0, 0, 30));
         return modemLocator.GetModemPortNames().First();
         //LogMsg(portName);
     }
 
-    private void AwaitCUClose(string adapterSerial)
+    private bool TurnModemPowerOn()
     {
-        _adapter ??= new Adapter(adapterSerial);
-        _adapter.OpenAdapter();
-        _adapter.WaitForSensor(true);
-        LogMsg("Adapter sensor detected");
-        _adapter.CloseAdapter();
-        LogMsg($"Adapter IsOpen: {_adapter.IsOpen}");
+        return _cu.PowerOn();
+    }
+
+    private Sensors AwaitCUClose()
+    {
+        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
     }
 
     public void LogMsg(string? message) => _kuLogList.Insert(0, message ?? string.Empty);

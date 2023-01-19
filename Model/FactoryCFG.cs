@@ -12,7 +12,11 @@ public class FactoryCFG
     private const string _baseName = "factory.cfg";
     private readonly string _path;
     private Dictionary<string, string> _factory = new();
-    public string ModelId => this["MODEL_ID"];
+    public string ModelId
+    {
+        get => this["MODEL_ID"];
+        set => this["MODEL_ID"] = value;
+    }
     public Base34 SerialNumber
     {
         get => this["SERIAL_NUMBER"].ToBase34();

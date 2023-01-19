@@ -2,15 +2,20 @@
 
 public abstract class ModemType
 {
-    public virtual string Type { get; } = "AT";
+    public virtual string BootCommand { get; } = "AT";
 }
 
 public class SimComModem : ModemType
 {
-    public override string Type { get; } = "AT+CGSN";
+    public override string BootCommand { get; } = "AT+CGSN";
+}
+
+public class SimComADB : ModemType
+{
+    public override string BootCommand { get; } = "at+cusbadb = 1";
 }
 
 public class TelitModem : ModemType
 {
-    public override string Type { get; } = "AT+GSN=1";
+    public override string BootCommand { get; } = "AT+GSN=1";
 }

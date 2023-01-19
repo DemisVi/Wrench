@@ -46,7 +46,7 @@ public class MainViewModel : INotifyPropertyChanged
         WriterCU1 = new Writer(CU1LogList);
         WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
 
-        ContactUnit = new AdapterLocator().AdapterSerials.First();
+        ContactUnit = new AdapterLocator().AdapterSerials.First().Trim('A');
 
         BindingOperations.EnableCollectionSynchronization(CU1LogList, _synclock1);
     }
@@ -88,6 +88,7 @@ public class MainViewModel : INotifyPropertyChanged
         {
             WriterCU1?.Start();
             FlashButtonColor = Brushes.IndianRed;
+
         }
         else
         {
@@ -171,4 +172,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     private List<string> _deviceVersion = new List<string>();
     public List<string> DeviceVersion { get => _deviceVersion; set => SetProperty(ref _deviceVersion, value); }
+
+    private Brush _logBgColor = Brushes.White;
+    public Brush LogBgColor { get => _logBgColor; set => SetProperty(ref _logBgColor, value); }
 }

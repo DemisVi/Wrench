@@ -25,10 +25,18 @@ public class ModemLocator
         DeviceQuery = objectQuery;
     }
 
-    public ManagementObjectCollection WaitDeviceConnect()
+    public ManagementObjectCollection WaitDeviceConnect(TimeSpan timeout)
     {
         using ManagementEventWatcher watcher = new(EventQuery);
-        watcher.WaitForNextEvent();
+        watcher.Options.Timeout = timeout;
+        try
+        {
+            watcher.WaitForNextEvent();
+        }
+        finally
+        {
+            watcher.Stop();
+        }
         return new ManagementObjectSearcher(DeviceQuery).Get();
     }
 
@@ -80,7 +88,7 @@ public class ModemLocator
 
         var resultStrings = searcher.Get().Cast<ManagementObject>().Select(x => ((string)x["Caption"]).ToString());
 
-        serials.AddRange(string.Join(' ', resultStrings).Split(new char[]{'(', ')'}).Where(x => x.Contains("COM", StringComparison.OrdinalIgnoreCase)));
+        serials.AddRange(string.Join(' ', resultStrings).Split(new char[] { '(', ')' }).Where(x => x.Contains("COM", StringComparison.OrdinalIgnoreCase)));
 
         return serials;
     }

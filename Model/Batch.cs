@@ -9,6 +9,7 @@ public class Batch
     public string? Cwd { get; set; } = string.Empty;
     public string? LastStdOut { get; private set; } = string.Empty;
     public string? LastStdErr { get; private set; } = string.Empty;
+    public int? ExitCode { get; set; }
 
     public Batch(string batchPath, string currentWorkingDirektory)
     {
@@ -34,7 +35,8 @@ public class Batch
         using Process process = Process.Start(startInfo)!;
         LastStdOut = process.StandardOutput.ReadToEnd();
         LastStdErr = process.StandardError.ReadToEnd();
-        process?.WaitForExit();
+        process.WaitForExit();
+        ExitCode = process.ExitCode;
         if (!string.IsNullOrEmpty(LastStdErr) && throwError)
             throw new InvalidOperationException(LastStdErr);
 

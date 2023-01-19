@@ -44,9 +44,6 @@ namespace Wrench.Services;
 
 public class Adapter : IDisposable
 {
-    public delegate void LogFunction(string msg);
-
-
     [Flags]
     enum PortBits
     {
@@ -65,13 +62,13 @@ public class Adapter : IDisposable
     protected bool _disposed = false;
     protected byte _fBits = 0;
     protected bool _oldSensorState;
-    protected LogFunction? _logger;
+    protected Action<string>? _logger;
     protected System.Timers.Timer _sensorTimer;
     public string SerialNum { get; private set; }
     public bool IsOpen => _myFtdiDevice.IsOpen;
 
     // Constructor 
-    public Adapter(string adapterSerial, LogFunction? log = null)
+    public Adapter(string adapterSerial, Action<string>? log = null)
     {
         _logger = log;
         _sensorTimer = new()
@@ -116,9 +113,9 @@ public class Adapter : IDisposable
     } // void OpenAdapter(string serial)
     //----------------------------------------------------
 
-    public void CloseAdapter()
+    public bool CloseAdapter()
     {
-        _myFtdiDevice.Close();
+        return FTDI.FT_STATUS.FT_OK == _myFtdiDevice.Close();
     } // void CloseAdapter()
     //----------------------------------------------------
 
@@ -234,44 +231,60 @@ public class Adapter : IDisposable
 
 
     // Power control
-    public void KL15_On()
+    public bool KL15_On()
     {
         _fBits |= (byte)PortBits.KL15;
         UpdateBitsInvert();
         if (_ftStatus != FTDI.FT_STATUS.FT_OK)
+        {
             Log("Ошибка включения питания устройства.");
+            return false;
+        }
+        else return true;
     } // void KL15_On()
     //---------------------------------------
 
     // Power control
-    public void KL15_Off()
+    public bool KL15_Off()
     {
         int mask = (int)PortBits.KL15;
         _fBits &= (byte)~mask;
         UpdateBitsInvert();
         if (_ftStatus != FTDI.FT_STATUS.FT_OK)
+        {
             Log("Ошибка выключения питания устройства.");
+            return false;
+        }
+        else return true;
     } // KL15_Off()
     //---------------------------------------
 
     // Power control
-    public void KL30_On()
+    public bool KL30_On()
     {
         _fBits |= (byte)PortBits.KL30;
         UpdateBitsInvert();
         if (_ftStatus != FTDI.FT_STATUS.FT_OK)
+        {
             Log("Ошибка включения питания устройства.");
+            return false;
+        }
+        else return true;
     } // void KL30_On()
     //---------------------------------------
 
     // Power control
-    public void KL30_Off()
+    public bool KL30_Off()
     {
         int mask = (int)PortBits.KL30;
         _fBits &= (byte)~mask;
         UpdateBitsInvert();
         if (_ftStatus != FTDI.FT_STATUS.FT_OK)
+        {
             Log("Ошибка выключения питания устройства.");
+            return false;
+        }
+        else return true;
     } // KL30_Off()
     //---------------------------------------
 

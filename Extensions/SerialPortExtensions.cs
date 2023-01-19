@@ -8,7 +8,7 @@ namespace Wrench.Extensions;
 
 public static class SerialExtensions
 {
-    public static async Task<string> WaitModemStartAsync(this SerialPort port, ModemType modemType)
+    public static async Task<bool> WaitModemStartAsync(this SerialPort port, ModemType modemType, int timeout = 10)
     {
         if (!port.IsOpen) throw new InvalidOperationException("Modem port closed");
 
@@ -18,17 +18,18 @@ public static class SerialExtensions
         {
             try
             {
-                port.WriteLine(modemType.Type);
+                port.DiscardOutBuffer();
+                await Task.Delay(500);
+                port.WriteLine(modemType.BootCommand);
             }
             catch (TimeoutException) { }
-            await Task.Delay(500);
             res = port.ReadLine();
             res += port.ReadExisting();
         } while (!res.Contains("OK"));
-        await Task.Delay(2500);
+        await Task.Delay(1000);
         port.DiscardInBuffer();
-        return new string(res.Where(Char.IsDigit).ToArray());
+        return res.Contains("OK");
     }
 
-    public static string WaitModemStart(this SerialPort port, ModemType modemType, int timeout = 10) => port.WaitModemStartAsync(modemType).GetAwaiter().GetResult();
+    public static bool WaitModemStart(this SerialPort port, ModemType modemType, int timeout = 10) => port.WaitModemStartAsync(modemType, timeout).GetAwaiter().GetResult();
 }

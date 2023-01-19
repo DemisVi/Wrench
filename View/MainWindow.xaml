@@ -66,7 +66,8 @@
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Конфигурация АТ" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>
         </Grid>
         
-        <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding CU1LogList}"/>
+        <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" 
+                 Background="{Binding LogBgColor}" ItemsSource="{Binding CU1LogList}"/>
 
         <StatusBar Grid.Row="7" Grid.ColumnSpan="2" HorizontalContentAlignment="Right">
             <StatusBarItem HorizontalAlignment="Left">

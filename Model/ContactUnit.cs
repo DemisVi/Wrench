@@ -1,10 +1,13 @@
 using System;
 using System.Linq;
 using System.Management;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.IO.Ports;
 using Wrench.Services;
+
+using Timer = System.Timers.Timer;
 
 namespace Wrench.Model;
 
@@ -108,9 +111,10 @@ public class ContactUnit
         return (Outs)result;
     }
 
-    internal Sensors WaitForState(Sensors sensors)
+    internal Sensors WaitForState(Sensors sensors, int timeout = Timeout.Infinite)
     {
         var tcs = new TaskCompletionSource<Sensors>();
+        var start = DateTime.Now;
         using var timer = new Timer(1000D)
         {
             Enabled = true,
@@ -119,11 +123,19 @@ public class ContactUnit
         timer.Elapsed += (s, _) =>
         {
             var timer = s as Timer;
+            var elapsed = (DateTime.Now - start).TotalSeconds;
             var sens = GetSensors();
             if (sens == sensors)
             {
                 tcs.SetResult(sens);
                 timer?.Stop();
+                return;
+            }
+            else if (timeout != Timeout.Infinite && elapsed > timeout)
+            {
+                tcs.SetResult(Sensors.None);
+                timer?.Stop();
+                return;
             }
         };
 
@@ -136,5 +148,36 @@ public class ContactUnit
         var readBuffer = new byte[_readBufferLength];
         port?.Read(readBuffer, 0, _readBufferLength);
         _tcs.SetResult(readBuffer.Last());
+    }
+
+    internal Sensors WaitForBits(Sensors sensors, int timeout = Timeout.Infinite)
+    {
+        var tcs = new TaskCompletionSource<Sensors>();
+        var start = DateTime.Now;
+        using var timer = new Timer(1000D)
+        {
+            Enabled = true,
+            AutoReset = true,
+        };
+        timer.Elapsed += (s, _) =>
+        {
+            var timer = s as Timer;
+            var elapsed = (DateTime.Now - start).TotalSeconds;
+            var sens = GetSensors();
+            if ((sens & sensors) == sensors)
+            {
+                tcs.SetResult(sens);
+                timer?.Stop();
+                return;
+            }
+            else if (timeout != Timeout.Infinite && elapsed > timeout)
+            {
+                tcs.SetResult(Sensors.None);
+                timer?.Stop();
+                return;
+            }
+        };
+
+        return tcs.Task.Result;
     }
 }

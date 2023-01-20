@@ -29,14 +29,9 @@ public class ModemLocator
     {
         using ManagementEventWatcher watcher = new(EventQuery);
         watcher.Options.Timeout = timeout;
-        try
-        {
-            watcher.WaitForNextEvent();
-        }
-        finally
-        {
-            watcher.Stop();
-        }
+        try { watcher.WaitForNextEvent(); }
+        catch (Exception) { throw; }
+        finally { watcher.Stop(); }
         return new ManagementObjectSearcher(DeviceQuery).Get();
     }
 

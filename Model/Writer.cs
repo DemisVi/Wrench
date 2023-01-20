@@ -7,6 +7,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Management;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -76,39 +77,88 @@ internal class Writer : INotifyPropertyChanged
         _cts.Cancel();
     }
 
-    void SimComQuery()
+    private void SimComQuery()
     {
         // Task starting sequence
+        var modemPort = string.Empty;
+        DateTime start;
+        object opResult;
+
+        if (!DiagnoseCU())
+        {
+            LogMsg("Contact Unit fialure!");
+            Stop();
+        }
 
         while (!_cts.IsCancellationRequested)
         {
-            var start = DateTime.Now;
+            start = DateTime.Now;
 
-
-            _cu.SetOuts(Outs.None);
+            SignalReady();
 
             //Wait for CU
             LogMsg("Awaiting CU ready...");
-            LogMsg($"{nameof(AwaitCUClose)} returned {AwaitCUClose()}"); //looks done
+            opResult = AwaitCUClose();
+            if (opResult as Sensors? is not (Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down))
+            {
+                LogMsg("Contact Unit fault");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(AwaitCUClose)} returned {opResult}"); //looks done
 
-            _cu.SetOuts(Outs.Pn1);
+            if (!LockCU())
+            {
+                LogMsg("Failed to lock Contact Unit");
+                WriterFaultState();
+                continue;
+            }
 
             //Turn ON modem power
-            LogMsg("2. Powering board up...");
-            LogMsg($"{nameof(TurnModemPowerOn)} returned { TurnModemPowerOn()}"); //looks done
+            LogMsg("Powering board up...");
+            opResult = TurnModemPowerOn();
+            if (opResult is not true)
+            {
+                LogMsg("Failed to power on board");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(TurnModemPowerOn)} returned {opResult}"); //looks done
 
             // wait for device
             LogMsg("Awaiting device attach...");
-            var modemPort = AwaitDeviceAttach(); //looks done
+            try
+            {
+                modemPort = AwaitDeviceAttach(); //looks done
+            }
+            catch (Exception)
+            {
+                WriterFaultState();
+                continue;
+            }
             LogMsg($"Modem at {modemPort}");
 
             // find modem or AT com port
             LogMsg("Awaiting device start...");
-            LogMsg($"{nameof(AwaitDeviceReady)} returned {AwaitDeviceReady(modemPort)}"); //looks done
+            opResult = AwaitDeviceReady(modemPort, 10);
+            if (opResult is not true)
+            {
+                LogMsg("Device dows not start within expected interval");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(AwaitDeviceReady)} returned {opResult}"); //looks done
 
             // turn on adb and reboot
             LogMsg("Reboot for ADB mode....");
-            LogMsg($"{nameof(RebootForAdb)} returned {RebootForAdb(modemPort)}");
+            opResult = RebootForAdb(modemPort);
+            if (opResult is not true)
+            {
+                LogMsg("Failed to reboot device");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(RebootForAdb)} returned {opResult}"); //looks done
 
             // wait for device
             //LogMsg("6. Awaiting device attach...");
@@ -125,12 +175,27 @@ internal class Writer : INotifyPropertyChanged
 
             // wait for device
             LogMsg("Awaiting device attach...");
-            modemPort = AwaitDeviceAttach(); //looks done
+            try
+            {
+                modemPort = AwaitDeviceAttach(); //looks done
+            }
+            catch (Exception)
+            {
+                WriterFaultState();
+                continue;
+            }
             LogMsg($"Modem at {modemPort}");
 
             // find modem or AT com port
             LogMsg("Awaiting device start...");
-            LogMsg($"{nameof(AwaitDeviceReady)} returned {AwaitDeviceReady(modemPort)}"); //looks done
+            opResult = AwaitDeviceReady(modemPort, 10);
+            if (opResult is not true)
+            {
+                LogMsg("Device dows not start within expected interval");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(AwaitDeviceReady)} returned {opResult}"); //looks done
 
             // turn on adb and reboot
             LogMsg("Reboot for ADB mode....");
@@ -149,7 +214,7 @@ internal class Writer : INotifyPropertyChanged
             if (!_cts.IsCancellationRequested) continue;
 
             LogBgColor = Brushes.White;
-            
+
             //if (_cu is not null && _cu is { IsOpen: true })
             //    _cu.CloseAdapter();
             //if (_modemPort is not null && _modemPort is { IsOpen: true })
@@ -157,6 +222,23 @@ internal class Writer : INotifyPropertyChanged
             LogMsg("Stopped");
             break;
         }
+    }
+
+    private bool LockCU()
+    {
+        _cu.SetOuts(Outs.Pn1 | Outs.Blue);
+        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2) != Sensors.None;
+    }
+
+    private void SignalReady() => _cu.SetOuts(Outs.Yellow);
+
+    private bool DiagnoseCU(int timeout = 2)
+    {
+        var lastOuts = _cu.SetOuts(Outs.White | Outs.Pn1);
+        _cu.WaitForBits(Sensors.Pn1_Up, timeout);
+        _cu.SetOuts(lastOuts ^ Outs.Pn1);
+        var lastSensors = _cu.WaitForBits(Sensors.Pn1_Down, timeout);
+        return (lastSensors & Sensors.Pn1_Down) != Sensors.None;
     }
 
     private bool ExecuteAdbBatch(string workingDir)
@@ -204,6 +286,7 @@ internal class Writer : INotifyPropertyChanged
         serial.Open();
         Thread.Sleep(1000);
         serial.DiscardOutBuffer();
+        serial.DiscardInBuffer();
         serial.WriteLine("at+creset");
         var res = ParseAnswer();
         serial.Close();
@@ -219,7 +302,7 @@ internal class Writer : INotifyPropertyChanged
         }
     }
 
-    private bool AwaitDeviceReady(string portName)
+    private bool AwaitDeviceReady(string portName, int timeout)
     {
         var serial = new SerialPort(portName)
         {
@@ -227,8 +310,7 @@ internal class Writer : INotifyPropertyChanged
             NewLine = localNewLine,
         };
         serial.Open();
-        //serial.WaitModemStart(new TelitModem());
-        var res = serial.WaitModemStart(new SimComADB());
+        var res = serial.WaitModemStart(new SimComADB(), timeout);
         serial.Close();
         return res;
     }
@@ -236,21 +318,24 @@ internal class Writer : INotifyPropertyChanged
     private string AwaitDeviceAttach()
     {
         var modemLocator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.querySimcomModem);
-        //LogMsg(string.Join(' ', modemLocator.WaitDeviceConnect().Cast<ManagementObject>().Select(x => x.GetText(TextFormat.Mof))) + localNewLine);
-        modemLocator.WaitDeviceConnect(new TimeSpan(0, 0, 30));
+        try { modemLocator.WaitDeviceConnect(new TimeSpan(0, 0, 30)); }
+        catch (Exception)
+        {
+            LogMsg("Device does not appear within expected interval");
+            throw;
+        }
         return modemLocator.GetModemPortNames().First();
-        //LogMsg(portName);
     }
 
-    private bool TurnModemPowerOn()
+    private void WriterFaultState()
     {
-        return _cu.PowerOn();
+        _cu.SetOuts(Outs.Red);
+        _cu.WaitForState(Sensors.Pn1_Down);
     }
 
-    private Sensors AwaitCUClose()
-    {
-        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
-    }
+    private bool TurnModemPowerOn() => _cu.PowerOn();
+
+    private Sensors AwaitCUClose() => _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
 
     public void LogMsg(string? message) => _kuLogList.Insert(0, message ?? string.Empty);
 }

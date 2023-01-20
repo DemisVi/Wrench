@@ -41,6 +41,13 @@ public class FactoryCFG
         File.WriteAllLines(_path, lines);
     }
 
+    public void UpdateFactory()
+    {
+        ReadFactory();
+        SerialNumber++;
+        SaveFactory();
+    }
+
     public string this[string parameter]
     {
         get => _factory[parameter];

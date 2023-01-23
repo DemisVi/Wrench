@@ -81,7 +81,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private Command? _toggleWriter;
-    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter/*, x => PackageDir.Length > 0*/);
+    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter, x => PackageDir.Length > 0);
     private void PerformToggleWriter(object? commandParameter)
     {
         if (!IsWriterRunning)
@@ -106,7 +106,7 @@ public class MainViewModel : INotifyPropertyChanged
         WriterCU1.WorkingDir = PackageDir;
         var msg = new StringBuilder().AppendJoin(' ', new[] { "Загружен пакет", SelectedDevice });
         if (SelectedVersion?.Length > 0) msg.AppendJoin(' ', new[] { " /", "версия", SelectedVersion });
-        CU1LogList.Insert(0, msg.ToString() + Environment.NewLine + PackageDir);
+        CU1LogList.Insert(0, msg.ToString() /*+ Environment.NewLine + PackageDir*/);
         (commandParameter as Window)?.Close();
     }
 
@@ -161,6 +161,12 @@ public class MainViewModel : INotifyPropertyChanged
     private bool _isAccessGranted = false;
     public bool IsAccessGranted { get => _isAccessGranted; set => SetProperty(ref _isAccessGranted, value); }
 
+    private int _progressValue = 0;
+    public int ProgressValue { get => _progressValue; set => SetProperty(ref _progressValue, value); }
+
+    private bool _progressIndeterminate = false;
+    public bool ProgressIndeterminate { get => _progressIndeterminate; set => SetProperty(ref _progressIndeterminate, value); }
+
     private Brush _indicatorColor = Brushes.Beige;
     public Brush IndicatorColor { get => _indicatorColor; set => SetProperty(ref _indicatorColor, value); }
 
@@ -173,6 +179,41 @@ public class MainViewModel : INotifyPropertyChanged
     private List<string> _deviceVersion = new List<string>();
     public List<string> DeviceVersion { get => _deviceVersion; set => SetProperty(ref _deviceVersion, value); }
 
-    private Brush _logBgColor = Brushes.White;
-    public Brush LogBgColor { get => _logBgColor; set => SetProperty(ref _logBgColor, value); }
+    private Brush _statusColor = Brushes.White;
+    public Brush StatusColor { get => _statusColor; set => SetProperty(ref _statusColor, value); }
+
+    private int _passValue;
+    public int PassValue
+    {
+        get => _passValue; set
+        {
+
+            SetProperty(ref _passValue, value);
+            OnPropertyChange(nameof(PFKValue));
+        }
+    }
+
+    private int _failValue;
+    public int FailValue
+    {
+        get => _failValue; set
+        {
+            SetProperty(ref _failValue, value);
+            OnPropertyChange(nameof(PFKValue));
+        }
+    }
+
+    public string PFKValue { get => string.Format("{0}/{1}", PassValue, FailValue); }
+
+    private TimeSpan _timeAvgValue;
+    public TimeSpan TimeAvgValue
+    {
+        get
+        {
+            if (PassValue <= 0) return TimeSpan.Zero;
+
+            return new TimeSpan(0, 0, (int)(_timeAvgValue / PassValue).TotalSeconds);
+        }
+        set => SetProperty(ref _timeAvgValue, _timeAvgValue + value);
+    }
 }

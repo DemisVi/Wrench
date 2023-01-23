@@ -25,7 +25,7 @@ public class ModemLocator
         DeviceQuery = objectQuery;
     }
 
-    public ManagementObjectCollection WaitDeviceConnect(TimeSpan timeout)
+    public ManagementObjectCollection WaitDeviceAttach(TimeSpan timeout)
     {
         using ManagementEventWatcher watcher = new(EventQuery);
         watcher.Options.Timeout = timeout;

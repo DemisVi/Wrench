@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
@@ -12,18 +13,21 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Media;
 using Wrench.Extensions;
 using Wrench.Services;
 
 namespace Wrench.Model;
 
+using Timer = System.Timers.Timer;
+
 internal class Writer : INotifyPropertyChanged
 {
     private const string localNewLine = "\r";
     private const Handshake localHandshake = Handshake.RequestToSend;
     private const string fastbootBatch = "flash_most.bat";
-    private const string adbBatch = "transfer_to_modem.bat";
+    private const string adbBatch = "load_cfg.bat";
     public event PropertyChangedEventHandler? PropertyChanged;
     private readonly ObservableCollection<string> _kuLogList;
     private CancellationTokenSource _cts = new();
@@ -45,8 +49,23 @@ internal class Writer : INotifyPropertyChanged
     private string _workingDir = string.Empty;
     public string WorkingDir { get => _workingDir; set => SetProperty(ref _workingDir, value, nameof(WorkingDir)); }
 
-    private Brush _logBgColor = Brushes.White;
-    public Brush LogBgColor { get => _logBgColor; set => SetProperty(ref _logBgColor, value); }
+    private Brush _statusColor = Brushes.White;
+    public Brush StatusColor { get => _statusColor; set => SetProperty(ref _statusColor, value); }
+
+    private int _passValue;
+    public int PassValue { get => _passValue; set => SetProperty(ref _passValue, value); }
+
+    private int _failValue;
+    public int FailValue { get => _failValue; set => SetProperty(ref _failValue, value); }
+
+    private int _progressValue = 0;
+    public int ProgressValue { get => _progressValue; set => SetProperty(ref _progressValue, value); }
+
+    private bool _progressIndeterminate = false;
+    public bool ProgressIndeterminate { get => _progressIndeterminate; set => SetProperty(ref _progressIndeterminate, value); }
+
+    private TimeSpan _timeAvgValue;
+    public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
     public Writer(ObservableCollection<string> cULogList)
     {
@@ -69,7 +88,7 @@ internal class Writer : INotifyPropertyChanged
     {
         if (_cts.IsCancellationRequested) _cts = new();
         ContactUnit = new AdapterLocator().AdapterSerials.First().Trim('A');
-        Task.Factory.StartNew(SimComQuery);
+        Task.Factory.StartNew(SimcomFlash);
     }
 
     public void Stop()
@@ -77,18 +96,23 @@ internal class Writer : INotifyPropertyChanged
         _cts.Cancel();
     }
 
-    private void SimComQuery()
+    private void SimcomFlash()
     {
         // Task starting sequence
         var modemPort = string.Empty;
         DateTime start;
+        TimeSpan elapsed = TimeSpan.Zero;
         object opResult;
 
-        if (!DiagnoseCU())
+        ProgressIndeterminate = true;
+        if (!DiagnoseCU(60))
         {
             LogMsg("Contact Unit fialure!");
+            StatusColor = Brushes.LightPink;
+            _cu.SetOuts(Outs.Red);
             Stop();
         }
+        ProgressIndeterminate = false;
 
         while (!_cts.IsCancellationRequested)
         {
@@ -96,9 +120,21 @@ internal class Writer : INotifyPropertyChanged
 
             SignalReady();
 
-            //Wait for CU
+            UpdateCfgSN();
+
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 1. Wait for CU
             LogMsg("Awaiting CU ready...");
+            ProgressIndeterminate = true;
             opResult = AwaitCUClose();
+            ProgressIndeterminate = false;
             if (opResult as Sensors? is not (Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down))
             {
                 LogMsg("Contact Unit fault");
@@ -107,6 +143,14 @@ internal class Writer : INotifyPropertyChanged
             }
             LogMsg($"{nameof(AwaitCUClose)} returned {opResult}"); //looks done
 
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
             if (!LockCU())
             {
                 LogMsg("Failed to lock Contact Unit");
@@ -114,7 +158,16 @@ internal class Writer : INotifyPropertyChanged
                 continue;
             }
 
-            //Turn ON modem power
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 2. Turn ON modem power
+            ProgressValue = 10;
             LogMsg("Powering board up...");
             opResult = TurnModemPowerOn();
             if (opResult is not true)
@@ -125,7 +178,16 @@ internal class Writer : INotifyPropertyChanged
             }
             LogMsg($"{nameof(TurnModemPowerOn)} returned {opResult}"); //looks done
 
-            // wait for device
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 3. wait for device
+            ProgressValue = 20;
             LogMsg("Awaiting device attach...");
             try
             {
@@ -138,18 +200,36 @@ internal class Writer : INotifyPropertyChanged
             }
             LogMsg($"Modem at {modemPort}");
 
-            // find modem or AT com port
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 4. find modem or AT com port
+            ProgressValue = 30;
             LogMsg("Awaiting device start...");
-            opResult = AwaitDeviceReady(modemPort, 10);
+            opResult = AwaitDeviceStart(modemPort, 10);
             if (opResult is not true)
             {
                 LogMsg("Device dows not start within expected interval");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDeviceReady)} returned {opResult}"); //looks done
+            LogMsg($"{nameof(AwaitDeviceStart)} returned {opResult}"); //looks done
 
-            // turn on adb and reboot
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 5. turn on adb and reboot
+            ProgressValue = 40;
             LogMsg("Reboot for ADB mode....");
             opResult = RebootForAdb(modemPort);
             if (opResult is not true)
@@ -160,20 +240,36 @@ internal class Writer : INotifyPropertyChanged
             }
             LogMsg($"{nameof(RebootForAdb)} returned {opResult}"); //looks done
 
-            // wait for device
-            //LogMsg("6. Awaiting device attach...");
-            //modemPort = AwaitDeviceAttach(); //looks done
-            //LogMsg($"Modem at {modemPort}");
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
 
-            //// find modem or AT com port
-            //LogMsg("7. Awaiting device start...");
-            //AwaitDeviceReady(modemPort); //looks done
+            }
 
-            // execute fastboot flash sequence / batch flash (with subsequent reboot?)
+            // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
+            ProgressValue = 50;
             LogMsg("Fastboot batch...");
-            LogMsg($"{nameof(ExecuteFastbootBatch)} returned {ExecuteFastbootBatch(WorkingDir)}"); // testing
+            opResult = ExecuteFastbootBatch(WorkingDir);
+            if (opResult is not true)
+            {
+                LogMsg("Failed to run Fastboot");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(ExecuteFastbootBatch)} returned {opResult}"); // testing
 
-            // wait for device
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 7. wait for device
+            ProgressValue = 60;
             LogMsg("Awaiting device attach...");
             try
             {
@@ -186,34 +282,86 @@ internal class Writer : INotifyPropertyChanged
             }
             LogMsg($"Modem at {modemPort}");
 
-            // find modem or AT com port
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 8. find modem or AT com port
+            ProgressValue = 70;
             LogMsg("Awaiting device start...");
-            opResult = AwaitDeviceReady(modemPort, 10);
+            opResult = AwaitDeviceStart(modemPort, 10);
             if (opResult is not true)
             {
                 LogMsg("Device dows not start within expected interval");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDeviceReady)} returned {opResult}"); //looks done
+            LogMsg($"{nameof(AwaitDeviceStart)} returned {opResult}"); //looks done
 
-            // turn on adb and reboot
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 9. turn on adb and reboot
+            ProgressValue = 80;
             LogMsg("Reboot for ADB mode....");
-            LogMsg($"{nameof(RebootForAdb)} returned {RebootForAdb(modemPort)}");
+            opResult = RebootForAdb(modemPort);
+            if (opResult is not true)
+            {
+                LogMsg("Failed to reboot device");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(RebootForAdb)} returned {opResult}"); //looks done
 
-            // execute adb upload sequence / batch file upload
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            // 10. execute adb upload sequence / batch file upload
+            ProgressValue = 90;
             LogMsg("Adb batch...");
-            LogMsg($"{nameof(ExecuteAdbBatch)} returned {ExecuteAdbBatch(WorkingDir)}");
+            opResult = ExecuteAdbBatch(WorkingDir);
+            if (opResult is not true)
+            {
+                LogMsg("Failed to run ADB");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(ExecuteAdbBatch)} returned {opResult}");
+
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
 
             // turn off adb and reboot / option: finalizing AT sequence
             //TurnAdbModeOff();
 
-            LogMsg($"Done in {DateTime.Now - start}");
+            elapsed = DateTime.Now - start;
 
+            LogMsg($"Done in {elapsed}");
+
+            WriterSuccessState(elapsed);
 
             if (!_cts.IsCancellationRequested) continue;
 
-            LogBgColor = Brushes.White;
+            StatusColor = Brushes.White;
 
             //if (_cu is not null && _cu is { IsOpen: true })
             //    _cu.CloseAdapter();
@@ -224,18 +372,32 @@ internal class Writer : INotifyPropertyChanged
         }
     }
 
+    private void UpdateCfgSN()
+    {
+        var dir = Path.GetDirectoryName(WorkingDir);
+        var factory = new FactoryCFG(dir);
+        factory.UpdateFactory();
+    }
+
     private bool LockCU()
     {
         _cu.SetOuts(Outs.Pn1 | Outs.Blue);
+        StatusColor = Brushes.LightBlue;
         return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2) != Sensors.None;
     }
 
-    private void SignalReady() => _cu.SetOuts(Outs.Yellow);
-
-    private bool DiagnoseCU(int timeout = 2)
+    private void SignalReady()
     {
+        _cu.SetOuts(Outs.Yellow);
+        StatusColor = Brushes.Wheat;
+    }
+
+    private bool DiagnoseCU(int timeout = Timeout.Infinite)
+    {
+        StatusColor = Brushes.White;
+        if (_cu.WaitForBits(Sensors.Lodg, timeout) == Sensors.None) return false;
         var lastOuts = _cu.SetOuts(Outs.White | Outs.Pn1);
-        _cu.WaitForBits(Sensors.Pn1_Up, timeout);
+        _cu.WaitForBits(Sensors.Pn1_Up | Sensors.Lodg, timeout);
         _cu.SetOuts(lastOuts ^ Outs.Pn1);
         var lastSensors = _cu.WaitForBits(Sensors.Pn1_Down, timeout);
         return (lastSensors & Sensors.Pn1_Down) != Sensors.None;
@@ -245,16 +407,16 @@ internal class Writer : INotifyPropertyChanged
     {
         if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not ampty value");
 
-        var batchFile = Path.Combine(workingDir, adbBatch);
+        var batchFile = Path.Combine(Directory.GetCurrentDirectory(), adbBatch);
         if (!File.Exists(batchFile)) throw new FileNotFoundException("adb batch file not found");
 
-        var dataDir = Path.GetDirectoryName(batchFile)!;
+        var dataDir = Path.GetDirectoryName(workingDir);
 
-        var batch = new Batch(batchFile, dataDir);
+        var batch = new Batch(batchFile, dataDir!);
 
         batch.Run();
 
-        return batch.ExitCode == 0;
+        return batch.ExitCode == ExitCodes.OK;
     }
 
     private bool ExecuteFastbootBatch(string workingDir)
@@ -273,64 +435,141 @@ internal class Writer : INotifyPropertyChanged
 
         batch.Run();
 
-        return batch.ExitCode == 0;
+        return batch.ExitCode == ExitCodes.OK;
     }
-
-    private bool RebootForAdb(string portName)
+    internal bool RebootForAdb(string portName, int timeout = 10)
     {
+        var tcs = new TaskCompletionSource<bool>();
+        var start = DateTime.Now;
+
+        using var timer = new Timer(1000D)
+        {
+            Enabled = true,
+            AutoReset = true,
+        };
+
         var serial = new SerialPort(portName)
         {
             Handshake = localHandshake,
             NewLine = localNewLine,
         };
+
+        serial.DataReceived += DataReceived;
         serial.Open();
-        Thread.Sleep(1000);
-        serial.DiscardOutBuffer();
-        serial.DiscardInBuffer();
-        serial.WriteLine("at+creset");
-        var res = ParseAnswer();
+
+        timer.Elapsed += (s, _) =>
+        {
+            var timer = s as Timer;
+            var elapsed = (DateTime.Now - start).TotalSeconds;
+            serial.WriteLine("at+creset");
+
+            if (timeout != Timeout.Infinite && elapsed > timeout)
+            {
+                tcs.SetResult(false);
+            }
+        };
+
+        var res = tcs.Task.Result;
+
+        timer.Stop();
         serial.Close();
+        serial.DataReceived -= DataReceived;
 
         return res;
 
-        bool ParseAnswer()
+        void DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            string ans;
-            ans = serial.ReadLine();
-            ans += serial.ReadExisting();
-            return ans.Contains("OK", StringComparison.OrdinalIgnoreCase);
+            var serial = sender as SerialPort;
+            var buffer = serial?.ReadExisting();
+            if (buffer is not null && buffer.Contains("OK"))
+            {
+                tcs.SetResult(true);
+            }
         }
     }
 
-    private bool AwaitDeviceReady(string portName, int timeout)
+    private bool AwaitDeviceStart(string portName, int timeout)
     {
+        var tcs = new TaskCompletionSource<bool>();
+        var command = new SimComADB().BootCommand;
         var serial = new SerialPort(portName)
         {
             Handshake = localHandshake,
             NewLine = localNewLine,
         };
+
+        var timer = new Timer(1000D)
+        {
+            Enabled = true,
+            AutoReset = true,
+        };
+
+        timer.Elapsed += (s, _) =>
+        {
+            serial.WriteLine(command);
+        };
+
+        serial.DataReceived += DataReceived;
         serial.Open();
-        var res = serial.WaitModemStart(new SimComADB(), timeout);
+
+        var res = tcs.Task.Result;
+
         serial.Close();
+        timer.Stop();
+        serial.DataReceived -= DataReceived;
+
         return res;
+
+        void DataReceived(object s, SerialDataReceivedEventArgs e)
+        {
+            var port = s as SerialPort;
+            var data = port?.ReadExisting();
+            if (data is not null && data.Contains("OK"))
+            {
+                tcs.SetResult(true);
+            }
+        }
     }
 
     private string AwaitDeviceAttach()
     {
-        var modemLocator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.querySimcomModem);
-        try { modemLocator.WaitDeviceConnect(new TimeSpan(0, 0, 30)); }
+        var modemLocator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.querySimcomATPort);
+        try { modemLocator.WaitDeviceAttach(new TimeSpan(0, 0, 60)); }
         catch (Exception)
         {
             LogMsg("Device does not appear within expected interval");
             throw;
         }
-        return modemLocator.GetModemPortNames().First();
+        return modemLocator.GetModemATPorts().First();
     }
 
     private void WriterFaultState()
     {
+        ProgressIndeterminate = true;
         _cu.SetOuts(Outs.Red);
+        StatusColor = Brushes.LightPink;
+        FailValue++;
         _cu.WaitForState(Sensors.Pn1_Down);
+        ProgressIndeterminate = false;
+    }
+
+    private void WriterStopState()
+    {
+        ProgressValue = 0;
+        _cu.SetOuts(Outs.White);
+        StatusColor = Brushes.White;
+        _cu.WaitForState(Sensors.Pn1_Down);
+    }
+
+    private void WriterSuccessState(TimeSpan elapsed)
+    {
+        ProgressValue = 100;
+        _cu.SetOuts(Outs.Green);
+        StatusColor = Brushes.LightGreen;
+        PassValue++;
+        TimeAvgValue = elapsed;
+        _cu.WaitForState(Sensors.Pn1_Down);
+        ProgressValue = 0;
     }
 
     private bool TurnModemPowerOn() => _cu.PowerOn();

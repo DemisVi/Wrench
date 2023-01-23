@@ -23,7 +23,7 @@ public class FactoryCFG
         set => this["SERIAL_NUMBER"] = value.ToDeviceSerial();
     }
 
-    public FactoryCFG(string path = "./") => _path = Path.Combine(path, _baseName);
+    public FactoryCFG(string? path = "./") => _path = Path.Combine(path ?? Environment.CurrentDirectory, _baseName);
 
     public void ReadFactory()
     {

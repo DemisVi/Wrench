@@ -12,7 +12,7 @@ public class SimComModem : ModemType
 
 public class SimComADB : ModemType
 {
-    public override string BootCommand { get; } = "at+cusbadb = 1";
+    public override string BootCommand { get; } = "AT+CUSBADB=1";
 }
 
 public class TelitModem : ModemType

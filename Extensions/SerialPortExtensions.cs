@@ -28,7 +28,7 @@ public static class SerialExtensions
             res = port.ReadLine();
             res += port.ReadExisting();
             elapsed = DateTime.Now - start;
-        } while (!res.Contains("OK") && elapsed.Seconds < timeoutSeconds);
+        } while (!res.Contains("OK") || elapsed.Seconds < timeoutSeconds);
         await Task.Delay(1000);
         port.DiscardInBuffer();
         return res.Contains("OK");

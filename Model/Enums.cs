@@ -32,4 +32,12 @@ namespace Wrench.Model
         Magenta = Red | Blue,
         White = Red | Green | Blue,
     }
+
+    [Flags]
+    public enum ExitCodes
+    {
+        OK = 0,
+        Fail = -1,
+        UserTimeout = 1000,
+    }
 }

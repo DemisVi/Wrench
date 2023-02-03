@@ -25,7 +25,7 @@ using Timer = System.Timers.Timer;
 internal class Writer : INotifyPropertyChanged
 {
     private const string localNewLine = "\r";
-    private const Handshake localHandshake = Handshake.RequestToSend;
+    private const Handshake localHandshake = Handshake.None;
     private const string fastbootBatch = "flash_most.bat";
     private const string adbBatch = "load_cfg.bat";
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -105,6 +105,7 @@ internal class Writer : INotifyPropertyChanged
         object opResult;
 
         ProgressIndeterminate = true;
+        LogMsg("Close Contact Unit!");
         if (!DiagnoseCU(60))
         {
             LogMsg("Contact Unit fialure!");
@@ -198,7 +199,7 @@ internal class Writer : INotifyPropertyChanged
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"Modem at {modemPort}");
+            LogMsg($"{nameof(AwaitDeviceAttach)} returned 'Modem at {modemPort}'");
 
             if (_cts.IsCancellationRequested)
             {
@@ -280,7 +281,7 @@ internal class Writer : INotifyPropertyChanged
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"Modem at {modemPort}");
+            LogMsg($"{nameof(AwaitDeviceAttach)} returned 'Modem at {modemPort}'");
 
             if (_cts.IsCancellationRequested)
             {
@@ -349,6 +350,13 @@ internal class Writer : INotifyPropertyChanged
                 break;
 
             }
+
+            // 2. Turn OFF modem power
+            LogMsg("Powering board down...");
+            opResult = TurnModemPowerOff();
+            if (opResult is not true)
+                LogMsg("Failed to power off board");
+            LogMsg($"{nameof(TurnModemPowerOff)} returned {opResult}"); //looks done
 
             // turn off adb and reboot / option: finalizing AT sequence
             //TurnAdbModeOff();
@@ -573,6 +581,15 @@ internal class Writer : INotifyPropertyChanged
     }
 
     private bool TurnModemPowerOn() => _cu.PowerOn();
+
+    private bool TurnModemPowerOff(int timeout = 2)
+    {
+        Thread.Sleep(new TimeSpan(0, 0, timeout));
+
+        _cu.PowerOff();
+
+        return true;
+    }
 
     private Sensors AwaitCUClose() => _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
 

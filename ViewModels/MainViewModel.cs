@@ -99,7 +99,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private Command? loadSelected;
-    public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected);
+    public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected, x => !string.IsNullOrEmpty(SelectedVersion));
     private void PerformLoadSelected(object? commandParameter)
     {
         PackageDir = Path.Combine(_dataDir, SelectedDevice ?? string.Empty, SelectedVersion ?? string.Empty);

@@ -14,6 +14,7 @@ namespace Wrench.Model;
 public class ContactUnit
 {
     private static readonly object _lock = new();
+    protected const double poolingInterval = 500D;
     protected const int _baseBoudRate = 115200;
     protected const string _cuSerialPrefix = "A";
     protected const int _readBufferLength = 3;
@@ -115,7 +116,7 @@ public class ContactUnit
     {
         var tcs = new TaskCompletionSource<Sensors>();
         var start = DateTime.Now;
-        using var timer = new Timer(1000D)
+        using var timer = new Timer(poolingInterval)
         {
             Enabled = true,
             AutoReset = true,
@@ -154,7 +155,7 @@ public class ContactUnit
     {
         var tcs = new TaskCompletionSource<Sensors>();
         var start = DateTime.Now;
-        using var timer = new Timer(1000D)
+        using var timer = new Timer(poolingInterval)
         {
             Enabled = true,
             AutoReset = true,

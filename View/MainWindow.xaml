@@ -27,9 +27,9 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="54"/>
-            <RowDefinition Height="64"/>
+            <RowDefinition Height="100"/>
             <RowDefinition Height="50*"/>
-            <RowDefinition Height="34"/>
+            <RowDefinition Height="48"/>
         </Grid.RowDefinitions>
         <Grid Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
@@ -75,21 +75,21 @@
             <StatusBarItem HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal">
                     <Button Command="{Binding ShowPackageSelector}"
-                            Width="24" Height="24" Margin="1,0">
-                        <Image Width="16" Height="16" Source="{Binding Mode=OneWay, Source={StaticResource svg_folder_plusDrawingImage}}"/>
+                            Width="32" Height="32" Margin="2,0">
+                        <Image Width="24" Height="24" Source="{Binding Mode=OneWay, Source={StaticResource svg_folder_plusDrawingImage}}"/>
                     </Button>
                     <Button Command="{Binding ToggleWriter}" Background="{Binding FlashButtonColor}"
-                            Width="24" Height="24" Margin="1,0">
-                        <Image Height="16" Width="16" Source="{Binding Mode=OneWay, Source={StaticResource svg_lightningDrawingImage}}"/>
+                            Width="32" Height="32" Margin="2,0">
+                        <Image Height="24" Width="24" Source="{Binding Mode=OneWay, Source={StaticResource svg_lightningDrawingImage}}"/>
                     </Button>
                     <TextBlock Text="{Binding OperationStatus}"/>
                 </StackPanel>
             </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right">
+            <StatusBarItem HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <StackPanel Orientation="Horizontal">
                     <TextBox Background="{Binding IndicatorColor}" Text="{Binding PasswordText, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding IsWriterRunningInvert}"
-                             Grid.Row="4" Width="50" Height="18" Margin="4,0">
+                             Grid.Row="4" Width="50" Height="18" Margin="2,2">
                     </TextBox>
                 </StackPanel>
             </StatusBarItem>

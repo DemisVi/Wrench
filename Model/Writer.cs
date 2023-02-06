@@ -104,6 +104,9 @@ internal class Writer : INotifyPropertyChanged
         TimeSpan elapsed = TimeSpan.Zero;
         object opResult;
 
+#if DEBUG
+        LogMsg("DiagnoseCU();");
+#elif RELEASE
         ProgressIndeterminate = true;
         LogMsg("Close Contact Unit!");
         if (!DiagnoseCU(60))
@@ -114,11 +117,14 @@ internal class Writer : INotifyPropertyChanged
             Stop();
         }
         ProgressIndeterminate = false;
+#endif
 
         while (!_cts.IsCancellationRequested)
         {
             start = DateTime.Now;
+#if DEBUG
 
+#elif RELEASE
             SignalReady();
 
             UpdateCfgSN();
@@ -186,7 +192,7 @@ internal class Writer : INotifyPropertyChanged
                 break;
 
             }
-
+#endif
             // 3. wait for device
             ProgressValue = 20;
             LogMsg("Awaiting device attach...");
@@ -248,7 +254,9 @@ internal class Writer : INotifyPropertyChanged
                 break;
 
             }
-
+#if DEBUG
+            LogMsg("ExecuteFastbootBatch(WorkingDir);");
+#elif RELEASE
             // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
             ProgressValue = 50;
             LogMsg("Fastboot batch...");
@@ -268,7 +276,7 @@ internal class Writer : INotifyPropertyChanged
                 break;
 
             }
-
+#endif
             // 7. wait for device
             ProgressValue = 60;
             LogMsg("Awaiting device attach...");
@@ -350,7 +358,9 @@ internal class Writer : INotifyPropertyChanged
                 break;
 
             }
+#if DEBUG
 
+#elif RELEASE
             // 2. Turn OFF modem power
             LogMsg("Powering board down...");
             opResult = TurnModemPowerOff();
@@ -360,7 +370,7 @@ internal class Writer : INotifyPropertyChanged
 
             // turn off adb and reboot / option: finalizing AT sequence
             //TurnAdbModeOff();
-
+#endif
             elapsed = DateTime.Now - start;
 
             LogMsg($"Done in {elapsed}");
@@ -473,6 +483,7 @@ internal class Writer : INotifyPropertyChanged
 
             if (timeout != Timeout.Infinite && elapsed > timeout)
             {
+                if (tcs.Task is { IsCompleted: true }) return;
                 tcs.SetResult(false);
             }
         };
@@ -491,15 +502,17 @@ internal class Writer : INotifyPropertyChanged
             var buffer = serial?.ReadExisting();
             if (buffer is not null && buffer.Contains("OK"))
             {
+                if (tcs.Task is { IsCompleted: true }) return;
                 tcs.SetResult(true);
             }
         }
     }
 
-    private bool AwaitDeviceStart(string portName, int timeout)
+    private bool AwaitDeviceStart(string portName, int timeout = Timeout.Infinite)
     {
         var tcs = new TaskCompletionSource<bool>();
         var command = new SimComADB().BootCommand;
+        var elapsed = 0;
         var serial = new SerialPort(portName)
         {
             Handshake = localHandshake,
@@ -514,6 +527,7 @@ internal class Writer : INotifyPropertyChanged
 
         timer.Elapsed += (s, _) =>
         {
+            elapsed++;
             serial.WriteLine(command);
         };
 
@@ -522,19 +536,26 @@ internal class Writer : INotifyPropertyChanged
 
         var res = tcs.Task.Result;
 
+        serial.DataReceived -= DataReceived;
         serial.Close();
         timer.Stop();
-        serial.DataReceived -= DataReceived;
 
         return res;
 
         void DataReceived(object s, SerialDataReceivedEventArgs e)
         {
+            if (tcs.Task is { IsCompleted: true }) return;
             var port = s as SerialPort;
             var data = port?.ReadExisting();
             if (data is not null && data.Contains("OK"))
             {
+                if (tcs.Task is { IsCompleted: true }) return;
                 tcs.SetResult(true);
+            }
+            else if (timeout != Timeout.Infinite && elapsed > timeout)
+            {
+                if (tcs.Task is { IsCompleted: true }) return;
+                tcs.SetResult(false);
             }
         }
     }
@@ -557,7 +578,14 @@ internal class Writer : INotifyPropertyChanged
         _cu.SetOuts(Outs.Red);
         StatusColor = Brushes.LightPink;
         FailValue++;
+#if DEBUG
+
+        Thread.Sleep(new TimeSpan(0, 0, 5));
+#elif RELEASE
+
         _cu.WaitForState(Sensors.Pn1_Down);
+#endif
+
         ProgressIndeterminate = false;
     }
 
@@ -566,7 +594,14 @@ internal class Writer : INotifyPropertyChanged
         ProgressValue = 0;
         _cu.SetOuts(Outs.White);
         StatusColor = Brushes.White;
+#if DEBUG
+
+        Thread.Sleep(new TimeSpan(0, 0, 5));
+#elif RELEASE
+
         _cu.WaitForState(Sensors.Pn1_Down);
+#endif
+
     }
 
     private void WriterSuccessState(TimeSpan elapsed)
@@ -576,7 +611,14 @@ internal class Writer : INotifyPropertyChanged
         StatusColor = Brushes.LightGreen;
         PassValue++;
         TimeAvgValue = elapsed;
+#if DEBUG
+
+        Thread.Sleep(new TimeSpan(0, 0, 5));
+#elif RELEASE
+
         _cu.WaitForState(Sensors.Pn1_Down);
+#endif
+
         ProgressValue = 0;
     }
 

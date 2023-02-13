@@ -218,7 +218,7 @@ internal class Writer : INotifyPropertyChanged
             // 4. find modem or AT com port
             ProgressValue = 30;
             LogMsg("Awaiting device start...");
-            opResult = AwaitDeviceStart(modemPort, 10);
+            opResult = AwaitDeviceStart(modemPort);
             if (opResult is not true)
             {
                 LogMsg("Device dows not start within expected interval");
@@ -302,7 +302,7 @@ internal class Writer : INotifyPropertyChanged
             // 8. find modem or AT com port
             ProgressValue = 70;
             LogMsg("Awaiting device start...");
-            opResult = AwaitDeviceStart(modemPort, 10);
+            opResult = AwaitDeviceStart(modemPort);
             if (opResult is not true)
             {
                 LogMsg("Device dows not start within expected interval");
@@ -455,7 +455,7 @@ internal class Writer : INotifyPropertyChanged
 
         return batch.ExitCode == ExitCodes.OK;
     }
-    internal bool RebootForAdb(string portName, int timeout = 10)
+    internal bool RebootForAdb(string portName, int timeout = 30)
     {
         var tcs = new TaskCompletionSource<bool>();
         var start = DateTime.Now;

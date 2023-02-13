@@ -81,13 +81,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private Command? _toggleWriter;
-#if DEBUG
-
-    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter);
-#elif RELEASE
-
     public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter, x => PackageDir.Length > 0);
-#endif
 
     private void PerformToggleWriter(object? commandParameter)
     {
@@ -106,13 +100,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private Command? loadSelected;
-#if DEBUG
-
-    public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected);
-#elif RELEASE
-
     public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected, x => !string.IsNullOrEmpty(SelectedVersion));
-#endif
 
     private void PerformLoadSelected(object? commandParameter)
     {

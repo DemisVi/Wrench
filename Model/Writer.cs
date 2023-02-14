@@ -104,16 +104,16 @@ internal class Writer : INotifyPropertyChanged
         TimeSpan elapsed = TimeSpan.Zero;
         object opResult;
 
-        ProgressIndeterminate = true;
-        LogMsg("Close Contact Unit!");
-        if (!DiagnoseCU(60))
-        {
-            LogMsg("Contact Unit fialure!");
-            StatusColor = Brushes.LightPink;
-            _cu.SetOuts(Outs.Red);
-            Stop();
-        }
-        ProgressIndeterminate = false;
+        //ProgressIndeterminate = true;
+        //LogMsg("Close Contact Unit!");
+        //if (!DiagnoseCU(60))
+        //{
+        //    LogMsg("Contact Unit fialure!");
+        //    StatusColor = Brushes.LightPink;
+        //    _cu.SetOuts(Outs.Red);
+        //    Stop();
+        //}
+        //ProgressIndeterminate = false;
 
         while (!_cts.IsCancellationRequested)
         {
@@ -183,7 +183,6 @@ internal class Writer : INotifyPropertyChanged
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
 
             // 3. wait for device
@@ -225,28 +224,44 @@ internal class Writer : INotifyPropertyChanged
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
 
-            // 5. turn on adb and reboot
-            ProgressValue = 40;
-            LogMsg("Reboot for ADB mode....");
-            opResult = AwaitDevice(modemPort, "AT+CRESET");
+            //3.1. Turn ADB IF on
+            LogMsg("Send 'AT+CUSBADB=1,1");
+            opResult = TurnOnADBInterface(modemPort);
             if (opResult is not true)
             {
-                LogMsg("Failed to reboot device");
+                LogMsg("Failed to get ADB iface");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
+            LogMsg($"{nameof(TurnOnADBInterface)} returned {opResult}");
 
             if (_cts.IsCancellationRequested)
             {
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
+            //// 5. turn on adb and reboot
+            //ProgressValue = 40;
+            //LogMsg("Reboot for ADB mode....");
+            //opResult = AwaitDevice(modemPort, "AT+CRESET");
+            //if (opResult is not true)
+            //{
+            //    LogMsg("Failed to reboot device");
+            //    WriterFaultState();
+            //    continue;
+            //}
+            //LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
+
+            //if (_cts.IsCancellationRequested)
+            //{
+            //    LogMsg("Stopped");
+            //    WriterStopState();
+            //    break;
+
+            //}
 
             // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
             ProgressValue = 50;
@@ -265,7 +280,6 @@ internal class Writer : INotifyPropertyChanged
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
 
             // 7. wait for device
@@ -307,30 +321,48 @@ internal class Writer : INotifyPropertyChanged
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
 
-            // 9. turn on adb and reboot
-            ProgressValue = 80;
-            LogMsg("Reboot for ADB mode....");
-            opResult = AwaitDevice(modemPort, "AT+CRESET");
+            LogMsg("Send 'AT+CUSBADB=1,1");
+            opResult = TurnOnADBInterface(modemPort);
             if (opResult is not true)
             {
-                LogMsg("Failed to reboot device");
+                LogMsg("Failed to get ADB iface");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
+            LogMsg($"{nameof(TurnOnADBInterface)} returned {opResult}");
 
             if (_cts.IsCancellationRequested)
             {
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
+            //// 9. turn on adb and reboot
+            //ProgressValue = 80;
+            //LogMsg("Reboot for ADB mode....");
+            //opResult = AwaitDevice(modemPort, "AT+CRESET");
+            //if (opResult is not true)
+            //{
+            //    LogMsg("Failed to reboot device");
+            //    WriterFaultState();
+            //    continue;
+            //}
+            //LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
 
-            // 10. execute adb upload sequence / batch file upload
+            //if (_cts.IsCancellationRequested)
+            //{
+            //    LogMsg("Stopped");
+            //    WriterStopState();
+            //    break;
+            //}
+
+
+            // 3.1. Turn ADB IF on
+            //opResult = TurnOnADBInterface(modemPort);
+
+            //10. execute adb upload sequence / batch file upload
             ProgressValue = 90;
             LogMsg("Adb batch...");
             opResult = ExecuteAdbBatch(WorkingDir);
@@ -347,7 +379,6 @@ internal class Writer : INotifyPropertyChanged
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
 
             // 2. Turn OFF modem power
@@ -376,6 +407,54 @@ internal class Writer : INotifyPropertyChanged
             //    _modemPort.Close();
             LogMsg("Stopped");
             break;
+        }
+    }
+
+    private bool TurnOnADBInterface(string modemPort)
+    {
+        using var cts = new CancellationTokenSource();
+        var task = Task.Factory.StartNew(() =>
+        {
+            var repeat = 3;
+            using var modemSerialPort = new SerialPort()
+            {
+                Handshake = localHandshake,
+                NewLine = localNewLine,
+                PortName = modemPort,
+                WriteTimeout = 2000,
+            };
+            Thread.Sleep(1000);
+
+            while (repeat-- > 0 && !cts.IsCancellationRequested)
+            {
+                if (!modemSerialPort.IsOpen) modemSerialPort.Open();
+                if (cts.IsCancellationRequested) break;
+                try
+                {
+                    modemSerialPort.WriteLine("at+cusbadb=1,1");
+                }
+                catch (Exception) { }
+                Thread.Sleep(4000);
+            }
+        }, cts.Token);
+
+        var loc = new ModemLocator(LocatorQuery.creationSimComADB, LocatorQuery.androidDevice);
+        try                                                                                         //bad practice!!!
+        {
+            if (loc.GetDevices().Count() > 0)
+            {
+                cts.Cancel();
+                task.Wait();
+                return true;
+            }
+            loc.WaitDeviceAttach(new TimeSpan(0, 0, 28));
+            cts.Cancel();
+            task.Wait();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 
@@ -551,7 +630,7 @@ internal class Writer : INotifyPropertyChanged
     private bool AwaitDeviceStart(string portName, int timeout = Timeout.Infinite)
     {
         var tcs = new TaskCompletionSource<bool>();
-        var command = new SimComADB().BootCommand;
+        var command = "at";
         var elapsed = 0;
         var serial = new SerialPort(portName)
         {
@@ -618,6 +697,10 @@ internal class Writer : INotifyPropertyChanged
         _cu.SetOuts(Outs.Red);
         StatusColor = Brushes.LightPink;
         FailValue++;
+        LogMsg("Powering board down...");
+        var opResult = TurnModemPowerOff();
+        if (opResult is not true)
+            LogMsg("Failed to power off board");
         _cu.WaitForState(Sensors.Pn1_Down);
         ProgressIndeterminate = false;
     }
@@ -627,6 +710,10 @@ internal class Writer : INotifyPropertyChanged
         ProgressValue = 0;
         _cu.SetOuts(Outs.White);
         StatusColor = Brushes.White;
+        LogMsg("Powering board down...");
+        var opResult = TurnModemPowerOff();
+        if (opResult is not true)
+            LogMsg("Failed to power off board");
         _cu.WaitForState(Sensors.Pn1_Down);
     }
 

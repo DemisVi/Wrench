@@ -118,4 +118,7 @@ public class ModemLocator
 
         return res;
     }
+
+    internal IEnumerable<ManagementBaseObject> GetDevices() =>
+        new ManagementObjectSearcher(DeviceQuery).Get().Cast<ManagementBaseObject>();
 }

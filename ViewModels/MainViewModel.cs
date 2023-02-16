@@ -110,6 +110,10 @@ public class MainViewModel : INotifyPropertyChanged
         if (SelectedVersion?.Length > 0) msg.AppendJoin(' ', new[] { " /", "версия", SelectedVersion });
         CU1LogList.Insert(0, msg.ToString() /*+ Environment.NewLine + PackageDir*/);
         (commandParameter as Window)?.Close();
+        var dir = Path.GetDirectoryName(PackageDir);
+        var factory = new FactoryCFG(dir);
+        factory.ReadFactory();
+        DeviceSerial = factory.SerialNumber.ToString();
     }
 
     private string? _contactUnit = null;

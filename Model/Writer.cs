@@ -538,7 +538,7 @@ internal class Writer : INotifyPropertyChanged
             AutoReset = true,
         };
 
-        var serial = new SerialPort(portName)
+        using var serial = new SerialPort(portName)
         {
             Handshake = localHandshake,
             NewLine = localNewLine,
@@ -584,7 +584,7 @@ internal class Writer : INotifyPropertyChanged
     {
         var tcs = new TaskCompletionSource<bool>();
         var elapsed = 0;
-        var serial = new SerialPort(portName)
+        using var serial = new SerialPort(portName)
         {
             Handshake = localHandshake,
             NewLine = localNewLine,
@@ -636,7 +636,7 @@ internal class Writer : INotifyPropertyChanged
         var tcs = new TaskCompletionSource<bool>();
         var command = "at";
         var elapsed = 0;
-        var serial = new SerialPort(portName)
+        using var serial = new SerialPort(portName)
         {
             Handshake = localHandshake,
             NewLine = localNewLine,

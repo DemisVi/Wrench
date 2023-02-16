@@ -79,7 +79,7 @@ public class ContactUnit
         lock (_lock)
         {
             _tcs = new TaskCompletionSource<byte>();
-            var serial = new SerialPort(_ftSerialPort, _baseBoudRate);
+            using var serial = new SerialPort(_ftSerialPort, _baseBoudRate);
             serial.DataReceived += ReceiveData;
             serial.Open();
             serial.Write(_readCommand, 0, _readCommand.Length);
@@ -99,7 +99,7 @@ public class ContactUnit
         {
             var request = _writeCommand.Concat(new byte[] { (byte)outs }).ToArray();
             _tcs = new TaskCompletionSource<byte>();
-            var serial = new SerialPort(_ftSerialPort, _baseBoudRate);
+            using var serial = new SerialPort(_ftSerialPort, _baseBoudRate);
             serial.DataReceived += ReceiveData;
             serial.Open();
             serial.Write(request, 0, request.Length);

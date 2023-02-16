@@ -87,7 +87,7 @@ internal class Writer : INotifyPropertyChanged
     public void Start()
     {
         if (_cts.IsCancellationRequested) _cts = new();
-        ContactUnit = new AdapterLocator().AdapterSerials.First().Trim('A');
+        ContactUnit = new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' });
         Task.Factory.StartNew(SimcomFlash);
     }
 

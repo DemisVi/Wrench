@@ -46,7 +46,7 @@ public class MainViewModel : INotifyPropertyChanged
         WriterCU1 = new Writer(CU1LogList);
         WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
 
-        ContactUnit = new AdapterLocator().AdapterSerials.First().Trim('A');
+        ContactUnit = new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' });
 
         BindingOperations.EnableCollectionSynchronization(CU1LogList, _synclock1);
     }

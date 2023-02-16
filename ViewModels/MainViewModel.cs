@@ -160,6 +160,9 @@ public class MainViewModel : INotifyPropertyChanged
     private string _operationStatus = string.Empty;
     public string OperationStatus { get => _operationStatus; set => SetProperty(ref _operationStatus, value); }
 
+    private string _deviceSerial = string.Empty;
+    public string DeviceSerial { get => _deviceSerial; set => SetProperty(ref _deviceSerial, value); }
+
     private bool _isAccessGranted = false;
     public bool IsAccessGranted { get => _isAccessGranted; set => SetProperty(ref _isAccessGranted, value); }
 

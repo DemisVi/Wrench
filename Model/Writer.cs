@@ -64,6 +64,9 @@ internal class Writer : INotifyPropertyChanged
     private bool _progressIndeterminate = false;
     public bool ProgressIndeterminate { get => _progressIndeterminate; set => SetProperty(ref _progressIndeterminate, value); }
 
+    private string _deviceSerial = string.Empty;
+    public string DeviceSerial { get => _deviceSerial; set => SetProperty(ref _deviceSerial, value); }
+
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
@@ -463,6 +466,7 @@ internal class Writer : INotifyPropertyChanged
         var dir = Path.GetDirectoryName(WorkingDir);
         var factory = new FactoryCFG(dir);
         factory.UpdateFactory();
+        DeviceSerial = factory.SerialNumber.ToString();
     }
 
     private bool LockCU()

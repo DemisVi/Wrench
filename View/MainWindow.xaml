@@ -62,7 +62,7 @@
             <Label Content="{Binding ContactUnit}" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="32"/>
             <ProgressBar Value="{Binding ProgressValue}" IsIndeterminate="{Binding ProgressIndeterminate}" 
                          Height="12" Grid.ColumnSpan="2" VerticalAlignment="Bottom"/>
-            <!--<Label Content="%" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="36"/>-->
+            <Label Content="{Binding DeviceSerial}" HorizontalAlignment="Left" Margin="0,8" VerticalAlignment="Bottom" FontSize="12"/>
             <!--<CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Базовое ПО" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Top" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Пакет файлов БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Конфигурация АТ" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>-->

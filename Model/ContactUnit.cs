@@ -11,7 +11,7 @@ using Timer = System.Timers.Timer;
 
 namespace Wrench.Model;
 
-public class ContactUnit
+public class ContactUnit : IContactUnit
 {
     private static readonly object _lock = new();
     protected const double poolingInterval = 500D;
@@ -56,7 +56,7 @@ public class ContactUnit
         return portName;
     }
 
-    internal bool PowerOn()
+    public bool PowerOn()
     {
         if (!_adapter.OpenAdapter()) return false;
         else if (!_adapter.KL15_On()) return false;
@@ -64,7 +64,7 @@ public class ContactUnit
         else if (!_adapter.CloseAdapter()) return false;
         else return true;
     }
-    internal bool PowerOff()
+    public bool PowerOff()
     {
         if (!_adapter.OpenAdapter()) return false;
         else if (!_adapter.KL15_Off()) return false;
@@ -92,7 +92,7 @@ public class ContactUnit
         return (Sensors)result;
     }
 
-    internal Outs SetOuts(Outs outs)
+    public Outs SetOuts(Outs outs)
     {
         var result = new byte();
         lock (_lock)
@@ -112,7 +112,7 @@ public class ContactUnit
         return (Outs)result;
     }
 
-    internal Sensors WaitForState(Sensors sensors, int timeout = Timeout.Infinite)
+    public Sensors WaitForState(Sensors sensors, int timeout = Timeout.Infinite)
     {
         var tcs = new TaskCompletionSource<Sensors>();
         var start = DateTime.Now;
@@ -151,7 +151,7 @@ public class ContactUnit
         _tcs.SetResult(readBuffer.Last());
     }
 
-    internal Sensors WaitForBits(Sensors sensors, int timeout = Timeout.Infinite)
+    public Sensors WaitForBits(Sensors sensors, int timeout = Timeout.Infinite)
     {
         var tcs = new TaskCompletionSource<Sensors>();
         var start = DateTime.Now;

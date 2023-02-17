@@ -73,7 +73,7 @@ internal class Writer : INotifyPropertyChanged
     public Writer(ObservableCollection<string> cULogList)
     {
         _kuLogList = cULogList;
-        _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim('A'));
+        _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
     }
 
     private bool SetProperty<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)

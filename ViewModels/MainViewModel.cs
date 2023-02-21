@@ -22,31 +22,40 @@ namespace Wrench.ViewModels;
 public class MainViewModel : INotifyPropertyChanged
 {
     private const string _dataDirName = "Data";
-    private readonly string _dataDir;
-    private Writer WriterCU1;
+    private string? _dataDir;
+    private IWriter? WriterCU1;
     private object _synclock1 = new();
     private readonly Validator _validator = new();
+    private readonly List<string> _writerVariant = new() { "SimCom", "Telit" };
 
     public ObservableCollection<string> CU1LogList { get; set; } = new();
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public MainViewModel()
     {
-        var currentDir = Directory.GetCurrentDirectory();
-        _dataDir = Path.Combine(currentDir, _dataDirName);
+        //var currentDir = Directory.GetCurrentDirectory();
+        //_dataDir = Path.Combine(currentDir, _dataDirName);
 
-        var dirs = new DirectoryInfo(_dataDir).EnumerateDirectories();
-        foreach (var i in dirs)
+        //var dirs = new DirectoryInfo(_dataDir).EnumerateDirectories();
+        //foreach (var i in dirs)
+        //{
+        //    DeviceType.Add(i.Name, new List<string>());
+        //    foreach (var j in i.GetDirectories())
+        //        DeviceType[i.Name].Add(j.Name);
+        //}
+
+        //WriterCU1 = new Writer(CU1LogList);
+        //WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
+
+        try
         {
-            DeviceType.Add(i.Name, new List<string>());
-            foreach (var j in i.GetDirectories())
-                DeviceType[i.Name].Add(j.Name);
+            ContactUnitTitle = new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' });
         }
-
-        WriterCU1 = new Writer(CU1LogList);
-        WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
-
-        ContactUnit = new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' });
+        catch (Exception)
+        {
+            StatusColor = Brushes.Red;
+            ContactUnitTitle = "no adaper";
+        }
 
         BindingOperations.EnableCollectionSynchronization(CU1LogList, _synclock1);
     }
@@ -77,7 +86,20 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand ShowPackageSelector => _showPackageSelector ??= new Command(PerformShowPackageSelector, x => !IsWriterRunning);
     private void PerformShowPackageSelector(object? commandParameter)
     {
-        new PackageSelectorWindow(this).Show();
+        DeviceType = new();
+
+        var currentDir = Directory.GetCurrentDirectory();
+        _dataDir = Path.Combine(currentDir, SelectedWriter);
+
+        var dirs = new DirectoryInfo(_dataDir).EnumerateDirectories();
+        foreach (var i in dirs)
+        {
+            DeviceType.Add(i.Name, new List<string>());
+            foreach (var j in i.GetDirectories())
+                DeviceType[i.Name].Add(j.Name);
+        }
+
+        new PackageSelectorWindow(this).ShowDialog();
     }
 
     private Command? _toggleWriter;
@@ -87,13 +109,19 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (!IsWriterRunning)
         {
+            WriterCU1 = new Writer(CU1LogList);
+            WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
+            WriterCU1.WorkingDir = PackageDir;
             WriterCU1?.Start();
             FlashButtonColor = Brushes.IndianRed;
-
         }
         else
         {
-            WriterCU1.Stop();
+            if (WriterCU1 is not null)
+            {
+                WriterCU1.PropertyChanged -= WriterKU1_PropertyChanged;
+                WriterCU1.Stop();
+            }
             FlashButtonColor = Brushes.Beige;
         }
         IsWriterRunning = !IsWriterRunning;
@@ -104,20 +132,31 @@ public class MainViewModel : INotifyPropertyChanged
 
     private void PerformLoadSelected(object? commandParameter)
     {
+        if (string.IsNullOrEmpty(_dataDir)) throw new NullReferenceException(nameof(_dataDir) + " cannot be null");
+
         PackageDir = Path.Combine(_dataDir, SelectedDevice ?? string.Empty, SelectedVersion ?? string.Empty);
-        WriterCU1.WorkingDir = PackageDir;
+        //WriterCU1.WorkingDir = PackageDir;
         var msg = new StringBuilder().AppendJoin(' ', new[] { "Загружен пакет", SelectedDevice });
         if (SelectedVersion?.Length > 0) msg.AppendJoin(' ', new[] { " /", "версия", SelectedVersion });
         CU1LogList.Insert(0, msg.ToString() /*+ Environment.NewLine + PackageDir*/);
         (commandParameter as Window)?.Close();
         var dir = Path.GetDirectoryName(PackageDir);
         var factory = new FactoryCFG(dir);
-        factory.ReadFactory();
-        DeviceSerial = factory.SerialNumber.ToString();
+        try
+        {
+            factory.ReadFactory();
+            DeviceSerial = factory.SerialNumber.ToString();
+        }
+        catch (Exception)
+        {
+            DeviceSerial = "no factory.cfg";
+        }
     }
 
+    public List<string> WriterVariant => _writerVariant;
+
     private string? _contactUnit = null;
-    public string? ContactUnit { get => _contactUnit; set => SetProperty(ref _contactUnit, value, nameof(ContactUnit)); }
+    public string? ContactUnitTitle { get => _contactUnit; set => SetProperty(ref _contactUnit, value, nameof(ContactUnitTitle)); }
 
     private string _passwordText = string.Empty;
     public string PasswordText
@@ -166,6 +205,9 @@ public class MainViewModel : INotifyPropertyChanged
 
     private string _deviceSerial = string.Empty;
     public string DeviceSerial { get => _deviceSerial; set => SetProperty(ref _deviceSerial, value); }
+
+    private string _selectedWriter = string.Empty;
+    public string SelectedWriter { get => _selectedWriter; set => SetProperty(ref _selectedWriter, value); }
 
     private bool _isAccessGranted = false;
     public bool IsAccessGranted { get => _isAccessGranted; set => SetProperty(ref _isAccessGranted, value); }

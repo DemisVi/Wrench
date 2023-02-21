@@ -11,7 +11,7 @@
     <Window.Resources>
         <ResourceDictionary Source="/Resources/Resources.xaml"/>
     </Window.Resources>
-    
+
     <Window.Icon>
         <Binding Mode="OneWay" Source="{StaticResource svg_wrench_adjustable_circle_fillDrawingImage}"/>
     </Window.Icon>
@@ -59,7 +59,7 @@
                 <ColumnDefinition Width="3*"/>
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
-            <Label Content="{Binding ContactUnit}" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="32"/>
+            <Label Content="{Binding ContactUnitTitle}" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="32"/>
             <ProgressBar Value="{Binding ProgressValue}" IsIndeterminate="{Binding ProgressIndeterminate}" 
                          Height="12" Grid.ColumnSpan="2" VerticalAlignment="Bottom"/>
             <Label Content="{Binding DeviceSerial}" HorizontalAlignment="Left" Margin="0,8" VerticalAlignment="Bottom" FontSize="12"/>
@@ -67,7 +67,7 @@
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Пакет файлов БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Конфигурация АТ" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>-->
         </Grid>
-        
+
         <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" 
                  ItemsSource="{Binding CU1LogList}"/>
 
@@ -87,13 +87,18 @@
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <StackPanel Orientation="Horizontal">
+
+                    <ComboBox Width="86" Margin="2,2"
+                              SelectedIndex="0" SelectedItem="{Binding SelectedWriter}" ItemsSource="{Binding WriterVariant}" />
+
                     <TextBox Background="{Binding IndicatorColor}" Text="{Binding PasswordText, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding IsWriterRunningInvert}"
                              Grid.Row="4" Width="50" Height="18" Margin="2,2">
+
                     </TextBox>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
-        
+
     </Grid>
 </Window>

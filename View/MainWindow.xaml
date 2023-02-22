@@ -79,6 +79,7 @@
                         <Image Width="24" Height="24" Source="{Binding Mode=OneWay, Source={StaticResource svg_folder_plusDrawingImage}}"/>
                     </Button>
                     <Button Command="{Binding ToggleWriter}" Background="{Binding FlashButtonColor}"
+                            CommandParameter="{Binding SelectedWriter}"
                             Width="32" Height="32" Margin="2,0">
                         <Image Height="24" Width="24" Source="{Binding Mode=OneWay, Source={StaticResource svg_lightningDrawingImage}}"/>
                     </Button>
@@ -89,11 +90,12 @@
                 <StackPanel Orientation="Horizontal">
 
                     <ComboBox Width="86" Margin="2,2"
-                              SelectedIndex="0" SelectedItem="{Binding SelectedWriter}" ItemsSource="{Binding WriterVariant}" />
+                              SelectedIndex="0" SelectedItem="{Binding SelectedWriter}" ItemsSource="{Binding WriterVariant}"
+                              IsEnabled="{Binding IsWriterRunningInvert}"/>
 
                     <TextBox Background="{Binding IndicatorColor}" Text="{Binding PasswordText, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding IsWriterRunningInvert}"
-                             Grid.Row="4" Width="50" Height="18" Margin="2,2">
+                             Grid.Row="4" Width="50" Height="22" Margin="2,2" FontSize="14">
 
                     </TextBox>
                 </StackPanel>

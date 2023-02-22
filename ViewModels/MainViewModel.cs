@@ -75,7 +75,7 @@ public class MainViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 
     private void WriterKU1_PropertyChanged(object? sender, PropertyChangedEventArgs e) =>  ///experimental crap
-             GetType().GetProperty(e.PropertyName!)?.SetValue(this, (sender as Writer)!
+             GetType().GetProperty(e.PropertyName!)?.SetValue(this, (sender as IWriter)!
             .GetType()?.GetProperty(e.PropertyName!)?.GetValue(sender));
 
     private Command? _exit;
@@ -109,7 +109,14 @@ public class MainViewModel : INotifyPropertyChanged
     {
         if (!IsWriterRunning)
         {
-            WriterCU1 = new Writer(CU1LogList);
+            //WriterCU1 = new Writer(CU1LogList);
+            WriterCU1 = commandParameter switch
+            {
+                "SimCom" => new Writer(CU1LogList),
+                "Telit" => new TelitWriter(CU1LogList),
+                _ => throw new NotImplementedException(),
+            };
+
             WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
             WriterCU1.WorkingDir = PackageDir;
             WriterCU1?.Start();

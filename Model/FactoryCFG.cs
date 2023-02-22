@@ -27,12 +27,16 @@ public class FactoryCFG
 
     public void ReadFactory()
     {
-        var lines = File.ReadAllLines(_path);
-        foreach (var l in lines)
+        try
         {
-            var temp = l.Split('=');
-            _factory.Add(temp.First(), temp.Last());
+            var lines = File.ReadAllLines(_path);
+            foreach (var l in lines)
+            {
+                var temp = l.Split('=');
+                _factory.Add(temp.First(), temp.Last());
+            }
         }
+        catch (Exception) { throw; }
     }
 
     public void SaveFactory()

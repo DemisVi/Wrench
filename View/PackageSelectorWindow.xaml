@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
         mc:Ignorable="d" Topmost="True"
-        Title="PackageSelectorWindow" Height="200" Width="400" WindowStartupLocation="CenterScreen">
+        Title="PackageSelectorWindow" Height="200" Width="500" WindowStartupLocation="CenterScreen">
 
     <Window.InputBindings>
         <KeyBinding Key="Esc" Command="{Binding Exit}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
@@ -18,7 +18,7 @@
             <RowDefinition Height="32"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
         <Button Command="{Binding LoadSelected}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" 

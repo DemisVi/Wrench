@@ -135,7 +135,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private Command? loadSelected;
-    public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected, x => !string.IsNullOrEmpty(SelectedVersion));
+    public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected, x => !string.IsNullOrEmpty(SelectedVersion) && !string.IsNullOrEmpty(SelectedDevice));
 
     private void PerformLoadSelected(object? commandParameter)
     {

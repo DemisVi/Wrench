@@ -122,7 +122,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             start = DateTime.Now;
             SignalReady();
 #if !NOCU
-            UpdateCfgSN();
+            //UpdateCfgSN();
 
             if (_cts.IsCancellationRequested)
             {

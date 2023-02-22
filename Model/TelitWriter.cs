@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define NOCU
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -119,7 +121,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         {
             start = DateTime.Now;
             SignalReady();
-
+#if !NOCU
             UpdateCfgSN();
 
             if (_cts.IsCancellationRequested)
@@ -184,6 +186,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
+#endif //NOCU
 
             // 3. wait for device
             ProgressValue = 20;
@@ -701,7 +704,11 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         var opResult = TurnModemPowerOff();
         if (opResult is not true)
             LogMsg("Failed to power off board");
+#if NOCU
+        Thread.Sleep(5000);
+#elif !NOCU
         _cu.WaitForState(Sensors.Pn1_Down);
+#endif
         ProgressIndeterminate = false;
     }
 
@@ -724,7 +731,11 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         StatusColor = Brushes.LightGreen;
         PassValue++;
         TimeAvgValue = elapsed;
+#if NOCU
+        Thread.Sleep(5000);
+#elif !NOCU
         _cu.WaitForState(Sensors.Pn1_Down);
+#endif
         ProgressValue = 0;
     }
 

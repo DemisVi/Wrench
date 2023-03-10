@@ -16,6 +16,7 @@ using System.Windows.Data;
 using System.IO;
 using System.Threading;
 using System.Windows.Interop;
+using Wrench.Interfaces;
 
 namespace Wrench.ViewModels;
 

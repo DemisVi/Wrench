@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Media;
 using Wrench.Extensions;
+using Wrench.Interfaces;
 using Wrench.Services;
 
 namespace Wrench.Model;

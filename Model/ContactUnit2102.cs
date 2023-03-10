@@ -8,6 +8,7 @@ using System.IO.Ports;
 using Wrench.Services;
 
 using Timer = System.Timers.Timer;
+using Wrench.Interfaces;
 
 namespace Wrench.Model;
 

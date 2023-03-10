@@ -89,7 +89,7 @@
             <StatusBarItem HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <StackPanel Orientation="Horizontal">
 
-                    <ComboBox Width="86" Margin="2,2"
+                    <ComboBox Width="120" Margin="2,2" FontSize="24"
                               SelectedIndex="0" SelectedItem="{Binding SelectedWriter}" ItemsSource="{Binding WriterVariant}"
                               IsEnabled="{Binding IsWriterRunningInvert}"/>
 

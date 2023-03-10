@@ -1,4 +1,4 @@
-﻿//#define NOCU
+﻿#define NOCU
 
 using System;
 using System.Collections.Generic;
@@ -29,13 +29,12 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 {
     private const string localNewLine = "\r";
     private const Handshake localHandshake = Handshake.None;
-    //private const string fastbootBatch = "flash_most.bat";
     private const string adbBatch = "transfer_to_modem.bat";
+    private const string atCommandFileName = "postinstallat.txt";
     public event PropertyChangedEventHandler? PropertyChanged;
     private readonly ObservableCollection<string> _kuLogList;
     private CancellationTokenSource _cts = new();
     ContactUnit _cu;
-    //SerialPort _modemPort;
 
     private bool _isWriterRunning = false;
     public bool IsWriterRunning { get => _isWriterRunning; set => SetProperty(ref _isWriterRunning, value); }
@@ -73,7 +72,9 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
     public TelitWriter(ObservableCollection<string> cULogList)
     {
         _kuLogList = cULogList;
+#if !NOCU
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
+#endif
     }
 
     private bool SetProperty<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
@@ -90,7 +91,9 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
     public void Start()
     {
         if (_cts.IsCancellationRequested) _cts = new();
+#if !NOCU
         ContactUnitTitle = new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' });
+#endif //NOCU
         Task.Factory.StartNew(TelitFlash);
     }
 
@@ -121,8 +124,9 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         while (!_cts.IsCancellationRequested)
         {
             start = DateTime.Now;
-            SignalReady();
+
 #if !NOCU
+            SignalReady();
             //UpdateCfgSN();
 
             if (_cts.IsCancellationRequested)
@@ -130,7 +134,6 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
 
             // 1. Wait for CU
@@ -145,6 +148,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 continue;
             }
             LogMsg($"{nameof(AwaitCUClose)} returned {opResult}"); //looks done
+
+            IncrementProgress();
 
             if (_cts.IsCancellationRequested)
             {
@@ -161,6 +166,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 continue;
             }
 
+            IncrementProgress();
+
             if (_cts.IsCancellationRequested)
             {
                 LogMsg("Stopped");
@@ -170,7 +177,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             }
 
             // 2. Turn ON modem power
-            ProgressValue = 10;
+            
             LogMsg("Powering board up...");
             opResult = TurnModemPowerOn();
             if (opResult is not true)
@@ -181,16 +188,17 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             }
             LogMsg($"{nameof(TurnModemPowerOn)} returned {opResult}"); //looks done
 
+            IncrementProgress();
+
             if (_cts.IsCancellationRequested)
             {
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
             }
-#endif //NOCU
 
             // 3. wait for device
-            ProgressValue = 20;
+            
             LogMsg("Awaiting device attach...");
             try
             {
@@ -203,6 +211,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             }
             LogMsg($"{nameof(AwaitDeviceAttach)} returned 'Modem at {modemPort}'");
 
+            IncrementProgress();
+
             if (_cts.IsCancellationRequested)
             {
                 LogMsg("Stopped");
@@ -211,8 +221,53 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
             }
 
+#endif 
+            // Reflash modem
+            LogMsg("Run TFI Reflasher...");
+            opResult = ModemReflasher.TryRestoreFirmware(LogMsg, WorkingDir);
+            if (opResult is not true)
+            {
+                LogMsg("Failed to flash modem firmware");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(ModemReflasher.TryRestoreFirmware)} returned 'Modem at {opResult}'");
+
+            IncrementProgress();
+
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+            }
+            // 3. wait for device
+            
+            LogMsg("Awaiting device attach...");
+            try
+            {
+                modemPort = AwaitDeviceAttach(); //looks done
+            }
+            catch (Exception)
+            {
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(AwaitDeviceAttach)} returned 'Modem at {modemPort}'");
+
+            IncrementProgress();
+
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+
+            }
+
+            IncrementProgress();
+
             // 4. find modem or AT com port
-            ProgressValue = 30;
             LogMsg("Awaiting device start...");
             opResult = AwaitDevice(modemPort, new TelitModem().BootCommand, 30);
             if (opResult is not true)
@@ -223,6 +278,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             }
             LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
 
+            IncrementProgress();
+
             if (_cts.IsCancellationRequested)
             {
                 LogMsg("Stopped");
@@ -230,144 +287,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 break;
             }
 
-            //3.1. Turn ADB IF on
-            //LogMsg("Send 'AT+CUSBADB=1,1");
-            //opResult = TurnOnADBInterface(modemPort);
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Failed to get ADB iface");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(TurnOnADBInterface)} returned {opResult}");
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-            //}
-            //// 5. turn on adb and reboot
-            //ProgressValue = 40;
-            //LogMsg("Reboot for ADB mode....");
-            //opResult = AwaitDevice(modemPort, "AT+CRESET");
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Failed to reboot device");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-
-            //}
-
-            // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
-            //ProgressValue = 50;
-            //LogMsg("Fastboot batch...");
-            //opResult = ExecuteFastbootBatch(WorkingDir);
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Failed to run Fastboot");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(ExecuteFastbootBatch)} returned {opResult}"); // testing
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-            //}
-
-            // 7. wait for device
-            //ProgressValue = 60;
-            //LogMsg("Awaiting device attach...");
-            //try
-            //{
-            //    modemPort = AwaitDeviceAttach(); //looks done
-            //}
-            //catch (Exception)
-            //{
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(AwaitDeviceAttach)} returned 'Modem at {modemPort}'");
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-
-            //}
-
-            //// 8. find modem or AT com port
-            //ProgressValue = 70;
-            //LogMsg("Awaiting device start...");
-            //opResult = AwaitDeviceStart(modemPort, 30);
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Device dows not start within expected interval");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(AwaitDeviceStart)} returned {opResult}"); //looks done
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-            //}
-
-            //LogMsg("Send 'AT+CUSBADB=1,1");
-            //opResult = TurnOnADBInterface(modemPort);
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Failed to get ADB iface");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(TurnOnADBInterface)} returned {opResult}");
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-            //}
-            //// 9. turn on adb and reboot
-            //ProgressValue = 80;
-            //LogMsg("Reboot for ADB mode....");
-            //opResult = AwaitDevice(modemPort, "AT+CRESET");
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Failed to reboot device");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-            //}
-
-
-            // 3.1. Turn ADB IF on
-            //opResult = TurnOnADBInterface(modemPort);
-
             //10. execute adb upload sequence / batch file upload
-            ProgressValue = 90;
+            
             LogMsg("Adb batch...");
             opResult = ExecuteAdbBatch(WorkingDir);
             if (opResult is not true)
@@ -378,6 +299,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             }
             LogMsg($"{nameof(ExecuteAdbBatch)} returned {opResult}");
 
+            IncrementProgress();
+
             if (_cts.IsCancellationRequested)
             {
                 LogMsg("Stopped");
@@ -385,15 +308,36 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 break;
             }
 
+            LogMsg("Send configuration AT commands...");
+            opResult = SendATCommands(modemPort, Path.Combine(WorkingDir, atCommandFileName));
+            if (opResult is not true)
+            {
+                LogMsg("Failed to sent AT commands");
+                WriterFaultState();
+                continue;
+            }
+            LogMsg($"{nameof(SendATCommands)} returned {opResult}");
+
+            IncrementProgress();
+
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Stopped");
+                WriterStopState();
+                break;
+            }
+
+            while (!_cts.IsCancellationRequested)
+                Thread.Sleep(1000);
+#if !NOCU
             // 2. Turn OFF modem power
             LogMsg("Powering board down...");
             opResult = TurnModemPowerOff();
             if (opResult is not true)
                 LogMsg("Failed to power off board");
-            LogMsg($"{nameof(TurnModemPowerOff)} returned {opResult}"); //looks done
+            LogMsg($"{nameof(TurnModemPowerOff)} returned {opResult}");
 
-            // turn off adb and reboot / option: finalizing AT sequence
-            //TurnAdbModeOff();
+            IncrementProgress(100);
 
             elapsed = DateTime.Now - start;
 
@@ -411,6 +355,24 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             //    _modemPort.Close();
             LogMsg("Stopped");
             break;
+#endif
+        }
+    }
+
+    private void IncrementProgress() => ProgressValue += (100 - ProgressValue) / 10;
+    private void IncrementProgress(int value) => ProgressValue = value;
+
+    private bool SendATCommands(string modemPort, string commandFilePath)
+    {
+        var writer = new ATWriter(new TelitPortConfig(modemPort), commandFilePath);
+
+        try
+        {
+            return writer.SendCommands();
+        }
+        catch (Exception)
+        {
+            throw;
         }
     }
 
@@ -507,25 +469,6 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
         return batch.ExitCode == ExitCodes.OK;
     }
-
-    //private bool ExecuteFastbootBatch(string workingDir)
-    //{
-    //    if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not ampty value");
-
-    //    var batchFile = Path.Combine(Directory.GetCurrentDirectory(), fastbootBatch);
-    //    if (!File.Exists(batchFile)) throw new FileNotFoundException("fastboot batch file not found");
-
-    //    var systemImage = Directory.EnumerateFiles(workingDir, "system.img", SearchOption.AllDirectories).First();
-    //    if (!File.Exists(systemImage) || string.IsNullOrEmpty(systemImage)) throw new FileNotFoundException("system image not found");
-
-    //    var systemImageDir = Path.GetDirectoryName(systemImage)!;
-
-    //    var batch = new Batch(batchFile, systemImageDir);
-
-    //    batch.Run();
-
-    //    return batch.ExitCode == ExitCodes.OK;
-    //}
 
     internal bool RebootForAdb(string portName, int timeout = 30)
     {
@@ -715,7 +658,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
     private void WriterStopState()
     {
-        ProgressValue = 0;
+        
         _cu.SetOuts(Outs.White);
         StatusColor = Brushes.White;
         LogMsg("Powering board down...");
@@ -727,7 +670,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
     private void WriterSuccessState(TimeSpan elapsed)
     {
-        ProgressValue = 100;
+        
         _cu.SetOuts(Outs.Green);
         StatusColor = Brushes.LightGreen;
         PassValue++;
@@ -737,7 +680,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 #elif !NOCU
         _cu.WaitForState(Sensors.Pn1_Down);
 #endif
-        ProgressValue = 0;
+        
     }
 
     private bool TurnModemPowerOn() => _cu.PowerOn();

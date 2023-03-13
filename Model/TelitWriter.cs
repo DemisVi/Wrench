@@ -1,4 +1,4 @@
-﻿#define NOCU
+﻿//#define NOCU
 
 using System;
 using System.Collections.Generic;
@@ -123,8 +123,6 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
         while (!_cts.IsCancellationRequested)
         {
-            start = DateTime.Now;
-
 #if !NOCU
             SignalReady();
             //UpdateCfgSN();
@@ -148,6 +146,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 continue;
             }
             LogMsg($"{nameof(AwaitCUClose)} returned {opResult}"); //looks done
+
+            start = DateTime.Now;
 
             IncrementProgress();
 
@@ -326,9 +326,10 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
-
-            while (!_cts.IsCancellationRequested)
-                Thread.Sleep(1000);
+#if NOCU
+            //while (!_cts.IsCancellationRequested)
+            //    Thread.Sleep(1000);
+#endif //NOCU
 #if !NOCU
             // 2. Turn OFF modem power
             LogMsg("Powering board down...");

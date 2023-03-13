@@ -52,6 +52,45 @@ public class ATWriter
         {
             port.Close();
         }
+
+    }
+    public static bool SendCommand(IModemPortConfig portConfig, ATCommand command)
+    {
+        using var port = new SerialPort()
+        {
+            NewLine = portConfig.NewLine,
+            PortName = portConfig.PortName,
+            BaudRate = portConfig.BaudRate,
+            Handshake = portConfig.HandShake,
+            ReadTimeout = portConfig.ReadTimeout,
+            WriteTimeout = portConfig.WriteTimeout,
+        };
+        try
+        {
+            port.Open();
+            port.WriteLine("ate0");
+            port.ReadLine();
+            port.DiscardInBuffer();
+
+            port.WriteLine(command.Command);
+            port.ReadLine();
+            if (!port.ReadExisting().Contains(command.Answer))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+        finally
+        {
+            port.Close();
+        }
     }
 
 }

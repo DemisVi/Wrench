@@ -231,7 +231,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(ModemReflasher.TryRestoreFirmware)} returned 'Modem at {opResult}'");
+            LogMsg($"{nameof(ModemReflasher.TryRestoreFirmware)} returned '{opResult}'");
 
             IncrementProgress();
 
@@ -242,7 +242,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 break;
             }
             // 3. wait for device
-            
+
             LogMsg("Awaiting device attach...");
             try
             {
@@ -288,7 +288,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             }
 
             //10. execute adb upload sequence / batch file upload
-            
+
             LogMsg("Adb batch...");
             opResult = ExecuteAdbBatch(WorkingDir);
             if (opResult is not true)

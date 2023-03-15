@@ -23,7 +23,11 @@ namespace Wrench.Model
 
             if (!File.Exists(logfilepath))
             {
-                if (!Directory.Exists(Path.GetDirectoryName(logfilepath))) Directory.CreateDirectory(Path.GetFullPath(logfilepath));
+                var logPath = Path.GetDirectoryName(logfilepath);
+                if (!Directory.Exists(Path.GetDirectoryName(logfilepath)) && !string.IsNullOrEmpty(logPath)) 
+                    Directory.CreateDirectory(logPath);
+                else
+                    throw new DirectoryNotFoundException(logPath);
                 File.Create(logfilepath).Close();
             }
 

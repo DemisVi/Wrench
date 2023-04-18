@@ -113,7 +113,7 @@ public class MainViewModel : INotifyPropertyChanged
             //WriterCU1 = new Writer(CU1LogList);
             WriterCU1 = commandParameter switch
             {
-                "SimCom" => new Writer(CU1LogList),
+                "SimCom" => new SimComWriter(CU1LogList),
                 "Telit" => new TelitWriter(CU1LogList),
                 _ => throw new NotImplementedException(),
             };

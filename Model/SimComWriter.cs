@@ -23,7 +23,7 @@ namespace Wrench.Model;
 
 using Timer = System.Timers.Timer;
 
-internal class Writer : INotifyPropertyChanged, IWriter
+internal class SimComWriter : INotifyPropertyChanged, IWriter
 {
     private const string localNewLine = "\r";
     private const Handshake localHandshake = Handshake.None;
@@ -68,7 +68,7 @@ internal class Writer : INotifyPropertyChanged, IWriter
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
-    public Writer(ObservableCollection<string> cULogList)
+    public SimComWriter(ObservableCollection<string> cULogList)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
@@ -118,9 +118,7 @@ internal class Writer : INotifyPropertyChanged, IWriter
 
         while (!_cts.IsCancellationRequested)
         {
-            start = DateTime.Now;
             SignalReady();
-
             UpdateCfgSN();
 
             if (_cts.IsCancellationRequested)
@@ -152,6 +150,8 @@ internal class Writer : INotifyPropertyChanged, IWriter
 
             }
 
+            start = DateTime.Now;
+
             if (!LockCU())
             {
                 LogMsg("Failed to lock Contact Unit");
@@ -164,7 +164,6 @@ internal class Writer : INotifyPropertyChanged, IWriter
                 LogMsg("Stopped");
                 WriterStopState();
                 break;
-
             }
 
             // 2. Turn ON modem power
@@ -211,7 +210,7 @@ internal class Writer : INotifyPropertyChanged, IWriter
             // 4. find modem or AT com port
             ProgressValue = 30;
             LogMsg("Awaiting device start...");
-            opResult = AwaitDeviceStart(modemPort, 30);
+            opResult = AwaitDeviceStart(modemPort, 20);
             if (opResult is not true)
             {
                 LogMsg("Device dows not start within expected interval");
@@ -244,25 +243,6 @@ internal class Writer : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
-            //// 5. turn on adb and reboot
-            //ProgressValue = 40;
-            //LogMsg("Reboot for ADB mode....");
-            //opResult = AwaitDevice(modemPort, "AT+CRESET");
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Failed to reboot device");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-
-            //}
 
             // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
             ProgressValue = 50;
@@ -308,7 +288,7 @@ internal class Writer : INotifyPropertyChanged, IWriter
             // 8. find modem or AT com port
             ProgressValue = 70;
             LogMsg("Awaiting device start...");
-            opResult = AwaitDeviceStart(modemPort, 30);
+            opResult = AwaitDeviceStart(modemPort, 20);
             if (opResult is not true)
             {
                 LogMsg("Device dows not start within expected interval");
@@ -340,28 +320,6 @@ internal class Writer : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
-            //// 9. turn on adb and reboot
-            //ProgressValue = 80;
-            //LogMsg("Reboot for ADB mode....");
-            //opResult = AwaitDevice(modemPort, "AT+CRESET");
-            //if (opResult is not true)
-            //{
-            //    LogMsg("Failed to reboot device");
-            //    WriterFaultState();
-            //    continue;
-            //}
-            //LogMsg($"{nameof(AwaitDevice)} returned {opResult}"); //looks done
-
-            //if (_cts.IsCancellationRequested)
-            //{
-            //    LogMsg("Stopped");
-            //    WriterStopState();
-            //    break;
-            //}
-
-
-            // 3.1. Turn ADB IF on
-            //opResult = TurnOnADBInterface(modemPort);
 
             //10. execute adb upload sequence / batch file upload
             ProgressValue = 90;
@@ -389,9 +347,6 @@ internal class Writer : INotifyPropertyChanged, IWriter
                 LogMsg("Failed to power off board");
             LogMsg($"{nameof(TurnModemPowerOff)} returned {opResult}"); //looks done
 
-            // turn off adb and reboot / option: finalizing AT sequence
-            //TurnAdbModeOff();
-
             elapsed = DateTime.Now - start;
 
             LogMsg($"Done in {elapsed}");
@@ -402,10 +357,6 @@ internal class Writer : INotifyPropertyChanged, IWriter
 
             StatusColor = Brushes.White;
 
-            //if (_cu is not null && _cu is { IsOpen: true })
-            //    _cu.CloseAdapter();
-            //if (_modemPort is not null && _modemPort is { IsOpen: true })
-            //    _modemPort.Close();
             LogMsg("Stopped");
             break;
         }
@@ -465,6 +416,11 @@ internal class Writer : INotifyPropertyChanged, IWriter
         var factory = new FactoryCFG(dir);
         factory.UpdateFactory();
         DeviceSerial = factory.SerialNumber.ToString();
+    }
+
+    private Sensors EnsureCUState()
+    {
+        return Sensors.None;
     }
 
     private bool LockCU()
@@ -631,6 +587,19 @@ internal class Writer : INotifyPropertyChanged, IWriter
 
     private bool AwaitDeviceStart(string portName, int timeout = Timeout.Infinite)
     {
+        Thread.Sleep(timeout * 1000);
+
+        using var serial = new SerialPort(portName)
+        {
+            Handshake = localHandshake,
+            NewLine = localNewLine,
+        };
+
+        return ATWriter.SendCommand(serial, new ATCommand("AT+CGMM"));
+    }
+
+    private bool Old_AwaitDeviceStart(string portName, int timeout = Timeout.Infinite)
+    {
         var tcs = new TaskCompletionSource<bool>();
         var command = "at";
         var elapsed = 0;
@@ -647,10 +616,10 @@ internal class Writer : INotifyPropertyChanged, IWriter
         };
 
         timer.Elapsed += (s, _) =>
-        {
-            elapsed++;
-            serial.WriteLine(command);
-        };
+                {
+                    elapsed++;
+                    serial.WriteLine(command);
+                };
 
         serial.DataReceived += DataReceived;
         serial.Open();

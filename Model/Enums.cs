@@ -40,4 +40,15 @@ namespace Wrench.Model
         Fail = -1,
         UserTimeout = 1000,
     }
+
+    [Flags]
+    public enum ErrorCodes
+    {
+        None = 0,
+        Lodg = 1,
+        Device = 2,
+        Pneumo_Up = 4,
+        Pneumo_Down = 8,
+        
+    }
 }

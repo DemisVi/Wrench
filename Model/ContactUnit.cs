@@ -41,7 +41,7 @@ public class ContactUnit : IContactUnit
     protected string GetFtSerialName()
     {
 
-#pragma warning disable CA1416
+#pragma warning disable CA1416 // platform warning
 
         using var searcher = new ManagementObjectSearcher(FtdiQueries.ftdiSerial);
         using var queryResult = searcher.Get();
@@ -52,7 +52,7 @@ public class ContactUnit : IContactUnit
                            .Where(x => x.Contains("COM", StringComparison.OrdinalIgnoreCase))
                            .First();
 
-#pragma warning restore CA1416
+#pragma warning restore CA1416 // platform warning
 
         return portName;
     }
@@ -127,15 +127,9 @@ public class ContactUnit : IContactUnit
             var timer = s as Timer;
             var elapsed = (DateTime.Now - start).TotalSeconds;
             var sens = GetSensors();
-            if (sens == sensors)
+            if (sens == sensors || (timeout != Timeout.Infinite && elapsed > timeout))
             {
                 tcs.SetResult(sens);
-                timer?.Stop();
-                return;
-            }
-            else if (timeout != Timeout.Infinite && elapsed > timeout)
-            {
-                tcs.SetResult(Sensors.None);
                 timer?.Stop();
                 return;
             }

@@ -103,7 +103,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         var modemPort = string.Empty;
         DateTime start;
         TimeSpan elapsed = TimeSpan.Zero;
-        object opResult;
+        object opResult, expected;
 
         //ProgressIndeterminate = true;
         //LogMsg("Close Contact Unit!");
@@ -123,71 +123,70 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
 
             }
 
             // 1. Wait for CU
-            LogMsg("Awaiting CU ready...");
+            LogMsg("Ожидание готовности КУ...");
             ProgressIndeterminate = true;
             opResult = AwaitCUClose();
+            expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down;
             ProgressIndeterminate = false;
-            if (opResult as Sensors? is not (Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down))
+            if (opResult as Sensors? != (expected as Sensors?))
             {
-                LogMsg("Contact Unit fault");
+                LogMsg($"ERROR: {((int)opResult ^ (int)expected):D4} \nContact Unit fault");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitCUClose)} returned {opResult}"); //looks done
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
 
             }
 
             start = DateTime.Now;
-
-            if (!LockCU())
+            opResult = LockCU();
+            expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up;
+            if (opResult as Sensors? != expected as Sensors?)
             {
-                LogMsg("Failed to lock Contact Unit");
+                LogMsg($"ERROR: {((int)opResult ^ (int)expected):D4} \nFailed to lock Contact Unit");
                 WriterFaultState();
                 continue;
             }
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
 
             // 2. Turn ON modem power
             ProgressValue = 10;
-            LogMsg("Powering board up...");
+            LogMsg("Подача питания...");
             opResult = TurnModemPowerOn();
             if (opResult is not true)
             {
-                LogMsg("Failed to power on board");
+                LogMsg($"ERROR: {(int)ErrorCodes.Device_Power:D4} \nFailed to power on board");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(TurnModemPowerOn)} returned {opResult}"); //looks done
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
-
             // 3. wait for device
             ProgressValue = 20;
-            LogMsg("Awaiting device attach...");
+            LogMsg("Ожидание подключения...");
             try
             {
                 modemPort = AwaitDeviceAttach(); //looks done
@@ -197,11 +196,10 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDeviceAttach)} returned 'Modem at {modemPort}'");
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
 
@@ -209,63 +207,60 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
             // 4. find modem or AT com port
             ProgressValue = 30;
-            LogMsg("Awaiting device start...");
+            LogMsg("Ожидание запуска...");
             opResult = AwaitDeviceStart(modemPort, 20);
             if (opResult is not true)
             {
-                LogMsg("Device dows not start within expected interval");
+                LogMsg($"ERROR: {(int)ErrorCodes.Device_Start:D4} \nDevice dows not start within expected interval");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDeviceStart)} returned {opResult}"); //looks done
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
 
             //3.1. Turn ADB IF on
-            LogMsg("Send 'AT+CUSBADB=1,1");
+            LogMsg("Получение ADB интерфейса...");
             opResult = TurnOnADBInterface(modemPort);
             if (opResult is not true)
             {
-                LogMsg("Failed to get ADB iface");
+                LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to get ADB iface");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(TurnOnADBInterface)} returned {opResult}");
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
-
+#if NOCU
             // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
             ProgressValue = 50;
-            LogMsg("Fastboot batch...");
+            LogMsg("Прошивка Fastboot'ом...");
             opResult = ExecuteFastbootBatch(WorkingDir);
             if (opResult is not true)
             {
-                LogMsg("Failed to run Fastboot");
+                LogMsg($"ERROR: {(int)ErrorCodes.Fastboot_Batch:D4} \nFailed to run Fastboot");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(ExecuteFastbootBatch)} returned {opResult}"); // testing
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
 
             // 7. wait for device
             ProgressValue = 60;
-            LogMsg("Awaiting device attach...");
+            LogMsg("Ожидание подключения...");
             try
             {
                 modemPort = AwaitDeviceAttach(); //looks done
@@ -275,11 +270,10 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDeviceAttach)} returned 'Modem at {modemPort}'");
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
 
@@ -287,69 +281,65 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
             // 8. find modem or AT com port
             ProgressValue = 70;
-            LogMsg("Awaiting device start...");
+            LogMsg("Ожидание запуска...");
             opResult = AwaitDeviceStart(modemPort, 20);
             if (opResult is not true)
             {
-                LogMsg("Device dows not start within expected interval");
+                LogMsg($"{(int)ErrorCodes.Device_Start:D4}Device dows not start within expected interval");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(AwaitDeviceStart)} returned {opResult}"); //looks done
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
 
-            LogMsg("Send 'AT+CUSBADB=1,1");
+            LogMsg("Получение ADB интерфейса...");
             opResult = TurnOnADBInterface(modemPort);
             if (opResult is not true)
             {
-                LogMsg("Failed to get ADB iface");
+                LogMsg($"{(int)ErrorCodes.ADB_Interface} \nFailed to get ADB iface");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(TurnOnADBInterface)} returned {opResult}");
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
 
             //10. execute adb upload sequence / batch file upload
             ProgressValue = 90;
-            LogMsg("Adb batch...");
+            LogMsg("Загрузка файлов по ADB интерфейсу...");
             opResult = ExecuteAdbBatch(WorkingDir);
             if (opResult is not true)
             {
-                LogMsg("Failed to run ADB");
+                LogMsg($"{(int)ErrorCodes.Device_Power:D4}Failed to run ADB");
                 WriterFaultState();
                 continue;
             }
-            LogMsg($"{nameof(ExecuteAdbBatch)} returned {opResult}");
 
             if (_cts.IsCancellationRequested)
             {
-                LogMsg("Stopped");
+                LogMsg("Остановлено");
                 WriterStopState();
                 break;
             }
-
+#endif
             // 2. Turn OFF modem power
-            LogMsg("Powering board down...");
+            LogMsg("Снятие питания...");
             opResult = TurnModemPowerOff();
             if (opResult is not true)
-                LogMsg("Failed to power off board");
-            LogMsg($"{nameof(TurnModemPowerOff)} returned {opResult}"); //looks done
+                LogMsg($"{(int)ErrorCodes.Device_Power:D4}Failed to power off board");
 
             elapsed = DateTime.Now - start;
 
-            LogMsg($"Done in {elapsed}");
+            LogMsg($"Завершено за {elapsed}");
 
             WriterSuccessState(elapsed);
 
@@ -357,7 +347,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
             StatusColor = Brushes.White;
 
-            LogMsg("Stopped");
+            LogMsg("Остановлено");
             break;
         }
     }
@@ -418,16 +408,18 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         DeviceSerial = factory.SerialNumber.ToString();
     }
 
-    private Sensors EnsureCUState()
-    {
-        return Sensors.None;
-    }
-
-    private bool LockCU()
+    private Sensors LockCU()
     {
         _cu.SetOuts(Outs.Pn1 | Outs.Blue);
         StatusColor = Brushes.LightBlue;
-        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2) != Sensors.None;
+        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2);
+    }
+
+    private bool EnsureCUState()
+    {
+        _cu.SetOuts(Outs.Pn1 | Outs.Blue);
+        StatusColor = Brushes.LightBlue;
+        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2) == (Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up);
     }
 
     private void SignalReady()
@@ -656,7 +648,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         try { modemLocator.WaitDeviceAttach(new TimeSpan(0, 0, 60)); }
         catch (Exception)
         {
-            LogMsg("Device does not appear within expected interval");
+            LogMsg($"ERROR: {(int)ErrorCodes.Device_Attach:D4} \nDevice does not appear within expected interval");
             throw;
         }
         return modemLocator.GetModemATPorts().First();
@@ -668,7 +660,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         _cu.SetOuts(Outs.Red);
         StatusColor = Brushes.LightPink;
         FailValue++;
-        LogMsg("Powering board down...");
+        LogMsg("Снятие питания...");
         var opResult = TurnModemPowerOff();
         if (opResult is not true)
             LogMsg("Failed to power off board");
@@ -681,7 +673,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         ProgressValue = 0;
         _cu.SetOuts(Outs.White);
         StatusColor = Brushes.White;
-        LogMsg("Powering board down...");
+        LogMsg("Снятие питания...");
         var opResult = TurnModemPowerOff();
         if (opResult is not true)
             LogMsg("Failed to power off board");
@@ -701,9 +693,9 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
     private bool TurnModemPowerOn() => _cu.PowerOn();
 
-    private bool TurnModemPowerOff(int timeout = 2)
+    private bool TurnModemPowerOff(int timeout = 4)
     {
-        Thread.Sleep(new TimeSpan(0, 0, timeout));
+        Thread.Sleep(TimeSpan.FromSeconds(timeout));
 
         _cu.PowerOff();
 

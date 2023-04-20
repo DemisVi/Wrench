@@ -49,6 +49,11 @@ namespace Wrench.Model
         Device = 2,
         Pneumo_Up = 4,
         Pneumo_Down = 8,
-        
+        Device_Power = 16,
+        Device_Attach = 32,
+        ADB_Interface = 64,
+        Fastboot_Batch = 128,
+        ADB_Batch = 256,
+        Device_Start = 512,
     }
 }

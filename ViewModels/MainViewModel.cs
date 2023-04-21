@@ -87,7 +87,10 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand ShowPackageSelector => _showPackageSelector ??= new Command(PerformShowPackageSelector, x => !IsWriterRunning);
     private void PerformShowPackageSelector(object? commandParameter)
     {
-        DeviceType = new();
+        if (DeviceType is not null)
+            DeviceType?.Clear();
+        else
+            DeviceType = new();
 
         var currentDir = Directory.GetCurrentDirectory();
         _dataDir = Path.Combine(currentDir, SelectedWriter);
@@ -95,9 +98,9 @@ public class MainViewModel : INotifyPropertyChanged
         var dirs = new DirectoryInfo(_dataDir).EnumerateDirectories();
         foreach (var i in dirs)
         {
-            DeviceType.Add(i.Name, new List<string>());
+            DeviceType?.Add(i.Name, new List<string>());
             foreach (var j in i.GetDirectories())
-                DeviceType[i.Name].Add(j.Name);
+                DeviceType?[i.Name].Add(j.Name);
         }
 
         new PackageSelectorWindow(this).ShowDialog();
@@ -136,7 +139,7 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     private Command? loadSelected;
-    public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected, 
+    public ICommand? LoadSelected => loadSelected ??= new Command(PerformLoadSelected,
         x => !string.IsNullOrEmpty(SelectedVersion) && !string.IsNullOrEmpty(SelectedDevice));
 
     private void PerformLoadSelected(object? commandParameter)
@@ -196,7 +199,7 @@ public class MainViewModel : INotifyPropertyChanged
         get => _selectedDevice; set
         {
             SetProperty(ref _selectedDevice, value);
-            DeviceVersion = DeviceType[SelectedDevice];
+            DeviceVersion = DeviceType[_selectedDevice];
         }
     }
 
@@ -263,7 +266,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    public string PFKValue { get => string.Format("{0}/{1}", PassValue, FailValue); }
+    public string PFKValue { get => string.Format($"{((float)PassValue / (float)(PassValue + FailValue)):N2}"); }
 
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue

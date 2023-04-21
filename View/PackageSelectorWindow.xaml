@@ -23,7 +23,7 @@
         </Grid.ColumnDefinitions>
         <Button Command="{Binding LoadSelected}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" 
                 Content="Загрузить" Grid.Row="1" Grid.ColumnSpan="2"/>
-        <ListBox ItemsSource="{Binding DeviceType.Keys}" SelectedValue="{Binding SelectedDevice}" d:SelectedIndex="0"/>
-        <ListBox ItemsSource="{Binding DeviceVersion}" SelectedValue="{Binding SelectedVersion}" d:SelectedIndex="0" Grid.Column="1"/>
+        <ListBox ItemsSource="{Binding DeviceType.Keys}" SelectedValue="{Binding SelectedDevice}"/>
+        <ListBox ItemsSource="{Binding DeviceVersion}" SelectedValue="{Binding SelectedVersion}" Grid.Column="1"/>
     </Grid>
 </Window>

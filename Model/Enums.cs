@@ -55,5 +55,7 @@ namespace Wrench.Model
         Fastboot_Batch = 128,
         ADB_Batch = 256,
         Device_Start = 512,
+        Device_AT_config = 1024,
+        
     }
 }

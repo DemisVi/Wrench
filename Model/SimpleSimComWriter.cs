@@ -23,7 +23,7 @@ namespace Wrench.Model;
 
 using Timer = System.Timers.Timer;
 
-internal class SimComWriter : INotifyPropertyChanged, IWriter
+internal class SimpleSimComWriter : INotifyPropertyChanged, IWriter
 {
     private const string localNewLine = "\r";
     private const Handshake localHandshake = Handshake.None;
@@ -34,8 +34,8 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     private CancellationTokenSource _cts = new();
     ContactUnit _cu;
 
-    private bool _isWriterRunning = false;
-    public bool IsWriterRunning { get => _isWriterRunning; set => SetProperty(ref _isWriterRunning, value); }
+    //private bool _isWriterRunning = false;
+    //public bool IsWriterRunning { get => _isWriterRunning; set => SetProperty(ref _isWriterRunning, value); }
 
     private string _status = string.Empty;
     public string OperationStatus { get => _status; set => SetProperty(ref _status, value, nameof(OperationStatus)); }
@@ -67,7 +67,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
-    public SimComWriter(ObservableCollection<string> cULogList)
+    public SimpleSimComWriter(ObservableCollection<string> cULogList)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));

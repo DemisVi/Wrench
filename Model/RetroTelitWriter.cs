@@ -23,10 +23,10 @@ namespace Wrench.Model;
 
 using Timer = System.Timers.Timer;
 
-internal class TelitWriter : INotifyPropertyChanged, IWriter
+internal class RetroTelitWriter : INotifyPropertyChanged, IWriter
 {
     private const string localNewLine = "\r";
-    private const Handshake localHandshake = Handshake.None;
+    private const Handshake localHandshake = Handshake.RequestToSend;
     private const string adbBatch = "transfer_to_modem.bat";
     private const string atCommandFileName = "postinstallat.txt";
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -67,7 +67,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
-    public TelitWriter(ObservableCollection<string> cULogList)
+    public RetroTelitWriter(ObservableCollection<string> cULogList)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
@@ -223,7 +223,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
-            
+
             // 3. wait for device
             LogMsg("Ожидание подключения...");
             try
@@ -248,7 +248,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             // 8. find modem or AT com port
             ProgressValue = 70;
             LogMsg("Ожидание запуска...");
-            opResult = AwaitDevice(modemPort, new TelitModem().BootCommand, 30);
+            opResult = AwaitDeviceStart(modemPort, 10);
             if (opResult is not true)
             {
                 LogMsg($"ERROR: {(int)ErrorCodes.Device_Start:D4} \nDevice dows not start within expected interval");
@@ -547,7 +547,11 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             NewLine = localNewLine,
         };
 
-        return ATWriter.SendCommand(serial, new ATCommand("AT+CGMM"));
+        var command = new TelitModem().BootCommand;
+
+        var res = ATWriter.SendCommand(serial, new ATCommand(command));
+
+        return res;
     }
 
     private bool Old_AwaitDeviceStart(string portName, int timeout = Timeout.Infinite)

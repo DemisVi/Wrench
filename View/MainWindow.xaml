@@ -13,7 +13,7 @@
     </Window.Resources>
 
     <Window.Icon>
-        <Binding Mode="OneWay" Source="{StaticResource svg_wrench_adjustable_circle_fillDrawingImage}"/>
+        <Binding Mode="OneWay" Source="{StaticResource wrench_adjustable_circle_fillDrawingImage}"/>
     </Window.Icon>
 
     <Window.InputBindings>
@@ -79,29 +79,34 @@
             <StatusBarItem HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal">
                     <Button Command="{Binding ShowPackageSelector}"
-                            Width="32" Height="32" Margin="2,0">
-                        <Image Width="24" Height="24" Source="{Binding Mode=OneWay, Source={StaticResource svg_folder_plusDrawingImage}}"/>
+                            Width="32" Height="32" Margin="4,0">
+                        <Image Width="24" Height="24" Source="{Binding Mode=OneWay, Source={StaticResource folder_plusDrawingImage}}"/>
                     </Button>
-                    <Button Command="{Binding ToggleWriter}" Background="{Binding FlashButtonColor}"
+                    <Button Command="{Binding StartWriter}" Background="{Binding FlashButtonColor}"
                             CommandParameter="{Binding SelectedWriter}"
-                            Width="32" Height="32" Margin="2,0">
-                        <Image Height="24" Width="24" Source="{Binding Mode=OneWay, Source={StaticResource svg_lightningDrawingImage}}"/>
+                            Width="32" Height="32" Margin="4,0">
+                        <Image Height="24" Width="24" Source="{Binding Mode=OneWay, Source={StaticResource lightningDrawingImage}}"/>
                     </Button>
-                    <TextBlock Text="{Binding OperationStatus}"/>
+                    <Button Command="{Binding StopWriter}" Background="{Binding FlashButtonColor}"
+                            CommandParameter="{Binding SelectedWriter}"
+                            Width="32" Height="32" Margin="4,0">
+                        <Image Height="24" Width="24" Source="{Binding Mode=OneWay, Source={StaticResource stopDrawingImage}}"/>
+                    </Button>
+                    <!--<TextBlock Text="{Binding OperationStatus}"/>-->
                 </StackPanel>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <StackPanel Orientation="Horizontal">
 
-                    <ComboBox Width="120" Margin="2,2" FontSize="24"
+                    <ComboBox Width="200" Margin="2,2" FontSize="24"
                               SelectedIndex="0" SelectedItem="{Binding SelectedWriter}" ItemsSource="{Binding WriterVariant}"
                               IsEnabled="{Binding IsWriterRunningInvert}"/>
 
-                    <TextBox Background="{Binding IndicatorColor}" Text="{Binding PasswordText, UpdateSourceTrigger=PropertyChanged}"
+                    <!--<TextBox Background="{Binding IndicatorColor}" Text="{Binding PasswordText, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding IsWriterRunningInvert}"
                              Grid.Row="4" Width="50" Height="22" Margin="2,2" FontSize="14">
 
-                    </TextBox>
+                    </TextBox>-->
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>

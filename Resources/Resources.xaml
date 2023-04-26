@@ -1,51 +1,56 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Geometry x:Key="svg_arrow_clockwiseGeometry1">F0 M16,16z M0,0z M8,3A5,5,0,1,0,12.546,5.914A0.5,0.5,0,0,1,13.454,5.497A6,6,0,1,1,8,2L8,3z</Geometry>
-  <Geometry x:Key="svg_arrow_clockwiseGeometry2">F1 M16,16z M0,0z M8,4.466L8,0.534A0.25,0.25,0,0,1,8.41,0.342L10.77,2.308C10.89,2.408,10.89,2.592,10.77,2.692L8.41,4.658A0.25,0.25,0,0,1,8,4.466z</Geometry>
-  <DrawingGroup x:Key="svg_arrow_clockwiseDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_arrow_clockwiseGeometry1}" />
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_arrow_clockwiseGeometry2}" />
+  <Geometry x:Key="wrench_adjustable_circle_fillGeometry1">F1 M16,16z M0,0z M6.705,8.139A0.25,0.25,0,0,0,6.417,7.763L4.917,8.263 5.076,8.737 5.884,8.467 5.289,9.361A0.25,0.25,0,0,0,5.576,9.737L6.384,9.467 5.789,10.361A0.25,0.25,0,0,0,6.076,10.737L7.576,10.237 7.417,9.763 6.609,10.033 7.205,9.139A0.25,0.25,0,0,0,6.917,8.763L6.109,9.033 6.705,8.139z</Geometry>
+  <Geometry x:Key="wrench_adjustable_circle_fillGeometry2">F1 M16,16z M0,0z M8,16A8,8,0,1,0,8,0A8,8,0,0,0,8,16z M1.798,11.249L3.786,9.592A4.5,4.5,0,0,1,11.323,4.969L7.497,6.5 8.497,9 9.83,12.11C9.27,12.361,8.65,12.5,7.997,12.5A4.49,4.49,0,0,1,6.405,12.21L4.747,14.2A7.031,7.031,0,0,1,1.798,11.249z M12.496,8A4.491,4.491,0,0,1,10.793,11.526L9.497,8.5 12.456,7.39C12.483,7.59,12.496,7.793,12.496,8z</Geometry>
+  <DrawingGroup x:Key="wrench_adjustable_circle_fillDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource wrench_adjustable_circle_fillGeometry1}" />
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource wrench_adjustable_circle_fillGeometry2}" />
   </DrawingGroup>
-  <DrawingImage x:Key="svg_arrow_clockwiseDrawingImage" Drawing="{StaticResource svg_arrow_clockwiseDrawingGroup}" />
-  <Geometry x:Key="svg_wrenchGeometry">F1 M16,16z M0,0z M0.102,2.223A3.004,3.004,0,0,0,3.78,5.897L10.121,12.149A3.003,3.003,0,0,0,13,16A3,3,0,1,0,12.149,10.122L5.897,3.781A3.004,3.004,0,0,0,2.223,0.1L4.364,2.242 4,4 2.243,4.364 0.102,2.223z M13.472,11.242L14,11.268 14.287,11.713 14.732,12 14.758,12.529 15,13 14.758,13.471 14.732,14 14.287,14.287 14,14.732 13.471,14.758 13,15 12.529,14.758 12,14.732 11.713,14.287 11.268,14 11.242,13.471 11,13 11.242,12.529 11.268,12 11.713,11.713 12,11.268 12.529,11.242 13,11 13.471,11.242z</Geometry>
-  <DrawingGroup x:Key="svg_wrenchDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
-    <DrawingGroup.Transform>
-      <TranslateTransform X="0" Y="0.0010945904068648815" />
-    </DrawingGroup.Transform>
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_wrenchGeometry}" />
+  <DrawingImage x:Key="wrench_adjustable_circle_fillDrawingImage" Drawing="{StaticResource wrench_adjustable_circle_fillDrawingGroup}" />
+  <Geometry x:Key="stopGeometry">F1 M16,16z M0,0z M3.5,5A1.5,1.5,0,0,1,5,3.5L11,3.5A1.5,1.5,0,0,1,12.5,5L12.5,11A1.5,1.5,0,0,1,11,12.5L5,12.5A1.5,1.5,0,0,1,3.5,11L3.5,5z M5,4.5A0.5,0.5,0,0,0,4.5,5L4.5,11A0.5,0.5,0,0,0,5,11.5L11,11.5A0.5,0.5,0,0,0,11.5,11L11.5,5A0.5,0.5,0,0,0,11,4.5L5,4.5z</Geometry>
+  <DrawingGroup x:Key="stopDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource stopGeometry}" />
   </DrawingGroup>
-  <DrawingImage x:Key="svg_wrenchDrawingImage" Drawing="{StaticResource svg_wrenchDrawingGroup}" />
-  <Geometry x:Key="svg_lockGeometry">F1 M16,16z M0,0z M8,1A2,2,0,0,1,10,3L10,7 6,7 6,3A2,2,0,0,1,8,1z M11,7L11,3A3,3,0,0,0,5,3L5,7A2,2,0,0,0,3,9L3,14A2,2,0,0,0,5,16L11,16A2,2,0,0,0,13,14L13,9A2,2,0,0,0,11,7z M5,8L11,8A1,1,0,0,1,12,9L12,14A1,1,0,0,1,11,15L5,15A1,1,0,0,1,4,14L4,9A1,1,0,0,1,5,8z</Geometry>
-  <DrawingGroup x:Key="svg_lockDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_lockGeometry}" />
+  <DrawingImage x:Key="stopDrawingImage" Drawing="{StaticResource stopDrawingGroup}" />
+  <Geometry x:Key="gearGeometry1">F1 M16,16z M0,0z M8,4.754A3.246,3.246,0,1,0,8,11.246A3.246,3.246,0,0,0,8,4.754z M5.754,8A2.246,2.246,0,1,1,10.246,8A2.246,2.246,0,0,1,5.754,8z</Geometry>
+  <Geometry x:Key="gearGeometry2">F1 M16,16z M0,0z M9.796,1.343C9.269,-0.447,6.731,-0.447,6.204,1.343L6.11,1.662A0.873,0.873,0,0,1,4.855,2.182L4.563,2.022C2.923,1.13,1.13,2.924,2.023,4.563L2.182,4.855A0.873,0.873,0,0,1,1.662,6.11L1.343,6.204C-0.447000000000001,6.731,-0.447000000000001,9.269,1.343,9.796L1.662,9.89A0.873,0.873,0,0,1,2.182,11.145L2.022,11.437C1.13,13.077,2.923,14.871,4.563,13.977L4.855,13.818A0.873,0.873,0,0,1,6.11,14.338L6.204,14.657C6.731,16.447,9.269,16.447,9.796,14.657L9.89,14.338A0.873,0.873,0,0,1,11.145,13.818L11.437,13.978C13.077,14.871,14.871,13.076,13.977,11.437L13.818,11.145A0.873,0.873,0,0,1,14.338,9.89L14.657,9.796C16.447,9.269,16.447,6.731,14.657,6.204L14.338,6.11A0.873,0.873,0,0,1,13.818,4.855L13.978,4.563C14.871,2.923,13.076,1.13,11.437,2.023L11.145,2.182A0.873,0.873,0,0,1,9.89,1.662L9.796,1.343z M7.163,1.626C7.409,0.791,8.591,0.791,8.837,1.626L8.931,1.945A1.873,1.873,0,0,0,11.624,3.06L11.915,2.9C12.679,2.485,13.515,3.32,13.099,4.085L12.94,4.377A1.873,1.873,0,0,0,14.056,7.069L14.374,7.163C15.209,7.409,15.209,8.591,14.374,8.837L14.055,8.931A1.873,1.873,0,0,0,12.94,11.624L13.1,11.915C13.515,12.679,12.68,13.515,11.915,13.099L11.624,12.94A1.873,1.873,0,0,0,8.931,14.056L8.837,14.374C8.591,15.209,7.409,15.209,7.163,14.374L7.069,14.055A1.873,1.873,0,0,0,4.377,12.94L4.085,13.1C3.321,13.515,2.485,12.68,2.901,11.915L3.06,11.624A1.873,1.873,0,0,0,1.945,8.93L1.626,8.836C0.791,8.59,0.791,7.408,1.626,7.162L1.945,7.068A1.873,1.873,0,0,0,3.06,4.377L2.9,4.085C2.485,3.321,3.32,2.485,4.085,2.901L4.377,3.06A1.873,1.873,0,0,0,7.069,1.945L7.163,1.626z</Geometry>
+  <DrawingGroup x:Key="gearDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource gearGeometry1}" />
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource gearGeometry2}" />
   </DrawingGroup>
-  <DrawingImage x:Key="svg_lockDrawingImage" Drawing="{StaticResource svg_lockDrawingGroup}" />
-  <Geometry x:Key="svg_folder_plusGeometry1">F1 M16,16z M0,0z M0.5,3L0.54,3.87A1.99,1.99,0,0,0,0.198,5.181L0.835,12.181A2,2,0,0,0,2.826,14L9,14 9,13 2.826,13A1,1,0,0,1,1.831,12.09L1.194,5.09A1,1,0,0,1,2.19,4L13.81,4A1,1,0,0,1,14.806,5.09L14.54,8 15.545,8 15.801,5.181A2,2,0,0,0,13.81,3L9.828,3A2,2,0,0,1,8.414,2.414L7.586,1.586A2,2,0,0,0,6.172,1L2.5,1A2,2,0,0,0,0.5,3z M6.172,2A1,1,0,0,1,6.879,2.293L7.586,3 2.19,3C1.95,3,1.72,3.042,1.507,3.12L1.5,2.98A1,1,0,0,1,2.5,2L6.172,2z</Geometry>
-  <Geometry x:Key="svg_folder_plusGeometry2">F1 M16,16z M0,0z M13.5,10A0.5,0.5,0,0,1,14,10.5L14,12 15.5,12A0.5,0.5,0,1,1,15.5,13L14,13 14,14.5A0.5,0.5,0,1,1,13,14.5L13,13 11.5,13A0.5,0.5,0,0,1,11.5,12L13,12 13,10.5A0.5,0.5,0,0,1,13.5,10z</Geometry>
-  <DrawingGroup x:Key="svg_folder_plusDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_folder_plusGeometry1}" />
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_folder_plusGeometry2}" />
+  <DrawingImage x:Key="gearDrawingImage" Drawing="{StaticResource gearDrawingGroup}" />
+  <Geometry x:Key="lockGeometry">F1 M16,16z M0,0z M8,1A2,2,0,0,1,10,3L10,7 6,7 6,3A2,2,0,0,1,8,1z M11,7L11,3A3,3,0,0,0,5,3L5,7A2,2,0,0,0,3,9L3,14A2,2,0,0,0,5,16L11,16A2,2,0,0,0,13,14L13,9A2,2,0,0,0,11,7z M5,8L11,8A1,1,0,0,1,12,9L12,14A1,1,0,0,1,11,15L5,15A1,1,0,0,1,4,14L4,9A1,1,0,0,1,5,8z</Geometry>
+  <DrawingGroup x:Key="lockDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource lockGeometry}" />
   </DrawingGroup>
-  <DrawingImage x:Key="svg_folder_plusDrawingImage" Drawing="{StaticResource svg_folder_plusDrawingGroup}" />
-  <Geometry x:Key="svg_gearGeometry1">F1 M16,16z M0,0z M8,4.754A3.246,3.246,0,1,0,8,11.246A3.246,3.246,0,0,0,8,4.754z M5.754,8A2.246,2.246,0,1,1,10.246,8A2.246,2.246,0,0,1,5.754,8z</Geometry>
-  <Geometry x:Key="svg_gearGeometry2">F1 M16,16z M0,0z M9.796,1.343C9.269,-0.447,6.731,-0.447,6.204,1.343L6.11,1.662A0.873,0.873,0,0,1,4.855,2.182L4.563,2.022C2.923,1.13,1.13,2.924,2.023,4.563L2.182,4.855A0.873,0.873,0,0,1,1.662,6.11L1.343,6.204C-0.447000000000001,6.731,-0.447000000000001,9.269,1.343,9.796L1.662,9.89A0.873,0.873,0,0,1,2.182,11.145L2.022,11.437C1.13,13.077,2.923,14.871,4.563,13.977L4.855,13.818A0.873,0.873,0,0,1,6.11,14.338L6.204,14.657C6.731,16.447,9.269,16.447,9.796,14.657L9.89,14.338A0.873,0.873,0,0,1,11.145,13.818L11.437,13.978C13.077,14.871,14.871,13.076,13.977,11.437L13.818,11.145A0.873,0.873,0,0,1,14.338,9.89L14.657,9.796C16.447,9.269,16.447,6.731,14.657,6.204L14.338,6.11A0.873,0.873,0,0,1,13.818,4.855L13.978,4.563C14.871,2.923,13.076,1.13,11.437,2.023L11.145,2.182A0.873,0.873,0,0,1,9.89,1.662L9.796,1.343z M7.163,1.626C7.409,0.791,8.591,0.791,8.837,1.626L8.931,1.945A1.873,1.873,0,0,0,11.624,3.06L11.915,2.9C12.679,2.485,13.515,3.32,13.099,4.085L12.94,4.377A1.873,1.873,0,0,0,14.056,7.069L14.374,7.163C15.209,7.409,15.209,8.591,14.374,8.837L14.055,8.931A1.873,1.873,0,0,0,12.94,11.624L13.1,11.915C13.515,12.679,12.68,13.515,11.915,13.099L11.624,12.94A1.873,1.873,0,0,0,8.931,14.056L8.837,14.374C8.591,15.209,7.409,15.209,7.163,14.374L7.069,14.055A1.873,1.873,0,0,0,4.377,12.94L4.085,13.1C3.321,13.515,2.485,12.68,2.901,11.915L3.06,11.624A1.873,1.873,0,0,0,1.945,8.93L1.626,8.836C0.791,8.59,0.791,7.408,1.626,7.162L1.945,7.068A1.873,1.873,0,0,0,3.06,4.377L2.9,4.085C2.485,3.321,3.32,2.485,4.085,2.901L4.377,3.06A1.873,1.873,0,0,0,7.069,1.945L7.163,1.626z</Geometry>
-  <DrawingGroup x:Key="svg_gearDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_gearGeometry1}" />
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_gearGeometry2}" />
+  <DrawingImage x:Key="lockDrawingImage" Drawing="{StaticResource lockDrawingGroup}" />
+  <Geometry x:Key="arrow_clockwiseGeometry1">F0 M16,16z M0,0z M8,3A5,5,0,1,0,12.546,5.914A0.5,0.5,0,0,1,13.454,5.497A6,6,0,1,1,8,2L8,3z</Geometry>
+  <Geometry x:Key="arrow_clockwiseGeometry2">F1 M16,16z M0,0z M8,4.466L8,0.534A0.25,0.25,0,0,1,8.41,0.342L10.77,2.308C10.89,2.408,10.89,2.592,10.77,2.692L8.41,4.658A0.25,0.25,0,0,1,8,4.466z</Geometry>
+  <DrawingGroup x:Key="arrow_clockwiseDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource arrow_clockwiseGeometry1}" />
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource arrow_clockwiseGeometry2}" />
   </DrawingGroup>
-  <DrawingImage x:Key="svg_gearDrawingImage" Drawing="{StaticResource svg_gearDrawingGroup}" />
-  <Geometry x:Key="svg_wrench_adjustable_circle_fillGeometry1">F1 M16,16z M0,0z M6.705,8.139A0.25,0.25,0,0,0,6.417,7.763L4.917,8.263 5.076,8.737 5.884,8.467 5.289,9.361A0.25,0.25,0,0,0,5.576,9.737L6.384,9.467 5.789,10.361A0.25,0.25,0,0,0,6.076,10.737L7.576,10.237 7.417,9.763 6.609,10.033 7.205,9.139A0.25,0.25,0,0,0,6.917,8.763L6.109,9.033 6.705,8.139z</Geometry>
-  <Geometry x:Key="svg_wrench_adjustable_circle_fillGeometry2">F1 M16,16z M0,0z M8,16A8,8,0,1,0,8,0A8,8,0,0,0,8,16z M1.798,11.249L3.786,9.592A4.5,4.5,0,0,1,11.323,4.969L7.497,6.5 8.497,9 9.83,12.11C9.27,12.361,8.65,12.5,7.997,12.5A4.49,4.49,0,0,1,6.405,12.21L4.747,14.2A7.031,7.031,0,0,1,1.798,11.249z M12.496,8A4.491,4.491,0,0,1,10.793,11.526L9.497,8.5 12.456,7.39C12.483,7.59,12.496,7.793,12.496,8z</Geometry>
-  <DrawingGroup x:Key="svg_wrench_adjustable_circle_fillDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_wrench_adjustable_circle_fillGeometry1}" />
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_wrench_adjustable_circle_fillGeometry2}" />
-  </DrawingGroup>
-  <DrawingImage x:Key="svg_wrench_adjustable_circle_fillDrawingImage" Drawing="{StaticResource svg_wrench_adjustable_circle_fillDrawingGroup}" />
-  <Geometry x:Key="svg_lightningGeometry">F1 M16,16z M0,0z M5.52,0.359A0.5,0.5,0,0,1,6,0L10,0A0.5,0.5,0,0,1,10.474,0.658L8.694,6 12.5,6A0.5,0.5,0,0,1,12.895,6.807L5.895,15.807A0.5,0.5,0,0,1,5.022,15.353L6.823,9.5 3.5,9.5A0.5,0.5,0,0,1,3.02,8.859L5.52,0.359z M6.374,1L4.168,8.5 7.5,8.5A0.5,0.5,0,0,1,7.978,9.147L6.78,13.04 11.478,7 8,7A0.5,0.5,0,0,1,7.526,6.342L9.306,1 6.374,1z</Geometry>
-  <DrawingGroup x:Key="svg_lightningDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+  <DrawingImage x:Key="arrow_clockwiseDrawingImage" Drawing="{StaticResource arrow_clockwiseDrawingGroup}" />
+  <Geometry x:Key="lightningGeometry">F1 M16,16z M0,0z M5.52,0.359A0.5,0.5,0,0,1,6,0L10,0A0.5,0.5,0,0,1,10.474,0.658L8.694,6 12.5,6A0.5,0.5,0,0,1,12.895,6.807L5.895,15.807A0.5,0.5,0,0,1,5.022,15.353L6.823,9.5 3.5,9.5A0.5,0.5,0,0,1,3.02,8.859L5.52,0.359z M6.374,1L4.168,8.5 7.5,8.5A0.5,0.5,0,0,1,7.978,9.147L6.78,13.04 11.478,7 8,7A0.5,0.5,0,0,1,7.526,6.342L9.306,1 6.374,1z</Geometry>
+  <DrawingGroup x:Key="lightningDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
     <DrawingGroup.Transform>
       <TranslateTransform X="0" Y="8.6548048727763671E-08" />
     </DrawingGroup.Transform>
-    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource svg_lightningGeometry}" />
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource lightningGeometry}" />
   </DrawingGroup>
-  <DrawingImage x:Key="svg_lightningDrawingImage" Drawing="{StaticResource svg_lightningDrawingGroup}" />
+  <DrawingImage x:Key="lightningDrawingImage" Drawing="{StaticResource lightningDrawingGroup}" />
+  <Geometry x:Key="folder_plusGeometry1">F1 M16,16z M0,0z M0.5,3L0.54,3.87A1.99,1.99,0,0,0,0.198,5.181L0.835,12.181A2,2,0,0,0,2.826,14L9,14 9,13 2.826,13A1,1,0,0,1,1.831,12.09L1.194,5.09A1,1,0,0,1,2.19,4L13.81,4A1,1,0,0,1,14.806,5.09L14.54,8 15.545,8 15.801,5.181A2,2,0,0,0,13.81,3L9.828,3A2,2,0,0,1,8.414,2.414L7.586,1.586A2,2,0,0,0,6.172,1L2.5,1A2,2,0,0,0,0.5,3z M6.172,2A1,1,0,0,1,6.879,2.293L7.586,3 2.19,3C1.95,3,1.72,3.042,1.507,3.12L1.5,2.98A1,1,0,0,1,2.5,2L6.172,2z</Geometry>
+  <Geometry x:Key="folder_plusGeometry2">F1 M16,16z M0,0z M13.5,10A0.5,0.5,0,0,1,14,10.5L14,12 15.5,12A0.5,0.5,0,1,1,15.5,13L14,13 14,14.5A0.5,0.5,0,1,1,13,14.5L13,13 11.5,13A0.5,0.5,0,0,1,11.5,12L13,12 13,10.5A0.5,0.5,0,0,1,13.5,10z</Geometry>
+  <DrawingGroup x:Key="folder_plusDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource folder_plusGeometry1}" />
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource folder_plusGeometry2}" />
+  </DrawingGroup>
+  <DrawingImage x:Key="folder_plusDrawingImage" Drawing="{StaticResource folder_plusDrawingGroup}" />
+  <Geometry x:Key="wrenchGeometry">F1 M16,16z M0,0z M0.102,2.223A3.004,3.004,0,0,0,3.78,5.897L10.121,12.149A3.003,3.003,0,0,0,13,16A3,3,0,1,0,12.149,10.122L5.897,3.781A3.004,3.004,0,0,0,2.223,0.1L4.364,2.242 4,4 2.243,4.364 0.102,2.223z M13.472,11.242L14,11.268 14.287,11.713 14.732,12 14.758,12.529 15,13 14.758,13.471 14.732,14 14.287,14.287 14,14.732 13.471,14.758 13,15 12.529,14.758 12,14.732 11.713,14.287 11.268,14 11.242,13.471 11,13 11.242,12.529 11.268,12 11.713,11.713 12,11.268 12.529,11.242 13,11 13.471,11.242z</Geometry>
+  <DrawingGroup x:Key="wrenchDrawingGroup" ClipGeometry="M0,0 V16 H16 V0 H0 Z">
+    <DrawingGroup.Transform>
+      <TranslateTransform X="0" Y="0.0010945904068648815" />
+    </DrawingGroup.Transform>
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource wrenchGeometry}" />
+  </DrawingGroup>
+  <DrawingImage x:Key="wrenchDrawingImage" Drawing="{StaticResource wrenchDrawingGroup}" />
 </ResourceDictionary>

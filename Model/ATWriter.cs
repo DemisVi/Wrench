@@ -71,7 +71,9 @@ public class ATWriter : IDisposable
 
                 Thread.Sleep(250);
 
-                var res = port.ReadExisting();
+                var res = string.Empty;
+                while (port.BytesToRead > 0)
+                res += port.ReadExisting();
 
                 return res.Contains(command.Answer);
             }

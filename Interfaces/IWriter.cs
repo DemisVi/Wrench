@@ -9,7 +9,7 @@ namespace Wrench.Interfaces
         string ContactUnitTitle { get; set; }
         string DeviceSerial { get; set; }
         int FailValue { get; set; }
-        bool IsWriterRunning { get; set; }
+        //bool IsWriterRunning { get; set; }
         string OperationStatus { get; set; }
         int PassValue { get; set; }
         bool ProgressIndeterminate { get; set; }

@@ -27,7 +27,7 @@ public class MainViewModel : INotifyPropertyChanged
     private IWriter? WriterCU1;
     private object _synclock1 = new();
     private readonly Validator _validator = new();
-    private readonly List<string> _writerVariant = new() { "SimCom", "Telit" };
+    private readonly List<string> _writerVariant = new() { "SimCom упр.", "SimCom ретро.", "Telit упр.", "Telit ретро." };
 
     public ObservableCollection<string> CU1LogList { get; set; } = new();
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -93,7 +93,16 @@ public class MainViewModel : INotifyPropertyChanged
             DeviceType = new();
 
         var currentDir = Directory.GetCurrentDirectory();
-        _dataDir = Path.Combine(currentDir, SelectedWriter);
+        var dataDir = SelectedWriter switch
+        {
+            "SimCom упр." => "SimCom_simple",
+            "SimCom ретро." => "SimCom_retro",
+            "Telit упр." => "Telit_simple",
+            "Telit ретро." => "Telit_retro",
+            _ => throw new NotImplementedException(),
+        };
+
+        _dataDir = Path.Combine(currentDir, dataDir);
 
         var dirs = new DirectoryInfo(_dataDir).EnumerateDirectories();
         foreach (var i in dirs)
@@ -106,36 +115,38 @@ public class MainViewModel : INotifyPropertyChanged
         new PackageSelectorWindow(this).ShowDialog();
     }
 
-    private Command? _toggleWriter;
-    public ICommand ToggleWriter => _toggleWriter ??= new Command(PerformToggleWriter, x => PackageDir.Length > 0);
+    private Command? _startWriter;
+    public ICommand StartWriter => _startWriter ??= new Command(PerformStartWriter, x => IsWriterRunningInvert && PackageDir.Length > 0);
 
-    private void PerformToggleWriter(object? commandParameter)
+    private void PerformStartWriter(object? commandParameter)
     {
-        if (!IsWriterRunning)
+        WriterCU1 = commandParameter switch
         {
-            //WriterCU1 = new Writer(CU1LogList);
-            WriterCU1 = commandParameter switch
-            {
-                "SimCom" => new SimComWriter(CU1LogList),
-                "Telit" => new TelitWriter(CU1LogList),
-                _ => throw new NotImplementedException(),
-            };
+            "SimCom упр." => new SimpleSimComWriter(CU1LogList),
+            "SimCom ретро." => throw new NotImplementedException(),
+            "Telit упр." => throw new NotImplementedException(),
+            "Telit ретро." => new RetroTelitWriter(CU1LogList),
+            _ => throw new NotImplementedException(),
+        };
 
-            WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
-            WriterCU1.WorkingDir = PackageDir;
-            WriterCU1?.Start();
-            FlashButtonColor = Brushes.IndianRed;
-        }
-        else
+        WriterCU1.PropertyChanged += WriterKU1_PropertyChanged;
+        WriterCU1.WorkingDir = PackageDir;
+        IsWriterRunning = true;
+        WriterCU1?.Start();
+        FlashButtonColor = Brushes.IndianRed;
+    }
+
+    private Command? _stopWriter;
+    public ICommand StopWriter => _stopWriter ??= new Command(PerformStopWriter, x => IsWriterRunning);
+    private void PerformStopWriter(object? commandParameter)
+    {
+        if (WriterCU1 is not null)
         {
-            if (WriterCU1 is not null)
-            {
-                WriterCU1.PropertyChanged -= WriterKU1_PropertyChanged;
-                WriterCU1.Stop();
-            }
-            FlashButtonColor = Brushes.Beige;
+            WriterCU1.PropertyChanged -= WriterKU1_PropertyChanged;
+            IsWriterRunning = false;
+            WriterCU1.Stop();
         }
-        IsWriterRunning = !IsWriterRunning;
+        FlashButtonColor = Brushes.Beige;
     }
 
     private Command? loadSelected;
@@ -191,7 +202,7 @@ public class MainViewModel : INotifyPropertyChanged
             OnPropertyChange(nameof(IsWriterRunningInvert));
         }
     }
-    public bool? IsWriterRunningInvert => !_isWriterRunning;
+    public bool IsWriterRunningInvert => !_isWriterRunning;
 
     private string _selectedDevice = string.Empty;
     public string SelectedDevice
@@ -199,7 +210,8 @@ public class MainViewModel : INotifyPropertyChanged
         get => _selectedDevice; set
         {
             SetProperty(ref _selectedDevice, value);
-            DeviceVersion = DeviceType[_selectedDevice];
+            if (_selectedDevice is not null)
+                DeviceVersion = DeviceType[_selectedDevice];
         }
     }
 

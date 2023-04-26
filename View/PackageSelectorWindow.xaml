@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
-        mc:Ignorable="d" Topmost="True"
+        mc:Ignorable="d" Topmost="{Binding IsChecked, ElementName=onTop}"
         Title="PackageSelectorWindow" Height="200" Width="500" WindowStartupLocation="CenterScreen">
 
     <Window.InputBindings>

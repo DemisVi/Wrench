@@ -122,10 +122,10 @@ public class MainViewModel : INotifyPropertyChanged
     {
         WriterCU1 = commandParameter switch
         {
-            "SimCom упр." => new SimpleSimComWriter(CU1LogList),
-            "SimCom ретро." => throw new NotImplementedException(),
+            "SimCom упр." => new SimComWriter(CU1LogList),
+            "SimCom ретро." => new SimComWriter(CU1LogList, true),
             "Telit упр." => throw new NotImplementedException(),
-            "Telit ретро." => new RetroTelitWriter(CU1LogList),
+            "Telit ретро." => new TelitWriter(CU1LogList),
             _ => throw new NotImplementedException(),
         };
 
@@ -228,7 +228,7 @@ public class MainViewModel : INotifyPropertyChanged
     public string OperationStatus { get => _operationStatus; set => SetProperty(ref _operationStatus, value); }
 
     private string _deviceSerial = string.Empty;
-    public string DeviceSerial { get => _deviceSerial; set => SetProperty(ref _deviceSerial, value); }
+    public string DeviceSerial { get => string.Format("{0} ({1})", _deviceSerial, _deviceSerial.ToInt32()); set => SetProperty(ref _deviceSerial, value); }
 
     private string _selectedWriter = string.Empty;
     public string SelectedWriter { get => _selectedWriter; set => SetProperty(ref _selectedWriter, value); }
@@ -241,6 +241,9 @@ public class MainViewModel : INotifyPropertyChanged
 
     private bool _progressIndeterminate = false;
     public bool ProgressIndeterminate { get => _progressIndeterminate; set => SetProperty(ref _progressIndeterminate, value); }
+
+    private bool _onTop = true;
+    public bool OnTop { get => _onTop; set => SetProperty(ref _onTop, value); }
 
     private Brush _indicatorColor = Brushes.Beige;
     public Brush IndicatorColor { get => _indicatorColor; set => SetProperty(ref _indicatorColor, value); }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
-        mc:Ignorable="d" Topmost="{Binding IsChecked, ElementName=onTop}"
+        mc:Ignorable="d" Topmost="{Binding OnTop}"
         Title="PackageSelectorWindow" Height="200" Width="500" WindowStartupLocation="CenterScreen">
 
     <Window.InputBindings>
@@ -22,7 +22,7 @@
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
         <Button Command="{Binding LoadSelected}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" 
-                Content="Загрузить" Grid.Row="1" Grid.ColumnSpan="2"/>
+                Content="Загрузить" Grid.Row="1" Grid.ColumnSpan="2" FontSize="18"/>
         <ListBox ItemsSource="{Binding DeviceType.Keys}" SelectedValue="{Binding SelectedDevice}"/>
         <ListBox ItemsSource="{Binding DeviceVersion}" SelectedValue="{Binding SelectedVersion}" Grid.Column="1"/>
     </Grid>

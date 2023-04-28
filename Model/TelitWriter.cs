@@ -23,7 +23,7 @@ namespace Wrench.Model;
 
 using Timer = System.Timers.Timer;
 
-internal class RetroTelitWriter : INotifyPropertyChanged, IWriter
+internal class TelitWriter : INotifyPropertyChanged, IWriter
 {
     private const string localNewLine = "\r";
     private const Handshake localHandshake = Handshake.RequestToSend;
@@ -67,7 +67,7 @@ internal class RetroTelitWriter : INotifyPropertyChanged, IWriter
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
-    public RetroTelitWriter(ObservableCollection<string> cULogList)
+    public TelitWriter(ObservableCollection<string> cULogList)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
-        mc:Ignorable="d" Topmost="{Binding IsChecked, ElementName=onTop}"
+        mc:Ignorable="d" Topmost="{Binding OnTop}"
         Title="Wrench" Height="400" Width="400" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
@@ -64,7 +64,7 @@
                          Height="12" Grid.ColumnSpan="2" VerticalAlignment="Bottom"/>
             <Label Content="{Binding DeviceSerial}" HorizontalAlignment="Left" Margin="0,8" VerticalAlignment="Bottom" FontSize="12"/>
             <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">
-                <CheckBox x:Name="onTop" IsChecked="True" Grid.Column="1" FlowDirection="RightToLeft" Content="OnTop" HorizontalAlignment="Right"/>
+                <CheckBox x:Name="onTop" IsChecked="{Binding OnTop}" Grid.Column="1" FlowDirection="RightToLeft" Content="OnTop" HorizontalAlignment="Right"/>
                 <!--<CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Базовое ПО" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Top" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Пакет файлов БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Конфигурация АТ" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>-->

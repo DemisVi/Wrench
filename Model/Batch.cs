@@ -5,7 +5,6 @@ using System.IO;
 namespace Wrench.Model;
 public class Batch
 {
-    private const int millisMultiplier = 1000;
     public string? BatchPath { get; set; } = string.Empty;
     public string? Cwd { get; set; } = string.Empty;
     //public string? LastStdOut { get; private set; } = string.Empty;
@@ -44,7 +43,7 @@ public class Batch
         //process.BeginOutputReadLine();
         //process.BeginErrorReadLine();
 
-        process.WaitForExit(timeOut * millisMultiplier);
+        process.WaitForExit(timeOut * 1000);
 
         if (process.HasExited) ExitCode = (ExitCodes)process.ExitCode;
         else if (!process.HasExited)
@@ -59,15 +58,15 @@ public class Batch
         return ExitCode;
     }
 
-    private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-    {
-        File.AppendAllText(Path.Combine(Environment.CurrentDirectory, "errorlog.log"),
-            DateTime.Now.ToString("g") + Environment.NewLine + e.Data + Environment.NewLine);
-    }
+    //private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+    //{
+    //    File.AppendAllText(Path.Combine(Environment.CurrentDirectory, "errorlog.log"),
+    //        DateTime.Now.ToString("g") + Environment.NewLine + e.Data + Environment.NewLine);
+    //}
 
-    private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
-    {
-        File.AppendAllText(Path.Combine(Environment.CurrentDirectory, "outputlog.log"),
-            DateTime.Now.ToString("g") + Environment.NewLine + e.Data + Environment.NewLine);
-    }
+    //private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+    //{
+    //    File.AppendAllText(Path.Combine(Environment.CurrentDirectory, "outputlog.log"),
+    //        DateTime.Now.ToString("g") + Environment.NewLine + e.Data + Environment.NewLine);
+    //}
 }

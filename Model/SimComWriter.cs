@@ -23,16 +23,18 @@ namespace Wrench.Model;
 
 using Timer = System.Timers.Timer;
 
-internal class SimpleSimComWriter : INotifyPropertyChanged, IWriter
+internal class SimComWriter : INotifyPropertyChanged, IWriter
 {
     private const string localNewLine = "\r";
     private const Handshake localHandshake = Handshake.None;
     private const string fastbootBatch = "flash_most.bat";
     private const string adbBatch = "load_cfg.bat";
+    private bool isRetro = false;
     public event PropertyChangedEventHandler? PropertyChanged;
     private readonly ObservableCollection<string> _kuLogList;
     private CancellationTokenSource _cts = new();
-    ContactUnit _cu;
+    private Adb adb = new();
+    private ContactUnit _cu;
 
     //private bool _isWriterRunning = false;
     //public bool IsWriterRunning { get => _isWriterRunning; set => SetProperty(ref _isWriterRunning, value); }
@@ -67,10 +69,11 @@ internal class SimpleSimComWriter : INotifyPropertyChanged, IWriter
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
-    public SimpleSimComWriter(ObservableCollection<string> cULogList)
+    public SimComWriter(ObservableCollection<string> cULogList, bool isRetro = false)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
+        this.isRetro = isRetro;
     }
 
     private bool SetProperty<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
@@ -118,7 +121,11 @@ internal class SimpleSimComWriter : INotifyPropertyChanged, IWriter
         while (!_cts.IsCancellationRequested)
         {
             SignalReady();
-            UpdateCfgSN();
+
+            if (!isRetro)
+            {
+                UpdateCfgSN();
+            }
 
             ProgressValue = 0;
 
@@ -207,39 +214,42 @@ internal class SimpleSimComWriter : INotifyPropertyChanged, IWriter
 
             }
 
-            // 4. find modem or AT com port
-            ProgressValue = 30;
-            LogMsg("Ожидание запуска...");
-            opResult = AwaitDeviceStart(modemPort, 10);
-            if (opResult is not true)
+            if (!CheckADBDevice())
             {
-                LogMsg($"ERROR: {(int)ErrorCodes.Device_Start:D4} \nDevice dows not start within expected interval");
-                WriterFaultState();
-                continue;
-            }
+                // 4. find modem or AT com port
+                ProgressValue = 30;
+                LogMsg("Ожидание запуска...");
+                opResult = AwaitDeviceStart(modemPort, 10);
+                if (opResult is not true)
+                {
+                    LogMsg($"ERROR: {(int)ErrorCodes.Device_Start:D4} \nDevice dows not start within expected interval");
+                    WriterFaultState();
+                    continue;
+                }
 
-            if (_cts.IsCancellationRequested)
-            {
-                LogMsg("Остановлено");
-                WriterStopState();
-                break;
-            }
+                if (_cts.IsCancellationRequested)
+                {
+                    LogMsg("Остановлено");
+                    WriterStopState();
+                    break;
+                }
 
-            //3.1. Turn ADB IF on
-            LogMsg("Получение ADB интерфейса...");
-            opResult = TurnOnADBInterface(modemPort);
-            if (opResult is not true)
-            {
-                LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to get ADB iface");
-                WriterFaultState();
-                continue;
-            }
+                //3.1. Turn ADB iface on
+                LogMsg("Получение ADB интерфейса...");
+                opResult = TurnOnADBInterface(modemPort);
+                if (opResult is not true)
+                {
+                    LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to get ADB iface");
+                    WriterFaultState();
+                    continue;
+                }
 
-            if (_cts.IsCancellationRequested)
-            {
-                LogMsg("Остановлено");
-                WriterStopState();
-                break;
+                if (_cts.IsCancellationRequested)
+                {
+                    LogMsg("Остановлено");
+                    WriterStopState();
+                    break;
+                }
             }
 
             // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
@@ -300,43 +310,61 @@ internal class SimpleSimComWriter : INotifyPropertyChanged, IWriter
                 break;
             }
 
-            LogMsg("Получение ADB интерфейса...");
-            opResult = TurnOnADBInterface(modemPort);
-            if (opResult is not true)
+            if (!isRetro)
             {
-                LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to get ADB iface");
-                WriterFaultState();
-                continue;
+                if (!CheckADBDevice())
+                {
+                    LogMsg("Получение ADB интерфейса...");
+                    opResult = TurnOnADBInterface(modemPort);
+                    if (opResult is not true)
+                    {
+                        LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to get ADB iface");
+                        WriterFaultState();
+                        continue;
+                    }
+
+                    if (_cts.IsCancellationRequested)
+                    {
+                        LogMsg("Остановлено");
+                        WriterStopState();
+                        break;
+                    }
+                }
+
+                //10. execute adb upload sequence / batch file upload
+                ProgressValue = 90;
+                LogMsg("Загрузка файлов через ADB интерфейс...");
+                opResult = ExecuteAdbBatch(WorkingDir);
+                if (opResult is not true)
+                {
+                    LogMsg($"ERROR: {(int)ErrorCodes.ADB_Batch:D4} \nFailed to run ADB");
+                    WriterFaultState();
+                    continue;
+                }
+
+                if (_cts.IsCancellationRequested)
+                {
+                    LogMsg("Остановлено");
+                    WriterStopState();
+                    break;
+                }
             }
 
-            if (_cts.IsCancellationRequested)
+            if (CheckADBDevice())
             {
-                LogMsg("Остановлено");
-                WriterStopState();
-                break;
-            }
-
-            //10. execute adb upload sequence / batch file upload
-            ProgressValue = 90;
-            LogMsg("Загрузка файлов через ADB интерфейс...");
-            opResult = ExecuteAdbBatch(WorkingDir);
-            if (opResult is not true)
-            {
-                LogMsg($"ERROR: {(int)ErrorCodes.ADB_Batch:D4} \nFailed to run ADB");
-                WriterFaultState();
-                continue;
-            }
-
-            if (_cts.IsCancellationRequested)
-            {
-                LogMsg("Остановлено");
-                WriterStopState();
-                break;
+                LogMsg("Отключение ADB интерфейса...");
+                opResult = TurnOffADBInterface(modemPort);
+                if (opResult is not true)
+                {
+                    LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to turn off ADB iface");
+                    //WriterFaultState();
+                    //continue;
+                }
             }
 
             // 2. Turn OFF modem power
             LogMsg("Снятие питания...");
-            opResult = TurnModemPowerOff();
+            opResult = TurnModemPowerOff(5);
             if (opResult is not true)
                 LogMsg($"ERROR: {(int)ErrorCodes.Device_Power:D4} \nFailed to power off board");
 
@@ -353,6 +381,48 @@ internal class SimpleSimComWriter : INotifyPropertyChanged, IWriter
             LogMsg("Остановлено");
             break;
         }
+    }
+
+    private bool TurnOffADBInterface(string modemPort)
+    {
+        using var port = new SerialPort()
+        {
+            PortName = modemPort,
+            Handshake = Handshake.RequestToSend,
+            NewLine = "\r",
+            BaudRate = 115200,
+            DataBits = 8,
+            StopBits = StopBits.One,
+            Parity = Parity.None,
+            DtrEnable = true,
+        };
+
+        var res = false;
+
+        try
+        {
+            port.Open();
+            port.Write("AT+CUSBADB=0\r");
+            var answer = string.Empty;
+            while (port.BytesToRead > 0)
+            {
+                Thread.Sleep(250);
+                answer += port.ReadExisting();
+            }
+            res = answer.Contains("OK");
+        }
+        finally { port.Close(); }
+
+        adb.Run("reboot");
+
+        return res;
+    }
+
+    private bool CheckADBDevice()
+    {
+        var locator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.androidDevice);
+        var res = locator.GetDevices().Count() > 0;
+        return res;
     }
 
     private bool TurnOnADBInterface(string modemPort)

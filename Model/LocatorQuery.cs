@@ -11,7 +11,7 @@ namespace Wrench.Model;
 
 public class LocatorQuery
 {
-    public static readonly WqlEventQuery queryEventDevice = new("SELECT * FROM Win32_DeviceChangeEvent"
+    public static readonly WqlEventQuery queryEventDeviceChange = new("SELECT * FROM Win32_DeviceChangeEvent"
         + " WHERE EventType = 2 GROUP WITHIN 4");
 
     public static readonly WqlEventQuery queryEventTelit = new("SELECT * FROM __InstanceCreationEvent "
@@ -29,6 +29,13 @@ public class LocatorQuery
         + "OR TargetInstance.ProviderName LIKE '%Simcom%' "
         + "OR TargetInstance.DeviceID LIKE '%VID_1E0E&PID_9001%') "
         + "GROUP WITHIN 4");
+
+    public static readonly WqlEventQuery queryEventAndroid = new(
+        "SELECT * FROM  __InstanceCreationEvent "
+        + "WITHIN 1 WHERE "
+        + "TargetInstance ISA 'Win32_PnpEntity' "
+        + "AND TargetInstance.ClassGuid = '{3f966bd9-fa04-4ec5-991c-d326973b5128}'"
+    );
 
     public static readonly WqlObjectQuery queryTelitModem = new("SELECT AttachedTo FROM Win32_POTSModem WHERE "
         + "(Caption LIKE '%Telit%' OR ProviderName LIKE '%Telit%' OR DeviceID LIKE '%VID_1BC7&PID_1201%')");

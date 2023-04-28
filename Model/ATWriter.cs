@@ -73,9 +73,9 @@ public class ATWriter : IDisposable
 
                 var res = string.Empty;
                 while (port.BytesToRead > 0)
-                res += port.ReadExisting();
+                    res += port.ReadExisting();
 
-                return res.Contains(command.Answer);
+                return res.Contains(command.Answer, StringComparison.OrdinalIgnoreCase);
             }
             catch (IOException)
             {

@@ -239,6 +239,9 @@ public class MainViewModel : INotifyPropertyChanged
     private int _progressValue = 0;
     public int ProgressValue { get => _progressValue; set => SetProperty(ref _progressValue, value); }
 
+    private TimeSpan _operationTime = TimeSpan.Zero;
+    public TimeSpan OperationTime { get => _operationTime; set => SetProperty(ref _operationTime, value); }
+
     private bool _progressIndeterminate = false;
     public bool ProgressIndeterminate { get => _progressIndeterminate; set => SetProperty(ref _progressIndeterminate, value); }
 

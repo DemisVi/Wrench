@@ -16,6 +16,7 @@ namespace Wrench.Interfaces
         int ProgressValue { get; set; }
         Brush StatusColor { get; set; }
         TimeSpan TimeAvgValue { get; set; }
+        public TimeSpan OperationTime { get; set; }
         string WorkingDir { get; set; }
 
         event PropertyChangedEventHandler? PropertyChanged;

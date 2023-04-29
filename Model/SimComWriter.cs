@@ -33,6 +33,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     public event PropertyChangedEventHandler? PropertyChanged;
     private readonly ObservableCollection<string> _kuLogList;
     private CancellationTokenSource _cts = new();
+    private Timer operationTimer = new(1000);
     private Adb adb = new();
     private ContactUnit _cu;
 
@@ -69,11 +70,16 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     private TimeSpan _timeAvgValue;
     public TimeSpan TimeAvgValue { get => _timeAvgValue; set => SetProperty(ref _timeAvgValue, value); }
 
+    private TimeSpan _operationTime = TimeSpan.Zero;
+    public TimeSpan OperationTime { get => _operationTime; set => SetProperty(ref _operationTime, value); }
+
     public SimComWriter(ObservableCollection<string> cULogList, bool isRetro = false)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
         this.isRetro = isRetro;
+
+        operationTimer.Elapsed += (_, _) => OperationTime += TimeSpan.FromSeconds(1);
     }
 
     private bool SetProperty<T>(ref T property, T value, [CallerMemberName] string? propertyName = null)
@@ -173,6 +179,9 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
+
+            OperationTime = TimeSpan.Zero;
+            operationTimer.Start();
 
             // 2. Turn ON modem power
             ProgressValue = 10;
@@ -725,6 +734,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
     private void WriterFaultState()
     {
+        operationTimer.Stop();
         ProgressIndeterminate = true;
         _cu.SetOuts(Outs.Red);
         StatusColor = Brushes.LightPink;
@@ -739,6 +749,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
     private void WriterStopState()
     {
+        operationTimer.Stop();
         //ProgressValue = 0;
         ProgressIndeterminate = true;
         _cu.SetOuts(Outs.None);
@@ -753,6 +764,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
     private void WriterSuccessState(TimeSpan elapsed)
     {
+        operationTimer.Stop();
         ProgressValue = 100;
         _cu.SetOuts(Outs.Green);
         StatusColor = Brushes.LightGreen;

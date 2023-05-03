@@ -23,20 +23,22 @@ namespace Wrench.Model;
 
 using Timer = System.Timers.Timer;
 
-internal class TelitWriter : INotifyPropertyChanged, IWriter
+internal class Writer : INotifyPropertyChanged, IWriter
 {
     private const string localNewLine = "\r";
-    private const Handshake localHandshake = Handshake.RequestToSend;
-    private const string adbBatch = "transfer_to_modem.bat";
-    private const string atCommandFileName = "postinstallat.txt";
-    private Timer operationTimer = new(1000);
+    private const Handshake localHandshake = Handshake.None;
+    private const string fastbootBatch = "flash_most.bat";
+    private const string adbBatch = "load_cfg.bat";
+    private bool isRetro = false;
     public event PropertyChangedEventHandler? PropertyChanged;
     private readonly ObservableCollection<string> _kuLogList;
     private CancellationTokenSource _cts = new();
-    ContactUnit _cu;
+    private Timer operationTimer = new(1000);
+    private Adb adb = new();
+    private ContactUnit _cu;
 
-    private bool _isWriterRunning = false;
-    public bool IsWriterRunning { get => _isWriterRunning; set => SetProperty(ref _isWriterRunning, value); }
+    //private bool _isWriterRunning = false;
+    //public bool IsWriterRunning { get => _isWriterRunning; set => SetProperty(ref _isWriterRunning, value); }
 
     private string _status = string.Empty;
     public string OperationStatus { get => _status; set => SetProperty(ref _status, value, nameof(OperationStatus)); }
@@ -71,10 +73,11 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
     private TimeSpan _operationTime = TimeSpan.Zero;
     public TimeSpan OperationTime { get => _operationTime; set => SetProperty(ref _operationTime, value); }
 
-    public TelitWriter(ObservableCollection<string> cULogList)
+    public Writer(ObservableCollection<string> cULogList, bool isRetro = false)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
+        this.isRetro = isRetro;
 
         operationTimer.Elapsed += (_, _) => OperationTime += TimeSpan.FromSeconds(1);
     }
@@ -94,7 +97,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
     {
         if (_cts.IsCancellationRequested) _cts = new();
         ContactUnitTitle = new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' });
-        Task.Factory.StartNew(TelitFlash);
+        Task.Factory.StartNew(SimcomFlash);
     }
 
     public void Stop()
@@ -102,7 +105,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         _cts.Cancel();
     }
 
-    private void TelitFlash()
+    private void SimcomFlash()
     {
         // Task starting sequence
         var modemPort = string.Empty;
@@ -124,6 +127,12 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         while (!_cts.IsCancellationRequested)
         {
             SignalReady();
+
+            if (!isRetro)
+            {
+            UpdateCfgSN();
+            }
+
             ProgressValue = 0;
 
             if (_cts.IsCancellationRequested)
@@ -134,14 +143,14 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             }
 
             // 1. Wait for CU
-            LogMsg("Ожидание готовности КУ...");
+            LogMsg("Ожидание сигнала КУ...");
             ProgressIndeterminate = true;
-            opResult = AwaitCUClose();
-            expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down;
+            opResult = AwaitCUSignal();
+            expected = Sensors.Lodg;
             ProgressIndeterminate = false;
             if (opResult as Sensors? != (expected as Sensors?))
             {
-                LogMsg($"ERROR: {((int)opResult ^ (int)expected):D4} \nContact Unit fault");
+                LogMsg($"ERROR: {((byte)opResult ^ (byte)expected):D4} \nContact Unit fault");
                 WriterFaultState();
                 continue;
             }
@@ -156,10 +165,9 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
             start = DateTime.Now;
             opResult = LockCU();
-            expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up;
-            if (opResult as Sensors? != expected as Sensors?)
+            if (!(bool)opResult)
             {
-                LogMsg($"ERROR: {((int)opResult ^ (int)expected):D4} \nFailed to lock Contact Unit");
+                LogMsg($"ERROR: {((byte)opResult ^ (byte)expected):D4} \nFailed to lock Contact Unit");
                 WriterFaultState();
                 continue;
             }
@@ -191,7 +199,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
-            
+
             // 3. wait for device
             ProgressValue = 20;
             LogMsg("Ожидание подключения...");
@@ -214,17 +222,54 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
             }
 
-            // Reflash modem
-            LogMsg("Запуск TFI программатора...");
-            opResult = ModemReflasher.TryRestoreFirmware(LogMsg, WorkingDir);
+            if (!CheckADBDevice())
+            {
+            // 4. find modem or AT com port
+            ProgressValue = 30;
+                LogMsg("Ожидание запуска...");
+                opResult = AwaitDeviceStart(modemPort, 10);
             if (opResult is not true)
             {
-                LogMsg($"ERROR: {(int)ErrorCodes.Fastboot_Batch:D4} \nОшибка прошивки по средствам TFI");
+                LogMsg($"ERROR: {(int)ErrorCodes.Device_Start:D4} \nDevice dows not start within expected interval");
                 WriterFaultState();
                 continue;
             }
 
-            ProgressValue = 60;
+            if (_cts.IsCancellationRequested)
+            {
+                    LogMsg("Остановлено");
+                WriterStopState();
+                break;
+            }
+
+                //3.1. Turn ADB iface on
+                LogMsg("Получение ADB интерфейса...");
+            opResult = TurnOnADBInterface(modemPort);
+            if (opResult is not true)
+            {
+                    LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to get ADB iface");
+                WriterFaultState();
+                continue;
+            }
+
+            if (_cts.IsCancellationRequested)
+            {
+                LogMsg("Остановлено");
+                WriterStopState();
+                break;
+            }
+            }
+
+            // 6. execute fastboot flash sequence / batch flash (with subsequent reboot?)
+            ProgressValue = 50;
+            LogMsg("Прошивка Fastboot'ом...");
+            opResult = ExecuteFastbootBatch(WorkingDir);
+            if (opResult is not true)
+            {
+                LogMsg($"ERROR: {(int)ErrorCodes.Fastboot_Batch:D4} \nFailed to run Fastboot");
+                WriterFaultState();
+                continue;
+            }
 
             if (_cts.IsCancellationRequested)
             {
@@ -233,7 +278,8 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 break;
             }
 
-            // 3. wait for device
+            // 7. wait for device
+            ProgressValue = 60;
             LogMsg("Ожидание подключения...");
             try
             {
@@ -272,7 +318,29 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 break;
             }
 
+            if (!isRetro)
+            {
+                if (!CheckADBDevice())
+                {
+                    LogMsg("Получение ADB интерфейса...");
+            opResult = TurnOnADBInterface(modemPort);
+            if (opResult is not true)
+            {
+                LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to get ADB iface");
+                WriterFaultState();
+                continue;
+            }
+
+            if (_cts.IsCancellationRequested)
+            {
+                        LogMsg("Остановлено");
+                WriterStopState();
+                break;
+            }
+                }
+
             //10. execute adb upload sequence / batch file upload
+            ProgressValue = 90;
             LogMsg("Загрузка файлов через ADB интерфейс...");
             opResult = ExecuteAdbBatch(WorkingDir);
             if (opResult is not true)
@@ -288,26 +356,23 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
-
-            LogMsg("Отправка конфигурационных АТ команд...");
-            opResult = SendATCommands(modemPort, Path.Combine(WorkingDir, atCommandFileName));
-            if (opResult is not true)
-            {
-                LogMsg($"ERROR: {(int)ErrorCodes.Device_AT_config:D4} \nFailed to sent AT commands");
-                WriterFaultState();
-                continue;
             }
 
-            if (_cts.IsCancellationRequested)
+            if (CheckADBDevice())
             {
-                LogMsg("Остановлено");
-                WriterStopState();
-                break;
+                LogMsg("Отключение ADB интерфейса...");
+                opResult = TurnOffADBInterface(modemPort);
+                if (opResult is not true)
+                {
+                    LogMsg($"ERROR: {(int)ErrorCodes.ADB_Interface:D4} \nFailed to turn off ADB iface");
+                    //WriterFaultState();
+                    //continue;
+                }
             }
 
             // 2. Turn OFF modem power
             LogMsg("Снятие питания...");
-            opResult = TurnModemPowerOff();
+            opResult = TurnModemPowerOff(5);
             if (opResult is not true)
                 LogMsg($"ERROR: {(int)ErrorCodes.Device_Power:D4} \nFailed to power off board");
 
@@ -326,18 +391,46 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         }
     }
 
-    private bool SendATCommands(string modemPort, string commandFilePath)
+    private bool TurnOffADBInterface(string modemPort)
     {
-        var writer = new ATWriter(new TelitPortConfig(modemPort), commandFilePath);
+        using var port = new SerialPort()
+        {
+            PortName = modemPort,
+            Handshake = Handshake.RequestToSend,
+            NewLine = "\r",
+            BaudRate = 115200,
+            DataBits = 8,
+            StopBits = StopBits.One,
+            Parity = Parity.None,
+            DtrEnable = true,
+        };
+
+        var res = false;
 
         try
         {
-            return writer.SendCommands();
+            port.Open();
+            port.Write("AT+CUSBADB=0\r");
+            var answer = string.Empty;
+            while (port.BytesToRead > 0)
+            {
+                Thread.Sleep(250);
+                answer += port.ReadExisting();
+            }
+            res = answer.Contains("OK");
         }
-        catch (Exception)
-        {
-            throw;
-        }
+        finally { port.Close(); }
+
+        adb.Run("reboot");
+
+        return res;
+    }
+
+    private bool CheckADBDevice()
+    {
+        var locator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.androidDevice);
+        var res = locator.GetDevices().Count() > 0;
+        return res;
     }
 
     private bool TurnOnADBInterface(string modemPort)
@@ -397,18 +490,12 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         DeviceSerial = factory.SerialNumber.ToString();
     }
 
-    private Sensors LockCU()
+    private bool LockCU()
     {
         _cu.SetOuts(Outs.Pn1 | Outs.Blue);
         StatusColor = Brushes.LightBlue;
-        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2);
-    }
-
-    private bool EnsureCUState()
-    {
-        _cu.SetOuts(Outs.Pn1 | Outs.Blue);
-        StatusColor = Brushes.LightBlue;
-        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2) == (Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up);
+        //return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2) != Sensors.None;
+        return (Outs.Pn1 | Outs.Blue) == _cu.SetOuts(Outs.Pn1 | Outs.Blue);
     }
 
     private void SignalReady()
@@ -430,18 +517,38 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
     private bool ExecuteAdbBatch(string workingDir)
     {
-        if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not empty value");
+        if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not ampty value");
 
-        var batchFile = Path.Combine(workingDir, adbBatch);
+        var batchFile = Path.Combine(Directory.GetCurrentDirectory(), adbBatch);
         if (!File.Exists(batchFile)) throw new FileNotFoundException("adb batch file not found");
 
-        var batch = new Batch(batchFile, workingDir);
+        var dataDir = Path.GetDirectoryName(workingDir);
+
+        var batch = new Batch(batchFile, dataDir!);
 
         batch.Run();
 
         return batch.ExitCode == ExitCodes.OK;
     }
 
+    private bool ExecuteFastbootBatch(string workingDir)
+    {
+        if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not empty value");
+
+        var batchFile = Path.Combine(Directory.GetCurrentDirectory(), fastbootBatch);
+        if (!File.Exists(batchFile)) throw new FileNotFoundException("fastboot batch file not found");
+
+        var systemImage = Directory.EnumerateFiles(workingDir, "system.img", SearchOption.AllDirectories).First();
+        if (!File.Exists(systemImage) || string.IsNullOrEmpty(systemImage)) throw new FileNotFoundException("system image not found");
+
+        var systemImageDir = Path.GetDirectoryName(systemImage)!;
+
+        var batch = new Batch(batchFile, systemImageDir);
+
+        batch.Run();
+
+        return batch.ExitCode == ExitCodes.OK;
+    }
     internal bool RebootForAdb(string portName, int timeout = 30)
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -556,17 +663,13 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             NewLine = localNewLine,
         };
 
-        var command = new TelitModem().BootCommand;
-
-        var res = ATWriter.SendCommand(serial, new ATCommand(command));
-
-        return res;
+        return ATWriter.SendCommand(serial, new ATCommand("AT+CGMM"));
     }
 
     private bool Old_AwaitDeviceStart(string portName, int timeout = Timeout.Infinite)
     {
         var tcs = new TaskCompletionSource<bool>();
-        var command = "at";
+        var command = new SimComADB().BootCommand;
         var elapsed = 0;
         using var serial = new SerialPort(portName)
         {
@@ -617,9 +720,9 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
     private string AwaitDeviceAttach(int timeout = 20)
     {
-        var modemLocator = new ModemLocator(LocatorQuery.queryEventTelit, LocatorQuery.queryTelitModem);
+        var modemLocator = new ModemLocator(LocatorQuery.queryEventSimcom, LocatorQuery.querySimcomATPort);
         modemLocator.WaitDeviceAttach(TimeSpan.FromSeconds(timeout));
-        return modemLocator.GetModemPortNames().First();
+        return modemLocator.GetModemATPorts().First();
     }
 
     private void WriterFaultState()
@@ -633,7 +736,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         var opResult = TurnModemPowerOff();
         if (opResult is not true)
             LogMsg("Failed to power off board");
-        _cu.WaitForState(Sensors.Pn1_Down);
+        _cu.WaitForState(Sensors.None);
         ProgressIndeterminate = false;
     }
 
@@ -642,13 +745,13 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         operationTimer.Stop();
         //ProgressValue = 0;
         ProgressIndeterminate = true;
-        _cu.SetOuts(Outs.None);
+        _cu.SetOuts(Outs.White);
         StatusColor = Brushes.Wheat;
         LogMsg("Снятие питания...");
         var opResult = TurnModemPowerOff();
         if (opResult is not true)
             LogMsg("Failed to power off board");
-        _cu.WaitForState(Sensors.Pn1_Down);
+        _cu.WaitForState(Sensors.None);
         ProgressIndeterminate = false;
     }
 
@@ -660,7 +763,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         StatusColor = Brushes.LightGreen;
         PassValue++;
         TimeAvgValue = elapsed;
-        _cu.WaitForState(Sensors.Pn1_Down);
+        _cu.WaitForState(Sensors.None);
         ProgressValue = 0;
     }
 
@@ -668,14 +771,15 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
 
     private bool TurnModemPowerOff(int timeout = 2)
     {
-        Thread.Sleep(TimeSpan.FromSeconds(timeout));
+        Thread.Sleep(new TimeSpan(0, 0, timeout));
 
         _cu.PowerOff();
 
         return true;
     }
 
-    private Sensors AwaitCUClose() => _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
+    // private Sensors AwaitCUClose() => _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
+    private Sensors AwaitCUSignal() => _cu.WaitForState(Sensors.Lodg);
 
     public void LogMsg(string? message) => _kuLogList.Insert(0, message ?? string.Empty);
 }

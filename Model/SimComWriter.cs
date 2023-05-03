@@ -540,7 +540,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
     private bool ExecuteFastbootBatch(string workingDir)
     {
-        if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not ampty value");
+        if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not empty value");
 
         var batchFile = Path.Combine(Directory.GetCurrentDirectory(), fastbootBatch);
         if (!File.Exists(batchFile)) throw new FileNotFoundException("fastboot batch file not found");

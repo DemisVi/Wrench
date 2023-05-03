@@ -27,7 +27,7 @@ public class MainViewModel : INotifyPropertyChanged
     private IWriter? WriterCU1;
     private object _synclock1 = new();
     private readonly Validator _validator = new();
-    private readonly List<string> _writerVariant = new() { "SimCom упр.", "SimCom ретро.", "Telit упр.", "Telit ретро." };
+    private readonly List<string> _writerVariant = new() { "SimCom упр.", "SimCom ретро.", "Telit упр.", "Telit ретро."/*, "SimCom O.O.O."*/ };
 
     public ObservableCollection<string> CU1LogList { get; set; } = new();
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -99,6 +99,7 @@ public class MainViewModel : INotifyPropertyChanged
             "SimCom ретро." => "SimCom_retro",
             "Telit упр." => "Telit_simple",
             "Telit ретро." => "Telit_retro",
+            "SimCom O.O.O." => "SimCom_simple",
             _ => throw new NotImplementedException(),
         };
 
@@ -126,6 +127,7 @@ public class MainViewModel : INotifyPropertyChanged
             "SimCom ретро." => new SimComWriter(CU1LogList, true),
             "Telit упр." => throw new NotImplementedException(),
             "Telit ретро." => new TelitWriter(CU1LogList),
+            "SimCom O.O.O." => new Writer(CU1LogList),
             _ => throw new NotImplementedException(),
         };
 

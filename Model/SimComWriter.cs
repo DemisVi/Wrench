@@ -109,6 +109,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     {
         // Task starting sequence
         var modemPort = string.Empty;
+        var factoryPath = Path.Combine(WorkingDir, "..", "factory.cfg");
         DateTime start;
         TimeSpan elapsed = TimeSpan.Zero;
         object opResult, expected;
@@ -343,8 +344,9 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
                 //10. execute adb upload sequence / batch file upload
                 ProgressValue = 90;
                 LogMsg("Загрузка файлов через ADB интерфейс...");
-                opResult = ExecuteAdbBatch(WorkingDir);
-                if (opResult is not true)
+                //opResult = ExecuteAdbBatch(WorkingDir);
+                opResult = adb.Run(string.Format("push {0} /data", factoryPath));
+                if (opResult is not ExitCodes.OK)
                 {
                     LogMsg($"ERROR: {(int)ErrorCodes.ADB_Batch:D4} \nFailed to run ADB");
                     WriterFaultState();
@@ -540,7 +542,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
     private bool ExecuteFastbootBatch(string workingDir)
     {
-        if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not ampty value");
+        if (string.IsNullOrEmpty(workingDir)) throw new ArgumentException($"{nameof(workingDir)} must contain not empty value");
 
         var batchFile = Path.Combine(Directory.GetCurrentDirectory(), fastbootBatch);
         if (!File.Exists(batchFile)) throw new FileNotFoundException("fastboot batch file not found");

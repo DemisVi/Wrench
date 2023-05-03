@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Wrench.View"
         xmlns:vm="clr-namespace:Wrench.ViewModels"
         mc:Ignorable="d" Topmost="{Binding OnTop}"
-        Title="Wrench" Height="400" Width="400" WindowStartupLocation="CenterScreen">
+        Title="Wrench" Height="400" Width="500" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
         <ResourceDictionary Source="/Resources/Resources.xaml"/>
@@ -33,7 +33,7 @@
         </Grid.RowDefinitions>
         <Grid Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="6*"/>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
@@ -52,7 +52,7 @@
             <Label Content="K:" VerticalAlignment="Center" Grid.Row="0"  Grid.Column="2" HorizontalAlignment="Left"/>
             <Label Content="{Binding PFKValue}" x:Name="fpyLabel" VerticalAlignment="Center" Grid.Row="0"  Grid.Column="2" HorizontalAlignment="Right"/>
             <Label Content="T:" VerticalAlignment="Center" Grid.Row="1"  Grid.Column="2" HorizontalAlignment="Left"/>
-            <Label Content="{Binding TimeAvgValue}" x:Name="cycleLabel" VerticalAlignment="Center" Grid.Row="1"  Grid.Column="2" HorizontalAlignment="Right"/>
+            <Label Content="{Binding TimeAvgValue}" ContentStringFormat="mm\:ss" x:Name="cycleLabel" VerticalAlignment="Center" Grid.Row="1"  Grid.Column="2" HorizontalAlignment="Right"/>
         </Grid>
         <Grid Background="{Binding StatusColor}" Grid.Row="1" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
@@ -64,11 +64,13 @@
                          Height="12" Grid.ColumnSpan="2" VerticalAlignment="Bottom"/>
             <Label Content="{Binding DeviceSerial}" HorizontalAlignment="Left" Margin="0,8" VerticalAlignment="Bottom" FontSize="12"/>
             <!--<StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">-->
-                <CheckBox x:Name="onTop" IsChecked="{Binding OnTop}" Grid.Column="1" FlowDirection="RightToLeft" Content="OnTop" HorizontalAlignment="Right"/>
-            <Label Content="{Binding OperationTime}" 
+            <CheckBox x:Name="onTop" IsChecked="{Binding OnTop}" 
+                      Grid.Column="1" FlowDirection="RightToLeft" Content="OnTop" 
+                      HorizontalAlignment="Right" VerticalAlignment="Top"/>
+            <Label Content="{Binding OperationTime}" ContentStringFormat="mm\:ss"
                    Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                    Margin="0,10" FontSize="32"/>
-                <!--<CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Базовое ПО" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Top" FontSize="14"/>
+            <!--<CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Базовое ПО" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Top" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Пакет файлов БЭГа" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14"/>
             <CheckBox IsEnabled="{Binding IsWriterRunningInvert}" Grid.Column="1" Content="Конфигурация АТ" HorizontalAlignment="Left" Margin="0,4" VerticalAlignment="Bottom" FontSize="14"/>-->
 

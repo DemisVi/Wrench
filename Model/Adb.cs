@@ -9,7 +9,7 @@ public class Adb
     public string? AdbPath { get; set; } = string.Empty;
     //public string? LastStdOut { get; private set; } = string.Empty;
     //public string? LastStdErr { get; private set; } = string.Empty;
-    public ExitCodes? ExitCode { get; set; }
+    public ExitCodes ExitCode { get; set; } = ExitCodes.WasNotRan;
 
     public Adb(string adbPath = "") =>
         AdbPath = adbPath.EndsWith(_adbExe) ? adbPath :
@@ -17,7 +17,7 @@ public class Adb
                      "platform-tools",
                      _adbExe);
 
-    public ExitCodes? Run(string args, int timeOut = 2000, bool throwError = false)
+    public ExitCodes Run(string args, int timeOut = 2000, bool throwError = false)
     {
         if (string.IsNullOrEmpty(AdbPath) || !File.Exists(AdbPath))
             throw new InvalidOperationException("ADB Path is invalid");
@@ -36,7 +36,7 @@ public class Adb
         };
 
         process.Start();
-        //LastStdOut = process?.StandardOutput.ReadToEnd();
+        //LastStdOut = process.StandardOutput.ReadToEnd();
         //LastStdErr = process?.StandardError.ReadToEnd();
 
         process.WaitForExit(timeOut * 1000);

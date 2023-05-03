@@ -39,6 +39,7 @@ namespace Wrench.Model
         OK = 0,
         Fail = -1,
         UserTimeout = 1000,
+        WasNotRan = 2000,
     }
 
     [Flags]

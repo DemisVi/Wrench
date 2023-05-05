@@ -30,6 +30,8 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     private const string fastbootBatch = "flash_most.bat";
     private const string adbBatch = "load_cfg.bat";
     private bool isRetro = false;
+    private bool isOoo = false;
+
     public event PropertyChangedEventHandler? PropertyChanged;
     private readonly ObservableCollection<string> _kuLogList;
     private CancellationTokenSource _cts = new();
@@ -73,11 +75,12 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     private TimeSpan _operationTime = TimeSpan.Zero;
     public TimeSpan OperationTime { get => _operationTime; set => SetProperty(ref _operationTime, value); }
 
-    public SimComWriter(ObservableCollection<string> cULogList, bool isRetro = false)
+    public SimComWriter(ObservableCollection<string> cULogList, bool isRetro = false, bool isOoo = false)
     {
         _kuLogList = cULogList;
         _cu = Wrench.Model.ContactUnit.GetInstance(new AdapterLocator().AdapterSerials.First().Trim(new[] { 'A', 'B' }));
         this.isRetro = isRetro;
+        this.isOoo = isOoo;
 
         operationTimer.Elapsed += (_, _) => OperationTime += TimeSpan.FromSeconds(1);
     }
@@ -144,10 +147,19 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
             }
 
             // 1. Wait for CU
-            LogMsg("Ожидание готовности КУ...");
             ProgressIndeterminate = true;
-            opResult = AwaitCUClose();
-            expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down;
+            if (isOoo)
+            {
+                LogMsg("Ожидание сигнала КУ...");
+                opResult = AwaitCUSignal();
+                expected = Sensors.Lodg;
+            }
+            else
+            {
+                LogMsg("Ожидание готовности КУ...");
+                opResult = AwaitCUClose();
+                expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down;
+            }
             ProgressIndeterminate = false;
             if (opResult as Sensors? != (expected as Sensors?))
             {
@@ -166,7 +178,10 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
 
             start = DateTime.Now;
             opResult = LockCU();
-            expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up;
+            if (isOoo)
+                expected = Sensors.Lodg;
+            else
+                expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up;
             if (opResult as Sensors? != expected as Sensors?)
             {
                 LogMsg($"ERROR: {((byte)opResult ^ (byte)expected):D4} \nFailed to lock Contact Unit");
@@ -497,14 +512,10 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     {
         _cu.SetOuts(Outs.Pn1 | Outs.Blue);
         StatusColor = Brushes.LightBlue;
-        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2);
-    }
-
-    private bool EnsureCUState()
-    {
-        _cu.SetOuts(Outs.Pn1 | Outs.Blue);
-        StatusColor = Brushes.LightBlue;
-        return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2) == (Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up);
+        if (isOoo)
+            return _cu.WaitForState(Sensors.Lodg);
+        else
+            return _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up, 2);
     }
 
     private void SignalReady()
@@ -678,7 +689,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     private bool Old_AwaitDeviceStart(string portName, int timeout = Timeout.Infinite)
     {
         var tcs = new TaskCompletionSource<bool>();
-        var command = "at";
+        var command = new SimComModem().BootCommand;
         var elapsed = 0;
         using var serial = new SerialPort(portName)
         {
@@ -693,10 +704,10 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         };
 
         timer.Elapsed += (s, _) =>
-                {
-                    elapsed++;
-                    serial.WriteLine(command);
-                };
+        {
+            elapsed++;
+            serial.WriteLine(command);
+        };
 
         serial.DataReceived += DataReceived;
         serial.Open();
@@ -745,7 +756,10 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         var opResult = TurnModemPowerOff();
         if (opResult is not true)
             LogMsg("Failed to power off board");
-        _cu.WaitForState(Sensors.Pn1_Down);
+        if (isOoo)
+            _cu.WaitForState(Sensors.None);
+        else
+            _cu.WaitForState(Sensors.Pn1_Down);
         ProgressIndeterminate = false;
     }
 
@@ -755,12 +769,15 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         //ProgressValue = 0;
         ProgressIndeterminate = true;
         _cu.SetOuts(Outs.None);
-        StatusColor = Brushes.Wheat;
+        StatusColor = Brushes.White;
         LogMsg("Снятие питания...");
         var opResult = TurnModemPowerOff();
         if (opResult is not true)
             LogMsg("Failed to power off board");
-        _cu.WaitForState(Sensors.Pn1_Down);
+        if (isOoo)
+            _cu.WaitForState(Sensors.None);
+        else
+            _cu.WaitForState(Sensors.Pn1_Down);
         ProgressIndeterminate = false;
     }
 
@@ -772,7 +789,10 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         StatusColor = Brushes.LightGreen;
         PassValue++;
         TimeAvgValue = elapsed;
-        _cu.WaitForState(Sensors.Pn1_Down);
+        if (isOoo)
+            _cu.WaitForState(Sensors.None);
+        else
+            _cu.WaitForState(Sensors.Pn1_Down);
         ProgressValue = 0;
     }
 
@@ -788,6 +808,8 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     }
 
     private Sensors AwaitCUClose() => _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
+    
+    private Sensors AwaitCUSignal() => _cu.WaitForState(Sensors.Lodg);
 
     public void LogMsg(string? message) => _kuLogList.Insert(0, message ?? string.Empty);
 }

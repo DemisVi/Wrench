@@ -27,7 +27,7 @@ public class MainViewModel : INotifyPropertyChanged
     private IWriter? WriterCU1;
     private object _synclock1 = new();
     private readonly Validator _validator = new();
-    private readonly List<string> _writerVariant = new() { "SimCom упр.", "SimCom ретро.", "Telit упр.", "Telit ретро."/*, "SimCom O.O.O."*/ };
+    private readonly List<string> _writerVariant = new() { "SimCom упр.", "SimCom ретро.", "Telit упр.", "Telit ретро." };
 
     public ObservableCollection<string> CU1LogList { get; set; } = new();
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -88,7 +88,10 @@ public class MainViewModel : INotifyPropertyChanged
     private void PerformShowPackageSelector(object? commandParameter)
     {
         if (DeviceType is not null)
+        {
             DeviceType?.Clear();
+            OnPropertyChange(nameof(DeviceType));
+        }
         else
             DeviceType = new();
 
@@ -99,7 +102,6 @@ public class MainViewModel : INotifyPropertyChanged
             "SimCom ретро." => "SimCom_retro",
             "Telit упр." => "Telit_simple",
             "Telit ретро." => "Telit_retro",
-            "SimCom O.O.O." => "SimCom_simple",
             _ => throw new NotImplementedException(),
         };
 
@@ -112,6 +114,7 @@ public class MainViewModel : INotifyPropertyChanged
             foreach (var j in i.GetDirectories())
                 DeviceType?[i.Name].Add(j.Name);
         }
+        OnPropertyChange(nameof(DeviceType));
 
         new PackageSelectorWindow(this).ShowDialog();
     }
@@ -123,11 +126,10 @@ public class MainViewModel : INotifyPropertyChanged
     {
         WriterCU1 = commandParameter switch
         {
-            "SimCom упр." => new SimComWriter(CU1LogList),
-            "SimCom ретро." => new SimComWriter(CU1LogList, true),
+            "SimCom упр." => new SimComWriter(CU1LogList, isOoo: IsOoo),
+            "SimCom ретро." => new SimComWriter(CU1LogList, true, isOoo: IsOoo),
             "Telit упр." => throw new NotImplementedException(),
             "Telit ретро." => new TelitWriter(CU1LogList),
-            "SimCom O.O.O." => new Writer(CU1LogList),
             _ => throw new NotImplementedException(),
         };
 
@@ -174,7 +176,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         catch (Exception)
         {
-            DeviceSerial = "no factory.cfg";
+            DeviceSerial = "no serial";
         }
     }
 
@@ -299,4 +301,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         set => SetProperty(ref _timeAvgValue, _timeAvgValue + value);
     }
+
+    private bool _isOoo = false;
+    public bool IsOoo { get => _isOoo; set => SetProperty(ref _isOoo, value); }
 }

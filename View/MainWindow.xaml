@@ -56,7 +56,7 @@
         </Grid>
         <Grid Background="{Binding StatusColor}" Grid.Row="1" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
             <Label Content="{Binding ContactUnitTitle}" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="32"/>
@@ -66,6 +66,9 @@
             <!--<StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">-->
             <CheckBox x:Name="onTop" IsChecked="{Binding OnTop}" 
                       Grid.Column="1" FlowDirection="RightToLeft" Content="OnTop" 
+                      HorizontalAlignment="Right" VerticalAlignment="Top"/>
+            <CheckBox IsChecked="{Binding IsOoo}" Content="Режим контактного устройства ООО"
+                      Grid.Column="1" FlowDirection="RightToLeft" Margin="0,26"
                       HorizontalAlignment="Right" VerticalAlignment="Top"/>
             <Label Content="{Binding OperationTime}" ContentStringFormat="mm\:ss"
                    Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom"

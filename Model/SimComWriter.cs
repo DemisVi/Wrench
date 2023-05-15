@@ -429,6 +429,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
         {
             port.Open();
             port.Write("AT+CUSBADB=0\r");
+            Thread.Sleep(250);
             var answer = string.Empty;
             while (port.BytesToRead > 0)
             {
@@ -808,7 +809,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
     }
 
     private Sensors AwaitCUClose() => _cu.WaitForState(Sensors.Lodg | Sensors.Device | Sensors.Pn1_Down);
-    
+
     private Sensors AwaitCUSignal() => _cu.WaitForState(Sensors.Lodg);
 
     public void LogMsg(string? message) => _kuLogList.Insert(0, message ?? string.Empty);

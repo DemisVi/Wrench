@@ -124,13 +124,14 @@ public class ContactUnit : IContactUnit
         };
         timer.Elapsed += (s, _) =>
         {
-            var timer = s as Timer;
+            var t = s as Timer;
             var elapsed = (DateTime.Now - start).TotalSeconds;
             var sens = GetSensors();
             if (sens == sensors || (timeout != Timeout.Infinite && elapsed > timeout))
             {
-                tcs.SetResult(sens);
-                timer?.Stop();
+                if (!tcs.Task.IsCompleted)
+                    tcs.SetResult(sens);
+                t?.Stop();
                 return;
             }
         };

@@ -8,6 +8,14 @@
         mc:Ignorable="d" Topmost="{Binding OnTop}"
         Title="PackageSelectorWindow" Height="200" Width="500" WindowStartupLocation="CenterScreen">
 
+    <Window.Resources>
+        <ResourceDictionary Source="/Resources/Resources.xaml"/>
+    </Window.Resources>
+
+    <Window.Icon>
+        <Binding Mode="OneWay" Source="{StaticResource wrench_adjustable_circle_fillDrawingImage}"/>
+    </Window.Icon>
+
     <Window.InputBindings>
         <KeyBinding Key="Esc" Command="{Binding Exit}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
     </Window.InputBindings>

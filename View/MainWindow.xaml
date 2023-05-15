@@ -68,6 +68,7 @@
                       Grid.Column="1" FlowDirection="RightToLeft" Content="OnTop" 
                       HorizontalAlignment="Right" VerticalAlignment="Top"/>
             <CheckBox IsChecked="{Binding IsOoo}" Content="Режим контактного устройства ООО"
+                      IsEnabled="false"
                       Grid.Column="1" FlowDirection="RightToLeft" Margin="0,26"
                       HorizontalAlignment="Right" VerticalAlignment="Top"/>
             <Label Content="{Binding OperationTime}" ContentStringFormat="mm\:ss"

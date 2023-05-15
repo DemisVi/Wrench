@@ -159,7 +159,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
             expected = Sensors.Lodg | Sensors.Device | Sensors.Pn1_Up;
             if (opResult as Sensors? != expected as Sensors?)
             {
-                LogMsg($"ERROR: {((int)opResult ^ (int)expected):D4} \nFailed to lock Contact Unit");
+                LogMsg($"ERROR: {((byte)opResult ^ (byte)expected):D4} \nFailed to lock Contact Unit");
                 WriterFaultState();
                 continue;
             }
@@ -191,7 +191,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
                 WriterStopState();
                 break;
             }
-            
+
             // 3. wait for device
             ProgressValue = 20;
             LogMsg("Ожидание подключения...");

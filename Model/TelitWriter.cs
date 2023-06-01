@@ -615,7 +615,7 @@ internal class TelitWriter : INotifyPropertyChanged, IWriter
         }
     }
 
-    private string AwaitDeviceAttach(int timeout = 20)
+    private string AwaitDeviceAttach(int timeout = 30)
     {
         var modemLocator = new ModemLocator(LocatorQuery.queryEventTelit, LocatorQuery.queryTelitModem);
         modemLocator.WaitDeviceAttach(TimeSpan.FromSeconds(timeout));

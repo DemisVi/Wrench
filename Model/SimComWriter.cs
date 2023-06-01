@@ -360,7 +360,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
                 ProgressValue = 90;
                 LogMsg("Загрузка файлов через ADB интерфейс...");
                 //opResult = ExecuteAdbBatch(WorkingDir);
-                opResult = adb.Run(string.Format("push {0} /data", factoryPath));
+                opResult = adb.Run(string.Format("push \"{0}\" /data", factoryPath));
                 if (opResult is not ExitCodes.OK)
                 {
                     LogMsg($"ERROR: {(int)ErrorCodes.ADB_Batch:D4} \nFailed to run ADB");

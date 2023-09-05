@@ -360,7 +360,9 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
                 ProgressValue = 90;
                 LogMsg("Загрузка файлов через ADB интерфейс...");
                 //opResult = ExecuteAdbBatch(WorkingDir);
+                Thread.Sleep(TimeSpan.FromSeconds(5));
                 opResult = adb.Run(string.Format("push \"{0}\" /data", factoryPath));
+                // LogMsg(adb.LastStdOut);
                 if (opResult is not ExitCodes.OK)
                 {
                     LogMsg($"ERROR: {(int)ErrorCodes.ADB_Batch:D4} \nFailed to run ADB");
@@ -477,7 +479,7 @@ internal class SimComWriter : INotifyPropertyChanged, IWriter
                 }
                 catch (Exception) { }
                 finally { modemSerialPort.Close(); }
-                Thread.Sleep(4000);
+                Thread.Sleep(5000);
             }
         }, cts.Token);
 

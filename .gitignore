@@ -454,3 +454,12 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 /Data
 platform-tools/**
+publish/**
+publish_ooo/**
+/SimCom_simple/**
+/SimCom_retro/**
+/SimCom_simple
+/SimCom_retro
+/Telit_retro
+/Telit_simple/**
+/Telit_retro/**

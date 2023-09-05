@@ -317,6 +317,6 @@ public class MainViewModel : INotifyPropertyChanged
         set => SetProperty(ref _timeAvgValue, _timeAvgValue + value);
     }
 
-    private bool _isOoo = false;
+    private bool _isOoo = true;
     public bool IsOoo { get => _isOoo; set => SetProperty(ref _isOoo, value); }
 }

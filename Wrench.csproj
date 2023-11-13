@@ -1,75 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
-    <ApplicationIcon>Resources\wrench-adjustable-circle-fill.ico</ApplicationIcon>
-    <PublishSingleFile>true</PublishSingleFile>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Data\**" />
-    <Compile Remove="Model.Tests\**" />
-    <Compile Remove="Model\bin\**" />
-    <Compile Remove="Model\obj\**" />
-    <Compile Remove="Services.Tests\**" />
-    <Compile Remove="Services\bin\**" />
-    <Compile Remove="Services\Common\**" />
-    <Compile Remove="Services\obj\**" />
-    <EmbeddedResource Remove="Data\**" />
-    <EmbeddedResource Remove="Model.Tests\**" />
-    <EmbeddedResource Remove="Model\bin\**" />
-    <EmbeddedResource Remove="Model\obj\**" />
-    <EmbeddedResource Remove="Services.Tests\**" />
-    <EmbeddedResource Remove="Services\bin\**" />
-    <EmbeddedResource Remove="Services\Common\**" />
-    <EmbeddedResource Remove="Services\obj\**" />
-    <None Remove="Data\**" />
-    <None Remove="Model.Tests\**" />
-    <None Remove="Model\bin\**" />
-    <None Remove="Model\obj\**" />
-    <None Remove="Services.Tests\**" />
-    <None Remove="Services\bin\**" />
-    <None Remove="Services\Common\**" />
-    <None Remove="Services\obj\**" />
-    <Page Remove="Data\**" />
-    <Page Remove="Model.Tests\**" />
-    <Page Remove="Model\bin\**" />
-    <Page Remove="Model\obj\**" />
-    <Page Remove="Services.Tests\**" />
-    <Page Remove="Services\bin\**" />
-    <Page Remove="Services\Common\**" />
-    <Page Remove="Services\obj\**" />
+    <Folder Include="Models\" />
+    <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
+
 
   <ItemGroup>
-    <None Remove=".gitignore" />
+    <PackageReference Include="Avalonia" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.2" />
+    <PackageReference Include="avalonia.svg" Version="11.0.0.3" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.2" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.2" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.2" />
+    <PackageReference Include="microsoft.extensions.hosting" Version="7.0.1" />
+    <PackageReference Include="system.io.ports" Version="7.0.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Resources\wrench-adjustable-circle-fill.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.IO.Ports" Version="7.0.0" />
-    <PackageReference Include="System.Management" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
 </Project>

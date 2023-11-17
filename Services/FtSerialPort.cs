@@ -1,7 +1,8 @@
 using System;
-using System.Linq;
 using System.IO.Ports;
-using System.Management;
+using Wrench.Models;
+
+namespace Wrench.Services;
 
 public class FtSerialPort : SerialPort
 {

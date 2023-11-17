@@ -1,6 +1,7 @@
 using System;
 using System.Management;
 
+namespace Wrench.Models;
 
 public static class FtdiQueries
 {

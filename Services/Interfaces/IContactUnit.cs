@@ -1,3 +1,8 @@
+using System;
+using Wrench.DataTypes;
+
+namespace Wrench.Services;
+
 public interface IContactUnit
 {
     public GpioOutputs Outputs { get; }

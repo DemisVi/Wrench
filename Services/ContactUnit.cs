@@ -1,12 +1,11 @@
 using System;
-using System.Text;
-using System.Linq;
-using System.IO.Ports;
-using System.Management;
 using System.Device.Gpio;
 using Iot.Device.Ft2232H;
 using Iot.Device.FtCommon;
 using System.Threading;
+using Wrench.DataTypes;
+
+namespace Wrench.Services;
 
 public class ContactUnit : IContactUnit, IDisposable
 {

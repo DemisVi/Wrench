@@ -5,6 +5,8 @@ using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
+namespace Wrench.Models;
+
 public static class WqlQueries
 {
 #pragma warning disable CA1416

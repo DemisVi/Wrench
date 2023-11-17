@@ -1,7 +1,6 @@
 using System;
-using System.Diagnostics;
 
-namespace Tools;
+namespace Wrench.Services;
 
 public class Adb : Tool
 {

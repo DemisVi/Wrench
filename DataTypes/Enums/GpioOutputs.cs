@@ -1,5 +1,7 @@
 using System;
 
+namespace Wrench.DataTypes;
+
 [Flags]
 public enum GpioOutputs : byte
 {

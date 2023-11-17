@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Wrench.Extensions;
+using Wrench.DataTypes;
+
+namespace Wrench.Models;
 
 public class FactoryCFG
 {

@@ -1,4 +1,7 @@
 using System;
+using Wrench.Extensions;
+
+namespace Wrench.DataTypes;
 
 public class Base34
 {

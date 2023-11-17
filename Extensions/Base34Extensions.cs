@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
 using System.Text;
+using Wrench.DataTypes;
+
+namespace Wrench.Extensions;
 
 public static class Base34Extensions
 {

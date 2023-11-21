@@ -10,10 +10,6 @@
     </Application.DataTemplates>
   
     <Application.Styles>
-        <FluentTheme>
-            <FluentTheme.Palettes>
-                <ColorPaletteResources x:Key="Light"/>
-            </FluentTheme.Palettes>
-        </FluentTheme>
+        <FluentTheme/>
     </Application.Styles>
 </Application>

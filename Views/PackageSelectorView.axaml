@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:Wrench.ViewModels"
+             x:DataType="vm:PackageSelectorViewModel"
+             x:Class="Wrench.Views.PackageSelectorView">
+
+  <Grid RowDefinitions="*,Auto" ColumnDefinitions="*,*">
+    
+    <Border Grid.Row="0" Grid.Column="0" Margin="1">
+      <ScrollViewer AllowAutoHide="false">
+        <ListBox ItemsSource="{Binding FirmwarePackages}" 
+                 SelectedItem="{Binding SelectedFirmware}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding ModelName}"/>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </ScrollViewer>
+    </Border>
+      
+    <Border Grid.Row="0" Grid.Column="1" Margin="1">
+      <ScrollViewer AllowAutoHide="false">
+        <ListBox x:CompileBindings="false" ItemsSource="{Binding SelectedFirmware.Packages}"
+                 SelectedItem="{Binding SelectedPackage}">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding VersionName}"/>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </ScrollViewer>
+    </Border>
+
+      <!-- <Button Content="Refresh" Command="{Binding Refresh}"/> -->
+      <Button Grid.Row="1" Grid.Column="0" Content="Загрузить" FontSize="24"
+              HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"/>
+      <Button Grid.Row="1" Grid.Column="1" Content="Отмена" FontSize="24"
+              HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"/>
+  </Grid>
+  
+</UserControl>

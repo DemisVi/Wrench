@@ -5,6 +5,12 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Wrench.Views.MainView"
              xmlns:vm="using:Wrench.ViewModels"
-             x:DataType="vm:MainViewModel">
-  Welcome to Avalonia!
+             x:DataType="vm:MainViewModel"
+             xmlns:v="using:Wrench.Views">
+  
+  <Grid RowDefinitions="*,*,Auto">
+    <v:StatusView Grid.Row="0"/>
+    <!-- <v:StatusView Grid.Row="1"/> -->
+  </Grid>
+  
 </UserControl>

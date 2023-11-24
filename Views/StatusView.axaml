@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Wrench.Views.StatusView"
+             xmlns:vm="using:Wrench.ViewModels"
+             x:DataType="vm:StatusViewModel">
+
+            <UserControl.Styles>
+                <Style Selector="Label.label">
+                    <Setter Property="Margin" Value="4,2"/>
+                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="24"/>
+                </Style>
+                <Style Selector="Label.value">
+                    <Setter Property="Margin" Value="4,2"/>
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="24"/>
+                </Style>
+                <Style Selector="Label.cu">
+                    <Setter Property="Margin" Value="4,2"/>
+                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="48"/>
+                </Style>
+                <Style Selector="Label.timer">
+                    <Setter Property="Margin" Value="4,2"/>
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="48"/>
+                </Style>
+                <Style Selector="Label.serial">
+                    <Setter Property="Margin" Value="4,2"/>
+                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="24"/>
+                </Style>
+            </UserControl.Styles>
+            
+            <!-- main grid -->
+            <Grid RowDefinitions="*,*">
+            <!-- labels grid -->
+              <Grid Grid.Row="0" RowDefinitions="*,*" ColumnDefinitions="3*,*,*">
+                <Label Classes="label" Grid.Row="0" Grid.Column="0">label:</Label>
+                <Label Classes="label" Grid.Row="1" Grid.Column="0">label:</Label>
+                <Label Classes="label" Grid.Row="0" Grid.Column="1">label:</Label>
+                <Label Classes="label" Grid.Row="1" Grid.Column="1">label:</Label>
+                <Label Classes="label" Grid.Row="0" Grid.Column="2">label:</Label>
+                <Label Classes="label" Grid.Row="1" Grid.Column="2">label:</Label>
+                <Label Classes="value" Grid.Row="0" Grid.Column="0">value</Label>
+                <Label Classes="value" Grid.Row="1" Grid.Column="0">value</Label>
+                <Label Classes="value" Grid.Row="0" Grid.Column="1">value</Label>
+                <Label Classes="value" Grid.Row="1" Grid.Column="1">value</Label>
+                <Label Classes="value" Grid.Row="0" Grid.Column="2">value</Label>
+                <Label Classes="value" Grid.Row="1" Grid.Column="2">value</Label>
+              </Grid>
+              <!-- CU and progress grid -->
+              <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*">
+                <Label Classes="cu" Grid.Row="0" Grid.Column="0">CuntactUnit</Label>
+                <Label Classes="timer" Grid.Row="1" Grid.Column="1">Timer</Label>
+                <Label Classes="serial" Grid.Row="1" Grid.Column="0">Serial</Label>
+              </Grid>
+            </Grid>
+
+</UserControl>

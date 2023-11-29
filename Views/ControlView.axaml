@@ -29,7 +29,9 @@
             </UserControl.Styles>
   
             <DockPanel HorizontalAlignment="Stretch" Background="LightGray">
-              <Button Classes="dockButton">
+              <Button Classes="dockButton"
+                x:CompileBindings="false" 
+                Command="{Binding $parent[Window].DataContext.ShowPackageSelector}" IsEnabled="{Binding AllowPackageSelector}">
                 <StackPanel Orientation="Horizontal">
                   <Image Classes="dockButtonImg" Source="{SvgImage /Assets/folder-plus.svg}"/>
                   <Label Content=" Загрузить"/>

@@ -5,6 +5,7 @@ namespace Wrench.ViewModels;
 
 public class ControlViewModel : ViewModelBase
 {
+    public bool AllowPackageSelector { get; set; } = true;
     public ComboBoxItem[] ComboBoxItems { get; set; } = new[] {
         new ComboBoxItem() {Content = "CimCom-pedro-fit"},
         new ComboBoxItem() {Content = "Telit-ultra-dub"},

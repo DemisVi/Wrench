@@ -22,15 +22,33 @@ public class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        StatsVM = new(SerialPort.GetPortNames().Select(x => new Modem() { AttachedTo = x }));
-        PackageSelectorViewModel = new();
+        StatsViewModel = new(SerialPort.GetPortNames().Select(x => new Modem() { AttachedTo = x }));
         MainViewModel = new();
         contentViewModel = MainViewModel;
     }
 
-    public StatsViewModel StatsVM { get; }
-    public PackageSelectorViewModel PackageSelectorViewModel { get; }
+    public StatsViewModel StatsViewModel { get; }
     public MainViewModel MainViewModel { get; }
+    public Package Package { get; private set; } = new();
+
+    public void ShowPackageSelector()
+    {
+        var psVM = new PackageSelectorViewModel();
+
+        Observable.Merge(
+            psVM.Load,
+            psVM.Cancel.Select(_ => (Package?)null))
+            .Take(1)
+            .Subscribe(item => 
+            {
+                if (item is not null)
+                {
+                    Package = item;
+                }
+                ContentViewModel = MainViewModel;
+            });
+        ContentViewModel = psVM;
+    }
 
     public void Update()
     {
@@ -44,9 +62,9 @@ public class MainWindowViewModel : ViewModelBase
                 {
                     if (newItem != null)
                     {
-                        StatsVM.Items.Add(newItem);
+                        StatsViewModel.Items.Add(newItem);
                     }
-                    ContentViewModel = StatsVM;
+                    ContentViewModel = StatsViewModel;
                 });
 
         ContentViewModel = addItemViewModel;

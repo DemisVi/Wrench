@@ -17,7 +17,7 @@ public class PackageSelectorViewModel : ViewModelBase
     {
         Refresh();
     }
-    
+
     public ObservableCollection<Firmware>? FirmwarePackages
     {
         get => firmwarePackages;
@@ -30,5 +30,5 @@ public class PackageSelectorViewModel : ViewModelBase
     }
     public Package? SelectedPackage { get; set; }
 
-    public void Refresh() => FirmwarePackages = new(FirmwareProvider.GetFirmware(Path.Combine(Environment.CurrentDirectory, "./SimCom_retro")));
+    public void Refresh() => FirmwarePackages = new(new FirmwareProvider().GetFirmware(Path.Combine(Environment.CurrentDirectory, "./SimCom_retro")));
 }

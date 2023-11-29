@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Wrench.Views.ControlView"
+             xmlns:vm="using:Wrench.ViewModels"
+             x:DataType="vm:ControlViewModel">
+
+            <UserControl.Styles>
+              <Style Selector="Button.dockButton">
+                <Setter Property="Margin" Value="4"/>
+                <Setter Property="FontSize" Value="18"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="DockPanel.Dock" Value="Left"/>
+              </Style>
+              <Style Selector="Image.dockButtonImg">
+                <Setter Property="Width" Value="28"/>
+                <Setter Property="Height" Value="28"/>
+              </Style>
+              <Style Selector="ComboBox.dock">
+                <Setter Property="Margin" Value="4"/>
+                <Setter Property="Width" Value="300"/>
+                <Setter Property="FontSize" Value="24"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+                <Setter Property="DockPanel.Dock" Value="Right"/>
+              </Style>
+            </UserControl.Styles>
+  
+            <DockPanel HorizontalAlignment="Stretch" Background="LightGray">
+              <Button Classes="dockButton">
+                <StackPanel Orientation="Horizontal">
+                  <Image Classes="dockButtonImg" Source="{SvgImage /Assets/folder-plus.svg}"/>
+                  <Label Content=" Загрузить"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="dockButton">
+                <StackPanel Orientation="Horizontal">
+                  <Image Classes="dockButtonImg" Source="{SvgImage /Assets/lightning.svg}"/>
+                  <Label Content=" Запуск"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="dockButton">
+                <StackPanel Orientation="Horizontal">
+                  <Image Classes="dockButtonImg" Source="{SvgImage /Assets/stop.svg}"/>
+                  <Label Content=" Завершить"/>
+                </StackPanel>
+              </Button>
+              <ComboBox Classes="dock" ItemsSource="{Binding ComboBoxItems}" SelectedItem="{Binding }"
+                PlaceholderText="Выбор типа изделия"/>
+            </DockPanel>
+
+</UserControl>

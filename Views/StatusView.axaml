@@ -5,7 +5,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Wrench.Views.StatusView"
              xmlns:vm="using:Wrench.ViewModels"
-             x:DataType="vm:StatusViewModel">
+             x:DataType="vm:StatusViewModel"
+             Background="{Binding IndicatorColor}">
 
             <UserControl.Styles>
                 <Style Selector="Label.label">
@@ -44,18 +45,18 @@
             <Grid RowDefinitions="*,*">
             <!-- labels grid -->
               <Grid Grid.Row="0" RowDefinitions="*,*" ColumnDefinitions="3*,*,*">
-                <Label Classes="label" Grid.Row="0" Grid.Column="0">label:</Label>
-                <Label Classes="label" Grid.Row="1" Grid.Column="0">label:</Label>
-                <Label Classes="label" Grid.Row="0" Grid.Column="1">label:</Label>
-                <Label Classes="label" Grid.Row="1" Grid.Column="1">label:</Label>
-                <Label Classes="label" Grid.Row="0" Grid.Column="2">label:</Label>
-                <Label Classes="label" Grid.Row="1" Grid.Column="2">label:</Label>
-                <Label Classes="value" Grid.Row="0" Grid.Column="0">value</Label>
-                <Label Classes="value" Grid.Row="1" Grid.Column="0">value</Label>
-                <Label Classes="value" Grid.Row="0" Grid.Column="1">value</Label>
-                <Label Classes="value" Grid.Row="1" Grid.Column="1">value</Label>
-                <Label Classes="value" Grid.Row="0" Grid.Column="2">value</Label>
-                <Label Classes="value" Grid.Row="1" Grid.Column="2">value</Label>
+                <Label Classes="label" Grid.Row="0" Grid.Column="0">Модель:</Label>
+                <Label Classes="label" Grid.Row="1" Grid.Column="0">Версия ПО:</Label>
+                <Label Classes="label" Grid.Row="0" Grid.Column="1">Годных:</Label>
+                <Label Classes="label" Grid.Row="1" Grid.Column="1">Сбойных:</Label>
+                <Label Classes="label" Grid.Row="0" Grid.Column="2">К:</Label>
+                <Label Classes="label" Grid.Row="1" Grid.Column="2">t/блок:</Label>
+                <Label Classes="value" Grid.Row="0" Grid.Column="0" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="1" Grid.Column="0" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="0" Grid.Column="1" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="1" Grid.Column="1" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="0" Grid.Column="2" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="1" Grid.Column="2" Content="{Binding Label}"/>
               </Grid>
               <!-- CU and progress grid -->
               <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*">

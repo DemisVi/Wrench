@@ -8,9 +8,10 @@
              x:DataType="vm:MainViewModel"
              xmlns:v="using:Wrench.Views">
   
-  <Grid RowDefinitions="*,*,Auto">
-    <v:StatusView Grid.Row="0"/>
-    <!-- <v:StatusView Grid.Row="1"/> -->
+  <Grid RowDefinitions="Auto,*,Auto">
+    <v:StatusView DataContext="{Binding StatusVM}" Grid.Row="0"/>
+    <v:LogView DataContext="{Binding LogVM}" Grid.Row="1"/>
+    <v:ControlView DataContext="{Binding ControlVM}" Grid.Row="2"/>
   </Grid>
   
 </UserControl>

@@ -25,10 +25,11 @@ public class FirmwareProvider : IFirmwareProvider
         {
             FirmwarePath = dir,
             ModelName = new DirectoryInfo(dir).Name,
-            Packages = Directory.GetDirectories(dir).Select(dir => new Package()
+            Packages = Directory.GetDirectories(dir).Select(indir => new Package()
             {
-                PackagePath = dir,
-                VersionName = new DirectoryInfo(dir).Name,
+                ModelName = new DirectoryInfo(dir).Name,
+                PackagePath = indir,
+                VersionName = new DirectoryInfo(indir).Name,
             }),
         });
     }

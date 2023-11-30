@@ -51,10 +51,18 @@
                 <Label Classes="label" Grid.Row="1" Grid.Column="1">Сбойных:</Label>
                 <Label Classes="label" Grid.Row="0" Grid.Column="2">К:</Label>
                 <Label Classes="label" Grid.Row="1" Grid.Column="2">t/блок:</Label>
-                <Label Classes="value" Grid.Row="0" Grid.Column="0" Content="{Binding Label}"/>
-                <Label Classes="value" Grid.Row="1" Grid.Column="0" Content="{Binding Label}"/>
-                <Label Classes="value" Grid.Row="0" Grid.Column="1" Content="{Binding Label}"/>
-                <Label Classes="value" Grid.Row="1" Grid.Column="1" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="0" Grid.Column="0">
+                  <TextBlock
+                    x:CompileBindings="false" Text="{Binding $parent[Window].DataContext.Package.ModelName}"/>
+                </Label>
+                <Label Classes="value" Grid.Row="1" Grid.Column="0">
+                  <TextBlock
+                    x:CompileBindings="false" Text="{Binding $parent[Window].DataContext.Package.VersionName}"/>
+                </Label>
+                <Label Classes="value" Grid.Row="0" Grid.Column="1"
+                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Package.Good}"/>
+                <Label Classes="value" Grid.Row="1" Grid.Column="1"
+                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Package.Bad}"/>
                 <Label Classes="value" Grid.Row="0" Grid.Column="2" Content="{Binding Label}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="2" Content="{Binding Label}"/>
               </Grid>

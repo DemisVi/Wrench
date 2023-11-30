@@ -11,7 +11,7 @@
     
     <Border Grid.Row="0" Grid.Column="0" Margin="1">
       <ScrollViewer AllowAutoHide="false">
-        <ListBox ItemsSource="{Binding FirmwarePackages}" 
+        <ListBox ItemsSource="{Binding FirmwarePackages}"
                  SelectedItem="{Binding SelectedFirmware}">
           <ListBox.ItemTemplate>
             <DataTemplate>
@@ -38,9 +38,11 @@
       <!-- <Button Content="Refresh" Command="{Binding Refresh}"/> -->
       <Button Grid.Row="1" Grid.Column="0" Content="Загрузить" FontSize="24"
               HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+              HotKey="Enter"
               Command="{Binding Load}"/>
       <Button Grid.Row="1" Grid.Column="1" Content="Отмена" FontSize="24"
               HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
+              HotKey="Escape"
               Command="{Binding Cancel}"/>
   </Grid>
   

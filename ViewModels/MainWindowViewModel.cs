@@ -11,25 +11,22 @@ namespace Wrench.ViewModels;
 public class MainWindowViewModel : ViewModelBase
 {
     private ViewModelBase contentViewModel;
-    
+
+    public MainWindowViewModel()
+    {
+        MainViewModel = new();
+        contentViewModel = MainViewModel;
+    }
     public ViewModelBase ContentViewModel
     {
         get => contentViewModel;
         private set => this.RaiseAndSetIfChanged(ref contentViewModel, value);
     }
-
-    //this has a dependency on the ToDoListService
-
-    public MainWindowViewModel()
-    {
-        StatsViewModel = new(SerialPort.GetPortNames().Select(x => new Modem() { AttachedTo = x }));
-        MainViewModel = new();
-        contentViewModel = MainViewModel;
-    }
-
-    public StatsViewModel StatsViewModel { get; }
     public MainViewModel MainViewModel { get; }
+
     public Package Package { get; private set; } = new();
+    public int Good { get; set; } = default;
+    public int Bad { get; set; } = default;
 
     public void ShowPackageSelector()
     {
@@ -39,7 +36,7 @@ public class MainWindowViewModel : ViewModelBase
             psVM.Load,
             psVM.Cancel.Select(_ => (Package?)null))
             .Take(1)
-            .Subscribe(item => 
+            .Subscribe(item =>
             {
                 if (item is not null)
                 {
@@ -48,25 +45,5 @@ public class MainWindowViewModel : ViewModelBase
                 ContentViewModel = MainViewModel;
             });
         ContentViewModel = psVM;
-    }
-
-    public void Update()
-    {
-        AddItemViewModel addItemViewModel = new();
-
-        Observable.Merge(
-            addItemViewModel.OkCommand,
-            addItemViewModel.CancelCommand.Select(_ => (Modem?)null))
-            .Take(1)
-            .Subscribe(newItem =>
-                {
-                    if (newItem != null)
-                    {
-                        StatsViewModel.Items.Add(newItem);
-                    }
-                    ContentViewModel = StatsViewModel;
-                });
-
-        ContentViewModel = addItemViewModel;
     }
 }

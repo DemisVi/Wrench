@@ -20,6 +20,9 @@ public class FirmwareProvider : IFirmwareProvider
     {
         if (string.IsNullOrEmpty(path)) throw new ArgumentException("Path can't be null or empty", nameof(path));
 
+        if (Directory.Exists(path) is not true)
+            return Enumerable.Empty<Firmware>();
+
         var firmwareDirectories = Directory.GetDirectories(path);
         return firmwareDirectories.Select(dir => new Firmware()
         {

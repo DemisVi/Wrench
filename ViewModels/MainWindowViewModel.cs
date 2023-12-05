@@ -16,19 +16,26 @@ public class MainWindowViewModel : ViewModelBase
     {
         MainViewModel = new();
         contentViewModel = MainViewModel;
+
+        var enableSelector = this.WhenAny(x => x.MainViewModel.ControlViewModel.SelectedSource, y => y.Value is not null);
+
+        ShowPackageSelector = ReactiveCommand.Create(ExecuteShowPackageSelector, enableSelector);
     }
     public ViewModelBase ContentViewModel
     {
         get => contentViewModel;
         private set => this.RaiseAndSetIfChanged(ref contentViewModel, value);
     }
+
+    public ReactiveCommand<Unit, Unit> ShowPackageSelector { get; }
+    
     public MainViewModel MainViewModel { get; }
 
     public Package Package { get; private set; } = new();
     public int Good { get; set; } = default;
     public int Bad { get; set; } = default;
 
-    public void ShowPackageSelector()
+    public void ExecuteShowPackageSelector()
     {
         var src = MainViewModel.ControlViewModel.SelectedSource;
         if (src is null) return;

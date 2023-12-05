@@ -32,7 +32,6 @@
               <Button Classes="dockButton"
                 x:CompileBindings="false" 
                 Command="{Binding $parent[Window].DataContext.ShowPackageSelector}"
-                IsEnabled="{Binding AllowPackageSelector}"
                 HotKey="Ctrl+O" >
                 <StackPanel Orientation="Horizontal">
                   <Image Classes="dockButtonImg" Source="{SvgImage /Assets/folder-plus.svg}"/>

@@ -9,7 +9,6 @@ public partial class ControlView : UserControl
 {
     public ControlView()
     {
-        DataContext = new ControlViewModel();
         InitializeComponent();
     }
 }

@@ -14,9 +14,11 @@ public class PackageSelectorViewModel : ViewModelBase
     private Firmware? selectedFirmware;
     private ObservableCollection<Firmware>? firmwarePackages;
     private Package? selectedPackage;
+    private FirmwareSource source;
 
-    public PackageSelectorViewModel()
+    public PackageSelectorViewModel(FirmwareSource source)
     {
+        this.source = source;
         Refresh();
 
         var loadEnable = this.WhenAnyValue(x => x.SelectedPackage,
@@ -46,5 +48,5 @@ public class PackageSelectorViewModel : ViewModelBase
     public ReactiveCommand<Unit, Package?> Load { get; }
     public ReactiveCommand<Unit, Unit> Cancel { get; }
 
-    public void Refresh() => FirmwarePackages = new(new FirmwareProvider().GetFirmware(Path.Combine(Environment.CurrentDirectory, "./SimCom_retro")));
+    public void Refresh() => FirmwarePackages = new(new FirmwareProvider().GetFirmware(Path.Combine(Environment.CurrentDirectory, source.SubfolderName)));
 }

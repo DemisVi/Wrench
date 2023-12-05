@@ -12,6 +12,10 @@
         "SubfolderName": "./SimCom_simple"
     },
     {
+        "Name": "Telit Ретрофит",
+        "SubfolderName": "./Telit_retro"
+    },
+    {
         "Name": "Telit \u0423\u043F\u0440\u043E\u0449\u0435\u043D\u043D\u044B\u0439",
         "SubfolderName": "./Telit_simple"
     }

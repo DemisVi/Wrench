@@ -11,4 +11,5 @@ namespace Wrench.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
+    public ControlViewModel ControlViewModel { get; set; } = new();
 }

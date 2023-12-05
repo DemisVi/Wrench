@@ -31,7 +31,8 @@
             <DockPanel HorizontalAlignment="Stretch" Background="LightGray">
               <Button Classes="dockButton"
                 x:CompileBindings="false" 
-                Command="{Binding $parent[Window].DataContext.ShowPackageSelector}" IsEnabled="{Binding AllowPackageSelector}"
+                Command="{Binding $parent[Window].DataContext.ShowPackageSelector}"
+                IsEnabled="{Binding AllowPackageSelector}"
                 HotKey="Ctrl+O" >
                 <StackPanel Orientation="Horizontal">
                   <Image Classes="dockButtonImg" Source="{SvgImage /Assets/folder-plus.svg}"/>
@@ -52,7 +53,7 @@
               </Button>
               <ComboBox Classes="dock" 
                 ItemsSource="{Binding FirmwareSources}" 
-                SelectedItem="{Binding SelectedFirmwareItem}"
+                SelectedItem="{Binding SelectedSource}"
                 PlaceholderText="Выбор типа изделия">
                   <ComboBox.ItemTemplate>
                     <DataTemplate>

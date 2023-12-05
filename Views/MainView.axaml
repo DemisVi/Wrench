@@ -11,7 +11,7 @@
   <Grid RowDefinitions="Auto,*,Auto">
     <v:StatusView Grid.Row="0"/>
     <v:LogView Grid.Row="1"/>
-    <v:ControlView Grid.Row="2"/>
+    <v:ControlView DataContext="{Binding ControlViewModel}" Grid.Row="2"/>
   </Grid>
   
 </UserControl>

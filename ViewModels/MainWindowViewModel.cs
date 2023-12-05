@@ -30,7 +30,10 @@ public class MainWindowViewModel : ViewModelBase
 
     public void ShowPackageSelector()
     {
-        var psVM = new PackageSelectorViewModel();
+        var src = MainViewModel.ControlViewModel.SelectedSource;
+        if (src is null) return;
+
+        var psVM = new PackageSelectorViewModel(src);
 
         Observable.Merge(
             psVM.Load,

@@ -1,18 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Avalonia.Controls;
+using Wrench.Models;
+using Wrench.Services;
 
 namespace Wrench.ViewModels;
 
 public class ControlViewModel : ViewModelBase
 {
     public bool AllowPackageSelector { get; set; } = true;
-    public ComboBoxItem[] ComboBoxItems { get; set; } = new[] {
-        new ComboBoxItem() {Content = "CimCom-pedro-fit"},
-        new ComboBoxItem() {Content = "Telit-ultra-dub"},
-        new ComboBoxItem() {Content = "Telit-ultra-dub"},
-        new ComboBoxItem() {Content = "Telit-ultra-dub"},
-        new ComboBoxItem() {Content = "Telit-ultra-dub"},
-        new ComboBoxItem() {Content = "Telit-ultra-dub"},
-        new ComboBoxItem() {Content = "SimSim-used-simp"}
-        };
+    public IEnumerable<FirmwareSource> FirmwareSources { get; set; } = new FirmwareSourcesProvider().GetSources();
+    public FirmwareSource? SelectedFirmwareItem { get; set; }
 }

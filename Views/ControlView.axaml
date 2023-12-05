@@ -50,8 +50,16 @@
                   <Label Content=" Завершить"/>
                 </StackPanel>
               </Button>
-              <ComboBox Classes="dock" ItemsSource="{Binding ComboBoxItems}" SelectedItem="{Binding }"
-                PlaceholderText="Выбор типа изделия"/>
+              <ComboBox Classes="dock" 
+                ItemsSource="{Binding FirmwareSources}" 
+                SelectedItem="{Binding SelectedFirmwareItem}"
+                PlaceholderText="Выбор типа изделия">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+              </ComboBox>
             </DockPanel>
 
 </UserControl>

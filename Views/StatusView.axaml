@@ -60,9 +60,9 @@
                     x:CompileBindings="false" Text="{Binding $parent[Window].DataContext.Package.VersionName}"/>
                 </Label>
                 <Label Classes="value" Grid.Row="0" Grid.Column="1"
-                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Package.Good}"/>
+                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Good}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="1"
-                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Package.Bad}"/>
+                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Bad}"/>
                 <Label Classes="value" Grid.Row="0" Grid.Column="2" Content="{Binding Label}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="2" Content="{Binding Label}"/>
               </Grid>

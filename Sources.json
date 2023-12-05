@@ -1,0 +1,18 @@
+[
+    {
+        "Name": "SimCom \u041F\u0424",
+        "SubfolderName": "./SimCom_full"
+    },
+    {
+        "Name": "SimCom \u0420\u0435\u0442\u0440\u043E\u0444\u0438\u0442",
+        "SubfolderName": "./SimCom_retro"
+    },
+    {
+        "Name": "SimCom \u0423\u043F\u0440\u043E\u0449\u0435\u043D\u043D\u044B\u0439",
+        "SubfolderName": "./SimCom_simple"
+    },
+    {
+        "Name": "Telit \u0423\u043F\u0440\u043E\u0449\u0435\u043D\u043D\u044B\u0439",
+        "SubfolderName": "./Telit_simple"
+    }
+]

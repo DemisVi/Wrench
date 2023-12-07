@@ -40,6 +40,13 @@
                     <Setter Property="VerticalAlignment" Value="Center"/>
                     <Setter Property="FontSize" Value="24"/>
                 </Style>
+                <Style Selector="Label.time">
+                    <Setter Property="Margin" Value="4,2"/>
+                    <Setter Property="FontFamily" Value="monospace"/>
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="FontSize" Value="24"/>
+                </Style>
             </UserControl.Styles>
             
             <!-- main grid -->
@@ -72,9 +79,11 @@
                 <Label Classes="cu" Grid.Row="0" Grid.Column="0"
                   Content="{Binding ContactUnit}"/>
                 <Label Classes="elapsed" Grid.Row="1" Grid.Column="1"
-                  Content="{Binding Elapsed, StringFormat={}{0:mm\\:ss}}"/>
+                  Content="{Binding Elapsed, StringFormat=mm\\:ss}"/>
                 <Label Classes="serial" Grid.Row="1" Grid.Column="0"
                   Content="{Binding SerialNumber}"/>
+                <Label Classes="time" Grid.Row="0" Grid.Column="1"
+                  Content="{Binding CurrentTime, StringFormat={}{0}}"/>
               </Grid>
             </Grid>
 

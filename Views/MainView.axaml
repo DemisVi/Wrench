@@ -9,7 +9,7 @@
              xmlns:v="using:Wrench.Views">
   
   <Grid RowDefinitions="Auto,*,Auto">
-    <v:StatusView Grid.Row="0"/>
+    <v:StatusView DataContext="{Binding StatusViewModel}" Grid.Row="0"/>
     <v:LogView Grid.Row="1"/>
     <v:ControlView DataContext="{Binding ControlViewModel}" Grid.Row="2"/>
   </Grid>

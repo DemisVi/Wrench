@@ -31,10 +31,6 @@ public class MainWindowViewModel : ViewModelBase
     
     public MainViewModel MainViewModel { get; }
 
-    public Package Package { get; private set; } = new();
-    public int Good { get; set; } = default;
-    public int Bad { get; set; } = default;
-
     public void ExecuteShowPackageSelector()
     {
         var src = MainViewModel.ControlViewModel.SelectedSource;
@@ -50,7 +46,7 @@ public class MainWindowViewModel : ViewModelBase
             {
                 if (item is not null)
                 {
-                    Package = item;
+                    MainViewModel.Package = item;
                 }
                 ContentViewModel = MainViewModel;
             });

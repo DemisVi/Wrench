@@ -6,8 +6,8 @@
              x:Class="Wrench.Views.StatusView"
              xmlns:vm="using:Wrench.ViewModels"
              x:DataType="vm:StatusViewModel"
-             Background="{Binding IndicatorColor}">
-
+             >
+<!-- Background="{Binding IndicatorColor}" -->
             <UserControl.Styles>
                 <Style Selector="Label.label">
                     <Setter Property="Margin" Value="4,2"/>
@@ -22,13 +22,14 @@
                     <Setter Property="FontSize" Value="24"/>
                 </Style>
                 <Style Selector="Label.cu">
-                    <Setter Property="Margin" Value="4,2"/>
+                    <Setter Property="Margin" Value="4"/>
                     <Setter Property="HorizontalAlignment" Value="Left"/>
                     <Setter Property="VerticalAlignment" Value="Center"/>
                     <Setter Property="FontSize" Value="48"/>
                 </Style>
-                <Style Selector="Label.timer">
-                    <Setter Property="Margin" Value="4,2"/>
+                <Style Selector="Label.elapsed">
+                    <Setter Property="Margin" Value="4"/>
+                    <Setter Property="FontFamily" Value="monospace"/>
                     <Setter Property="HorizontalAlignment" Value="Right"/>
                     <Setter Property="VerticalAlignment" Value="Center"/>
                     <Setter Property="FontSize" Value="48"/>
@@ -53,24 +54,27 @@
                 <Label Classes="label" Grid.Row="1" Grid.Column="2">t/блок:</Label>
                 <Label Classes="value" Grid.Row="0" Grid.Column="0">
                   <TextBlock
-                    x:CompileBindings="false" Text="{Binding $parent[Window].DataContext.Package.ModelName}"/>
+                    x:CompileBindings="false" Text="{Binding $parent[UserControl; 1].DataContext.Package.ModelName}"/>
                 </Label>
                 <Label Classes="value" Grid.Row="1" Grid.Column="0">
                   <TextBlock
-                    x:CompileBindings="false" Text="{Binding $parent[Window].DataContext.Package.VersionName}"/>
+                    x:CompileBindings="false" Text="{Binding $parent[UserControl; 1].DataContext.Package.VersionName}"/>
                 </Label>
                 <Label Classes="value" Grid.Row="0" Grid.Column="1"
-                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Good}"/>
+                  x:CompileBindings="false" Content="{Binding Good}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="1"
-                  x:CompileBindings="false" Content="{Binding $parent[Window].DataContext.Bad}"/>
+                  x:CompileBindings="false" Content="{Binding Bad}"/>
                 <Label Classes="value" Grid.Row="0" Grid.Column="2" Content="{Binding Label}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="2" Content="{Binding Label}"/>
               </Grid>
               <!-- CU and progress grid -->
               <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*">
-                <Label Classes="cu" Grid.Row="0" Grid.Column="0">CuntactUnit</Label>
-                <Label Classes="timer" Grid.Row="1" Grid.Column="1">Timer</Label>
-                <Label Classes="serial" Grid.Row="1" Grid.Column="0">Serial</Label>
+                <Label Classes="cu" Grid.Row="0" Grid.Column="0"
+                  Content="{Binding ContactUnit}"/>
+                <Label Classes="elapsed" Grid.Row="1" Grid.Column="1"
+                  Content="{Binding Elapsed, StringFormat={}{0:mm\\:ss}}"/>
+                <Label Classes="serial" Grid.Row="1" Grid.Column="0"
+                  Content="{Binding SerialNumber}"/>
               </Grid>
             </Grid>
 

@@ -48,5 +48,5 @@ public class PackageSelectorViewModel : ViewModelBase
     public ReactiveCommand<Unit, Package?> Load { get; }
     public ReactiveCommand<Unit, Unit> Cancel { get; }
 
-    public void Refresh() => FirmwarePackages = new(new FirmwareProvider().GetFirmware(Path.Combine(Environment.CurrentDirectory, source.SubfolderName)));
+    public void Refresh() => FirmwarePackages = new(new FirmwareProvider().GetFirmware(source));
 }

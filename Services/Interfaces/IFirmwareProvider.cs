@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using Wrench.Models;
-using Wrench.Services;
+using Wrench.DataTypes;
 
 namespace Wrench.Services
 {
     public interface IFirmwareProvider
     {
-        string RootPath { get; set; }
+        FirmwareSource? Source { get; set; }
 
         IEnumerable<Firmware> GetFirmware();
-        IEnumerable<Firmware> GetFirmware(string path);
+        IEnumerable<Firmware> GetFirmware(FirmwareSource? source);
     }
 }

@@ -8,17 +8,19 @@ namespace Wrench.Services;
 
 public class FirmwareProvider : IFirmwareProvider
 {
-    public string RootPath { get; set; } = string.Empty;
+    public FirmwareSource? Source { get; set; }
     public FirmwareProvider() { }
-    public FirmwareProvider(string path)
+    public FirmwareProvider(FirmwareSource source)
     {
-        RootPath = path;
+        Source = source;
     }
 
-    public IEnumerable<Firmware> GetFirmware() => GetFirmware(RootPath);
-    public IEnumerable<Firmware> GetFirmware(string path)
+    public IEnumerable<Firmware> GetFirmware() => GetFirmware(Source);
+    public IEnumerable<Firmware> GetFirmware(FirmwareSource? source)
     {
-        if (string.IsNullOrEmpty(path)) throw new ArgumentException("Path can't be null or empty", nameof(path));
+        if (source is null) throw new ArgumentException("Path can't be null or empty", nameof(source));
+
+        var path = Path.Combine(Environment.CurrentDirectory, source.SubfolderName);
 
         if (Directory.Exists(path) is not true)
             return Enumerable.Empty<Firmware>();
@@ -33,6 +35,7 @@ public class FirmwareProvider : IFirmwareProvider
                 ModelName = new DirectoryInfo(dir).Name,
                 PackagePath = indir,
                 VersionName = new DirectoryInfo(indir).Name,
+                DeviceType = source.DeviceType,
             }),
         });
     }

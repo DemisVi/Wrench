@@ -6,40 +6,50 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Wrench.Models;
+using Wrench.DataTypes;
 
 namespace Wrench.Services;
 
 public class FirmwareSourcesProvider : IFirmwareSourcesProvider
 {
     public static string DefaultFileName { get; } = "Sources.json";
-    public string SourceFile { get; set; } = Path.Combine(Environment.CurrentDirectory, DefaultFileName);
-    private IEnumerable<FirmwareSource> DefaultSource { get; } = new FirmwareSource[] {
+    public string DefaultSourcesFile { get; set; } = Path.Combine(Environment.CurrentDirectory, DefaultFileName);
+    private IEnumerable<FirmwareSource> DefaultSources { get; } = new FirmwareSource[] {
          new()
          {
             Name = "SimCom ПФ",
-            SubfolderName = "./SimCom_full"
+            SubfolderName = "./SimCom_full",
+            DeviceType = DeviceType.SimComFull,
         },
         new() {
             Name = "SimCom Ретрофит",
-            SubfolderName = "./SimCom_retro"
+            SubfolderName = "./SimCom_retro",
+            DeviceType = DeviceType.SimComRetro,
         },
         new() {
             Name = "SimCom Упрощенный",
-            SubfolderName = "./SimCom_simple"
+            SubfolderName = "./SimCom_simple",
+            DeviceType = DeviceType.SimComSimple,
+        },
+        new() {
+            Name = "Telit Ретрофит",
+            SubfolderName = "./Telit_retro",
+            DeviceType = DeviceType.TelitRetro,
         },
         new() {
             Name = "Telit Упрощенный",
-            SubfolderName = "./Telit_simple"
+            SubfolderName = "./Telit_simple",
+            DeviceType = DeviceType.TelitSimple,
         }};
 
-    public IEnumerable<FirmwareSource> GetSources() => GetSources(SourceFile);
+    public IEnumerable<FirmwareSource> GetSources() => GetSources(DefaultSourcesFile);
     public IEnumerable<FirmwareSource> GetSources(string path)
     {
         if (File.Exists(path) is not true)
         {
-            var @default = JsonSerializer.Serialize(DefaultSource);
+            var @default = JsonSerializer.Serialize(DefaultSources);
             File.WriteAllText(path, @default);
-            return DefaultSource;
+            return DefaultSources;
         }
         else
         {

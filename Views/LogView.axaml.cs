@@ -9,19 +9,19 @@ namespace Wrench.Views;
 
 public partial class LogView : UserControl
 {
-    public readonly ScrollViewer? logScrollViewer;
+    public readonly ScrollViewer? logViewScrollViewer;
 
     public bool? Autoscroll { get => this.FindControl<CheckBox>("autoscroll")!.IsChecked; }
     public LogView()
     {
         InitializeComponent();
 
-        logScrollViewer = this.FindControl<ScrollViewer>("LogScrollViewer");
-        if (logScrollViewer is not null)
-            logScrollViewer.ScrollChanged += (_, _) =>
+        logViewScrollViewer = this.FindControl<ScrollViewer>("logScrollViewer");
+        if (logViewScrollViewer is not null)
+            logViewScrollViewer.PropertyChanged += (_, _) =>
             {
                 if (Autoscroll is true)
-                    Dispatcher.UIThread.Invoke(logScrollViewer.ScrollToEnd);
+                    Dispatcher.UIThread.Invoke(logViewScrollViewer.ScrollToEnd);
             };
     }
 }

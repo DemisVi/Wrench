@@ -10,7 +10,7 @@
   
   <Grid RowDefinitions="Auto,*,Auto">
     <v:StatusView DataContext="{Binding StatusViewModel}" Grid.Row="0"/>
-    <v:LogView Grid.Row="1"/>
+    <v:LogView DataContext="{Binding LogViewModel}" Grid.Row="1"/>
     <v:ControlView DataContext="{Binding ControlViewModel}" Grid.Row="2"/>
   </Grid>
   

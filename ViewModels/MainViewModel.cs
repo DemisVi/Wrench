@@ -7,6 +7,7 @@ using DynamicData;
 using Iot.Device.FtCommon;
 using ReactiveUI;
 using Wrench.Models;
+using Wrench.Services;
 using Wrench.ViewModels;
 using Wrench.Views;
 
@@ -27,5 +28,13 @@ public class MainViewModel : ViewModelBase
 
     public ControlViewModel ControlViewModel { get; set; } = new();
     public StatusViewModel StatusViewModel { get; set; } = new();
+    public LogViewModel LogViewModel { get; set; } = new();
     public Package? Package { get => package; set => this.RaiseAndSetIfChanged(ref package, value); }
+
+    public void FireTool()
+    {
+        var tool = new MockTool();
+        tool.Run("", 10);
+        LogViewModel.Log.Add("out: " + tool.LastStdOut + "\nerr: " + tool.LastStdErr);
+    }
 }

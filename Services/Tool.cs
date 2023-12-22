@@ -7,7 +7,7 @@ namespace Wrench.Services;
 public abstract class Tool
 {
     private int errorExitCode = -1;
-    public abstract string ToolPath { get; }
+    public abstract string ToolPath { get; protected set; }
     public virtual string LastStdOut { get; protected set; } = string.Empty;
     public virtual string LastStdErr { get; protected set; } = string.Empty;
 

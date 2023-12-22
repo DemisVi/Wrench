@@ -4,5 +4,5 @@ namespace Wrench.Services;
 
 public class Fastboot : Tool
 {
-    public override string ToolPath { get; } = "fastboot";
+    public override string ToolPath { get; protected set; } = "fastboot";
 }

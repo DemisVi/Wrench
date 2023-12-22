@@ -67,5 +67,17 @@ public static class WqlQueries
         "TargetInstance ISA 'Win32_PnPEntity' " +
         "AND TargetInstance.ClassGuid = '{3f966bd9-fa04-4ec5-991c-d326973b5128}'");
 
+    public static WqlEventQuery CreationSimCom { get; } = new(
+        "SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE " +
+        "TargetInstance ISA 'Win32_PnPEntity' " +
+        "AND TargetInstance.ClassGuid = '{36fc9e60-c465-11cf-8056-444553540000}'");
+        
+    public static WqlEventQuery DeletionSimCom { get; } = new(
+        "SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE " +
+        "TargetInstance ISA 'Win32_PnPEntity' " +
+        "AND TargetInstance.ClassGuid = '{36fc9e60-c465-11cf-8056-444553540000}'");
+        
+
+
 #pragma warning restore CA1416
 }

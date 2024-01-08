@@ -126,6 +126,7 @@ public class ContactUnit : IContactUnit, IDisposable
             {
                 // TODO: dispose managed state (managed objects)
                 _cuSerialPort.Dispose();
+                _cuFtDevice.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer

@@ -46,11 +46,13 @@
                     <Label Content=" Запуск"/>
                   </StackPanel>
               </Button>
-              <Button Classes="dockButton">
-                <StackPanel Orientation="Horizontal">
-                  <Image Classes="dockButtonImg" Source="{SvgImage /Assets/stop.svg}"/>
-                  <Label Content=" Завершить"/>
-                </StackPanel>
+              <Button Classes="dockButton"
+                x:CompileBindings="false" 
+                Command="{Binding $parent[UserControl;1].DataContext.PerformCancel}">
+                  <StackPanel Orientation="Horizontal">
+                    <Image Classes="dockButtonImg" Source="{SvgImage /Assets/stop.svg}"/>
+                    <Label Content=" Завершить"/>
+                  </StackPanel>
               </Button>
               <ComboBox Classes="dock" 
                 ItemsSource="{Binding FirmwareSources}" 

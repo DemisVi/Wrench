@@ -1,22 +1,25 @@
 using System;
+using Wrench.Models;
+using System.Threading;
 
 namespace Wrench.Services;
 
 public interface IFlasher
 {
-    public void SignalReady();
-    public void AwaitCUSignal();
-    public void AwaitCUClose();
-    public void LockCU();
-    public void TurnModemPowerOn();
-    public void TurnModemPowerOff();
-    public void AwaitDeviceAttach();
-    public void AwaitDeviceStart();
-    public void TurnOnADBInterface();
-    public void TurnOffADBInterface();
-    public void ExecuteFastbootBatch();
-    public void UpdateCfgSN();
-    public void UploadFactoryCFG();
-    public void FlasherState();
-    public void CheckADBDevice();
+    public FlasherResponce SignalReady();
+    public FlasherResponce GetCUReady();
+    public FlasherResponce AwaitCUReady(CancellationToken token);
+    public FlasherResponce AwaitCUSignal(CancellationToken token);
+    public FlasherResponce LockCU();
+    public FlasherResponce TurnModemPowerOn();
+    public FlasherResponce TurnModemPowerOff();
+    public FlasherResponce AwaitDeviceAttach();
+    public FlasherResponce AwaitDeviceStart();
+    public FlasherResponce TurnOnADBInterface();
+    public FlasherResponce TurnOffADBInterface();
+    public FlasherResponce ExecuteFastbootBatch();
+    public FlasherResponce UpdateCfgSN();
+    public FlasherResponce UploadFactoryCFG();
+    public FlasherResponce FlasherState();
+    public FlasherResponce CheckADBDevice();
 }

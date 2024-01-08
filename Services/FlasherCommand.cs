@@ -1,12 +1,15 @@
 using System;
+using Wrench.Models;
 
 namespace Wrench.Services;
 
 public class FlasherCommand
 {
-    private Action command;
+    private Func<FlasherResponce> command;
 
-    public FlasherCommand(Action command) => this.command = command;
+    public FlasherCommand(Func<FlasherResponce> command) => this.command = command;
 
-    public void Execute() => command.Invoke();
+    public string CommandNote { get; set; } = string.Empty;
+
+    public FlasherResponce Execute() => command.Invoke();
 }

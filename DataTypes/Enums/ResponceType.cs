@@ -3,7 +3,7 @@ using System;
 namespace Wrench.DataTypes;
 
 [Flags]
-public enum ResponceType
+public enum ResponseType
 {
     Unsuccess = -1,
     OK = 0,

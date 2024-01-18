@@ -49,24 +49,33 @@ public class MainViewModel : ViewModelBase
     public void PerformFireTool()
     {
         cts = new CancellationTokenSource();
-
         var flasher = new Flasher();
+
         var commands = new List<FlasherCommand>
         {
-            new(() => flasher.AwaitCUSignal(cts.Token)) { CommandNote = "Ожидание сигнала готовности КУ" },
-            new(flasher.AwaitDeviceAttach) { CommandNote = "Ожидание подключения устройства" },
-            new(flasher.CheckADBDevice) { CommandNote = "Проверка типа устройства" },
+            new(flasher.TurnModemPowerOff),
+            new(flasher.TurnModemPowerOn),
+            new(flasher.AwaitDeviceAttach),
+            new(flasher.AwaitDeviceStart),
+            FlasherCommand.Create(flasher.Sleep, 8),
+            new(flasher.TurnOnADBInterface) { CommandNote = "ADB ON" },
+            FlasherCommand.Create(flasher.Sleep, 8),
+            new(flasher.TurnOffADBInterface) { CommandNote = "ADB OFF" },
+            FlasherCommand.Create(flasher.Sleep, 8),
+            new(flasher.TurnOnADBInterface) { CommandNote = "ADB ON" },
+            FlasherCommand.Create(flasher.Sleep, 8),
+            new(flasher.TurnOffADBInterface) { CommandNote = "ADB OFF" },
+            FlasherCommand.Create(flasher.Sleep, 8),
         };
+
         var sequence = new CommandSequence(commands: commands,
                                            log: Log);
 
-        File.WriteAllText("./comms.json", JsonSerializer.Serialize(commands));
 
         Task.Factory.StartNew(() =>
         {
             sequence.Run(cts.Token);
-            flasher.Dispose();
-        }, cts.Token);
+        }/* , cts.Token */);
 
         void Log(string str) => Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(str));
     }

@@ -6,6 +6,7 @@ using Iot.Device.FtCommon;
 using Wrench.Models;
 using Wrench.DataTypes;
 using System.Threading;
+using System.Diagnostics;
 
 namespace Wrench.Services;
 
@@ -15,9 +16,12 @@ public class Flasher : IFlasher, IDisposable
     private readonly ContactUnit cu;
     private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Up;
     private readonly GpioInputs deviceCUSignalState = GpioInputs.Lodg;
-    private const string modemPortNotFoundMessage = "Modem Port not found";
-    private const string cancellationRequestedMessage = "Cancellation requested";
-    private const string deviceNotFoundMessage = "Device not found";
+    private const string modemPortNotFoundMessage = "Modem Port not found",
+        cancellationRequestedMessage = "Cancellation requested",
+        deviceNotFoundMessage = "Device not found",
+        adbOn = "AT+CUSBADB=1,1",
+        adbOff = "AT+CUSBADB=0,1";
+
 
     public Flasher()
     {
@@ -32,56 +36,56 @@ public class Flasher : IFlasher, IDisposable
 
     public int DeviceWaitTime { get; set; } = 20;
 
-    public FlasherResponce Sleep(int timeoutSeconds) // ok 
+    public FlasherResponse Sleep(int timeoutSeconds) // ok 
     {
         Thread.Sleep(TimeSpan.FromSeconds(timeoutSeconds));
-        return new FlasherResponce(ResponceType.OK);
+        return new FlasherResponse(ResponseType.OK);
     }
 
-    public FlasherResponce AwaitCUReady(CancellationToken token) => AwaitCUState(GetCUReady, token);
+    public FlasherResponse AwaitCUReady(CancellationToken token) => AwaitCUState(GetCUReady, token);
 
-    public FlasherResponce AwaitCUSignal(CancellationToken token) => AwaitCUState(GetCUSignal, token);
+    public FlasherResponse AwaitCUSignal(CancellationToken token) => AwaitCUState(GetCUSignal, token);
 
-    public FlasherResponce AwaitCUState(Func<FlasherResponce> func, CancellationToken token) // ok 
+    public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token) // ok 
     {
         try
         {
             while (!token.IsCancellationRequested)
             {
                 var state = func();
-                if (state is { ResponceType: ResponceType.OK }) return state;
+                if (state is { ResponseType: ResponseType.OK }) return state;
                 else
                     Thread.Sleep(200);
             }
-            return new FlasherResponce(ResponceType.Unsuccess) { ResponceMessage = cancellationRequestedMessage, };
+            return new FlasherResponse(ResponseType.Unsuccess) { ResponseMessage = cancellationRequestedMessage, };
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
     }
 
-    public FlasherResponce GetCUReady() => GetCUState(deviceCUReadyState);
+    public FlasherResponse GetCUReady() => GetCUState(deviceCUReadyState);
 
-    public FlasherResponce GetCUSignal() => GetCUState(deviceCUSignalState);
+    public FlasherResponse GetCUSignal() => GetCUState(deviceCUSignalState);
 
-    public FlasherResponce GetCUState(GpioInputs inputs) // ok 
+    public FlasherResponse GetCUState(GpioInputs inputs) // ok 
     {
         try
         {
             if (cu.Inputs == inputs)
-                return new FlasherResponce(ResponceType.OK) { ResponceMessage = cu.Inputs.ToString() };
+                return new FlasherResponse(ResponseType.OK) { ResponseMessage = cu.Inputs.ToString() };
             else
-                return new FlasherResponce(ResponceType.Fail) { ResponceMessage = cu.Inputs.ToString() };
+                return new FlasherResponse(ResponseType.Fail) { ResponseMessage = cu.Inputs.ToString() };
 
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ResponceType.Unsuccess) { ResponceMessage = ex.Message };
+            return new FlasherResponse(ResponseType.Unsuccess) { ResponseMessage = ex.Message };
         }
     }
 
-    public FlasherResponce AwaitDeviceAttach() // ok 
+    public FlasherResponse AwaitDeviceAttach() // ok 
     {
 #pragma warning disable CA1416
 
@@ -93,14 +97,14 @@ public class Flasher : IFlasher, IDisposable
             var res = watcher.WaitForNextEvent();
             watcher.Stop();
 
-            return new FlasherResponce(ResponceType.OK) 
-            { 
-                ResponceMessage = (string?)((ManagementBaseObject)res["TargetInstance"])?["Caption"] ?? "",
+            return new FlasherResponse(ResponseType.OK)
+            {
+                ResponseMessage = (string?)((ManagementBaseObject)res["TargetInstance"])?["Caption"] ?? "",
             };
         }
         catch (ManagementException ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
         finally
         {
@@ -111,10 +115,10 @@ public class Flasher : IFlasher, IDisposable
 
     }
 
-    public FlasherResponce AwaitDeviceStart() // ok 
+    public FlasherResponse AwaitDeviceStart() // ok 
     {
         var port = ModemPort.GetModemATPortNames().FirstOrDefault();
-        if (string.IsNullOrEmpty(port)) return new FlasherResponce(ResponceType.Fail) { ResponceMessage = modemPortNotFoundMessage, };
+        if (string.IsNullOrEmpty(port)) return new FlasherResponse(ResponseType.Fail) { ResponseMessage = modemPortNotFoundMessage, };
 
         using var modemPort = new ModemPort(port);
         modemPort.Open();
@@ -126,12 +130,12 @@ public class Flasher : IFlasher, IDisposable
         modemPort.Dispose();
 
         if (!response.Contains("OK", StringComparison.OrdinalIgnoreCase))
-            return new FlasherResponce(ResponceType.Fail) { ResponceMessage = response };
+            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = response };
         else
-            return new FlasherResponce(ResponceType.OK) { ResponceMessage = response };
+            return new FlasherResponse(ResponseType.OK) { ResponseMessage = response };
     }
 
-    public FlasherResponce CheckADBDevice() // ok 
+    public FlasherResponse CheckADBDevice() // ok 
     {
 #pragma warning disable CA1416
 
@@ -143,29 +147,29 @@ public class Flasher : IFlasher, IDisposable
             if (res is not null and { Count: > 0 })
             {
                 var text = (string?)res.Cast<ManagementObject>()?.First()["Caption"];
-                return new FlasherResponce() { ResponceMessage = text, ResponceType = ResponceType.OK };
+                return new FlasherResponse() { ResponseMessage = text, ResponseType = ResponseType.OK };
             }
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
 #pragma warning restore CA1416
 
-        return new FlasherResponce(ResponceType.Fail) { ResponceMessage = deviceNotFoundMessage };
+        return new FlasherResponse(ResponseType.Fail) { ResponseMessage = deviceNotFoundMessage };
     }
 
-    public FlasherResponce ExecuteFastbootBatch()
+    public FlasherResponse ExecuteFastbootBatch()
     {
         throw new NotImplementedException();
     }
 
-    public FlasherResponce FlasherState()
+    public FlasherResponse FlasherState()
     {
         throw new NotImplementedException();
     }
 
-    public FlasherResponce LockCU() // ok 
+    public FlasherResponse LockCU() // ok 
     {
         try
         {
@@ -173,12 +177,12 @@ public class Flasher : IFlasher, IDisposable
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
-        return new FlasherResponce(ResponceType.OK);
+        return new FlasherResponse(ResponseType.OK);
     }
 
-    public FlasherResponce UnlockCU() // ok 
+    public FlasherResponse UnlockCU() // ok 
     {
         try
         {
@@ -186,12 +190,12 @@ public class Flasher : IFlasher, IDisposable
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
-        return new FlasherResponce(ResponceType.OK);
+        return new FlasherResponse(ResponseType.OK);
     }
 
-    public FlasherResponce SignalReady() // ok
+    public FlasherResponse SignalReady() // ok
     {
         try
         {
@@ -199,12 +203,12 @@ public class Flasher : IFlasher, IDisposable
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
-        return new FlasherResponce(ResponceType.OK);
+        return new FlasherResponse(ResponseType.OK);
     }
 
-    public FlasherResponce TurnModemPowerOff() // ok 
+    public FlasherResponse TurnModemPowerOff() // ok 
     {
         try
         {
@@ -212,12 +216,12 @@ public class Flasher : IFlasher, IDisposable
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
-        return new FlasherResponce(ResponceType.OK);
+        return new FlasherResponse(ResponseType.OK);
     }
 
-    public FlasherResponce TurnModemPowerOn() // ok 
+    public FlasherResponse TurnModemPowerOn() // ok 
     {
         try
         {
@@ -225,27 +229,43 @@ public class Flasher : IFlasher, IDisposable
         }
         catch (Exception ex)
         {
-            return new FlasherResponce(ex);
+            return new FlasherResponse(ex);
         }
-        return new FlasherResponce(ResponceType.OK);
+        return new FlasherResponse(ResponseType.OK);
     }
 
-    public FlasherResponce TurnOffADBInterface()
+    public FlasherResponse TurnOffADBInterface() => SwitchADB(adbOff);
+
+    public FlasherResponse TurnOnADBInterface() => SwitchADB(adbOn);
+    protected FlasherResponse SwitchADB(string req)
+    {
+        var portName = ModemPort.GetModemATPortNames().FirstOrDefault();
+        if (portName is null or { Length: <= 0 })
+            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = "Modem Port not found" };
+
+        var port = new ModemPort(portName);
+
+        try
+        {
+            port.Open();
+
+            port.TryGetResponce(req, out var resp);
+
+            return new FlasherResponse(ResponseType.OK) { ResponseMessage = resp, };
+        }
+        catch (Exception ex)
+        {
+            return new FlasherResponse(ex);
+        }
+
+    }
+
+    public FlasherResponse UpdateCfgSN()
     {
         throw new NotImplementedException();
     }
 
-    public FlasherResponce TurnOnADBInterface()
-    {
-        throw new NotImplementedException();
-    }
-
-    public FlasherResponce UpdateCfgSN()
-    {
-        throw new NotImplementedException();
-    }
-
-    public FlasherResponce UploadFactoryCFG()
+    public FlasherResponse UploadFactoryCFG()
     {
         throw new NotImplementedException();
     }

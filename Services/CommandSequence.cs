@@ -31,7 +31,7 @@ public class CommandSequence
             foreach (var c in Commands)
             {
                 var resp = c.Execute();
-                Log?.Invoke(string.Join(": ", resp.ResponceType, resp.ResponceMessage, c.CommandNote));
+                Log?.Invoke(string.Join(": ", resp.ResponseType, resp.ResponseMessage, c.CommandNote));
 
                 if (token is not null and { IsCancellationRequested: true }) return;
             }

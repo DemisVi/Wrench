@@ -45,13 +45,13 @@ public class FlasherCommand
         { CommandNote = commandDescription, };
     }
 
-    public static FlasherCommand Create<T, TRes>(Func<T, TRes> func, T param, string commandDescription = "Not described command")
+    public static FlasherCommand Create<T, TRes>(Func<T, TRes> func, T param, string commandDescription = "Not described command") where TRes : FlasherResponse
     {
-        return new FlasherCommand(new Func<FlasherResponse>(() =>
+        var cmd = new FlasherCommand(new Func<FlasherResponse>(() =>
         {
             try
             {
-                return new FlasherResponse(ResponseType.OK) { ResponseMessage = func.Invoke(param)?.ToString() };
+                return new FlasherResponse(ResponseType.OK) { ResponseMessage = func.Invoke(param)?.ResponseMessage };
             }
             catch (Exception ex)
             {
@@ -59,6 +59,8 @@ public class FlasherCommand
             }
         }))
         { CommandNote = commandDescription, };
+
+        return cmd;
     }
 
     public string CommandNote { get; set; } = string.Empty;

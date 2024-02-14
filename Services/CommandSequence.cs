@@ -33,6 +33,7 @@ public class CommandSequence
                 var resp = c.Execute();
                 Log?.Invoke(string.Join(": ", resp.ResponseType, resp.ResponseMessage, c.CommandNote));
 
+                if (resp.ResponseType is DataTypes.ResponseType.Fail) return;
                 if (token is not null and { IsCancellationRequested: true }) return;
             }
     }

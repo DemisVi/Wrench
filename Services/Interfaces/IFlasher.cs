@@ -14,7 +14,7 @@ public interface IFlasher
     public FlasherResponse TurnModemPowerOn();
     public FlasherResponse TurnModemPowerOff();
     public FlasherResponse AwaitDeviceAttach();
-    public FlasherResponse AwaitDeviceStart();
+    public FlasherResponse CheckDeviceResponding();
     public FlasherResponse TurnOnADBInterface();
     public FlasherResponse TurnOffADBInterface();
     public FlasherResponse ExecuteFastbootBatch();

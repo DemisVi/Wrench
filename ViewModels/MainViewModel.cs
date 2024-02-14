@@ -15,7 +15,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Avalonia.Threading;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Threading;
 using Wrench.DataTypes;
 using System.IO;
@@ -27,6 +26,16 @@ public class MainViewModel : ViewModelBase
 {
     private Package? package;
     private CancellationTokenSource? cts;
+    private bool isFlasherRunning;
+
+    public bool IsFlasherRunning { get => isFlasherRunning; private set => this.RaiseAndSetIfChanged(ref isFlasherRunning, value); }
+    public ControlViewModel ControlViewModel { get; set; } = new();
+    public StatusViewModel StatusViewModel { get; set; } = new();
+    public LogViewModel LogViewModel { get; set; } = new();
+    public ReactiveCommand<Unit, Unit> FireTool { get; set; }
+    public Package? Package { get => package; set => this.RaiseAndSetIfChanged(ref package, value); }
+
+
 
     public MainViewModel()
     {
@@ -36,46 +45,46 @@ public class MainViewModel : ViewModelBase
 #if DEBUG
         FireTool = ReactiveCommand.Create(PerformFireTool);
 #else
-        FireTool = ReactiveCommand.Create(PerformFireTool, this.WhenAnyValue(x => x.Package, x => (Package?)x is not null));
+        FireTool = ReactiveCommand.Create(PerformFireTool, this.WhenAnyValue(x => x.Package,
+                                                                             y => y.IsFlasherRunning,
+                                                                             (x, y) => (Package?)x is not null && y is false));
 #endif
     }
 
-    public ControlViewModel ControlViewModel { get; set; } = new();
-    public StatusViewModel StatusViewModel { get; set; } = new();
-    public LogViewModel LogViewModel { get; set; } = new();
-    public ReactiveCommand<Unit, Unit> FireTool { get; set; }
-    public Package? Package { get => package; set => this.RaiseAndSetIfChanged(ref package, value); }
-
     public void PerformFireTool()
     {
+        IsFlasherRunning = true;
         cts = new CancellationTokenSource();
-        var flasher = new Flasher();
+        using var flasher = new Flasher();
 
-        var commands = new List<FlasherCommand>
+        var initCommands = new List<FlasherCommand>
         {
             new(flasher.TurnModemPowerOff),
             new(flasher.TurnModemPowerOn),
             new(flasher.AwaitDeviceAttach),
-            new(flasher.AwaitDeviceStart),
-            FlasherCommand.Create(flasher.Sleep, 8),
-            new(flasher.TurnOnADBInterface) { CommandNote = "ADB ON" },
-            FlasherCommand.Create(flasher.Sleep, 8),
-            new(flasher.TurnOffADBInterface) { CommandNote = "ADB OFF" },
-            FlasherCommand.Create(flasher.Sleep, 8),
-            new(flasher.TurnOnADBInterface) { CommandNote = "ADB ON" },
-            FlasherCommand.Create(flasher.Sleep, 8),
-            new(flasher.TurnOffADBInterface) { CommandNote = "ADB OFF" },
-            FlasherCommand.Create(flasher.Sleep, 8),
+            new(flasher.CheckDeviceResponding),
         };
 
-        var sequence = new CommandSequence(commands: commands,
-                                           log: Log);
+        var fastbootCommands = new List<FlasherCommand>
+        {
+            FlasherCommand.Create(flasher.Sleep, 4),
+            new(flasher.ExecuteFastbootBatch),
+        };
 
+        var initSequence = new CommandSequence(commands: initCommands,
+                                               log: Log);
+        var fastbootSequence = new CommandSequence(commands: fastbootCommands,
+                                                   canExecute: new(() => flasher.CheckADBDevice().ResponseType == ResponseType.OK),
+                                                   log: Log);
 
         Task.Factory.StartNew(() =>
         {
-            sequence.Run(cts.Token);
-        }/* , cts.Token */);
+            // initSequence.Run(cts.Token);
+            fastbootSequence.Run(cts.Token);
+
+            Dispatcher.UIThread.Invoke(() => IsFlasherRunning = false);
+
+        }, cts.Token);
 
         void Log(string str) => Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(str));
     }

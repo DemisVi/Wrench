@@ -7,6 +7,8 @@ using Wrench.Models;
 using Wrench.DataTypes;
 using System.Threading;
 using System.Diagnostics;
+using System.Text;
+using DynamicData;
 
 namespace Wrench.Services;
 
@@ -21,6 +23,9 @@ public class Flasher : IFlasher, IDisposable
         deviceNotFoundMessage = "Device not found",
         adbOn = "AT+CUSBADB=1,1",
         adbOff = "AT+CUSBADB=0,1";
+
+    private const int modemBaudRate = 115200,
+        waitTime = 500;
 
 
     public Flasher()
@@ -115,7 +120,7 @@ public class Flasher : IFlasher, IDisposable
 
     }
 
-    public FlasherResponse AwaitDeviceStart() // ok 
+    public FlasherResponse CheckDeviceResponding() // ok 
     {
         var port = ModemPort.GetModemATPortNames().FirstOrDefault();
         if (string.IsNullOrEmpty(port)) return new FlasherResponse(ResponseType.Fail) { ResponseMessage = modemPortNotFoundMessage, };
@@ -161,7 +166,7 @@ public class Flasher : IFlasher, IDisposable
 
     public FlasherResponse ExecuteFastbootBatch()
     {
-        throw new NotImplementedException();
+        return new(ResponseType.Unsuccess) { ResponseMessage = "TEST MODE", };
     }
 
     public FlasherResponse FlasherState()
@@ -237,9 +242,10 @@ public class Flasher : IFlasher, IDisposable
     public FlasherResponse TurnOffADBInterface() => SwitchADB(adbOff);
 
     public FlasherResponse TurnOnADBInterface() => SwitchADB(adbOn);
-    protected FlasherResponse SwitchADB(string req)
+    protected FlasherResponse SwitchADB(string req) // Piece of shit
     {
         var portName = ModemPort.GetModemATPortNames().FirstOrDefault();
+
         if (portName is null or { Length: <= 0 })
             return new FlasherResponse(ResponseType.Fail) { ResponseMessage = "Modem Port not found" };
 
@@ -248,14 +254,17 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             port.Open();
+            port.WriteLine(req);
 
-            port.TryGetResponce(req, out var resp);
-
-            return new FlasherResponse(ResponseType.OK) { ResponseMessage = resp, };
+            return new FlasherResponse(ResponseType.OK) { ResponseMessage = "Impossible to read answer. Nobody can!", };
         }
         catch (Exception ex)
         {
             return new FlasherResponse(ex);
+        }
+        finally
+        {
+            port.Close();
         }
 
     }

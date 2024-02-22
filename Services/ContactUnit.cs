@@ -42,8 +42,8 @@ public class ContactUnit : IContactUnit, IDisposable
         _cuSerialPort = cuSerialPort;
         _cuFtDevice = ftDevice;
         using var gpio = _cuFtDevice.CreateGpioController();
-        _powerPin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS0"), PinMode.Output);
-        _cl15Pin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS2"), PinMode.Output);
+        _powerPin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS0"), PinMode.Output, PinValue.High);
+        _cl15Pin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS2"), PinMode.Output, PinValue.High);
         _cuSerialPort.Open();
     }
 

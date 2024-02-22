@@ -16,12 +16,11 @@ public class Flasher : IFlasher, IDisposable
 {
     private bool disposedValue;
     private readonly ContactUnit cu;
+    private readonly Adb adb;
+    private readonly Fastboot fastboot;
     private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Up;
     private readonly GpioInputs deviceCUSignalState = GpioInputs.Lodg;
-    private const string modemPortNotFoundMessage = "Modem Port not found",
-        cancellationRequestedMessage = "Cancellation requested",
-        deviceNotFoundMessage = "Device not found",
-        adbOn = "AT+CUSBADB=1,1",
+    private const string adbOn = "AT+CUSBADB=1,1",
         adbOff = "AT+CUSBADB=0,1";
 
     private const int modemBaudRate = 115200,
@@ -36,15 +35,27 @@ public class Flasher : IFlasher, IDisposable
         var ftPortName = FtSerialPort.GetPortNames().First();
         var ftSerialPort = new FtSerialPort(ftPortName);
 
+        adb = new Adb();
+        fastboot = new Fastboot();
         cu = new ContactUnit(ftSerialPort, ftDevice);
     }
 
     public int DeviceWaitTime { get; set; } = 20;
+    public Func<string, int, FlasherResponse> Adb => delegate (string command, int timeout)
+    {
+        var res = adb.Run(command, timeout);
+        return new((ResponseType)res) { ResponseMessage = $"StdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
+    };
+    public Func<string, int, FlasherResponse> Fastboot => delegate (string command, int timeout)
+    {
+        var res = fastboot.Run(command, timeout);
+        return new((ResponseType)res) { ResponseMessage = $"StdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
+    };
 
     public FlasherResponse Sleep(int timeoutSeconds) // ok 
     {
         Thread.Sleep(TimeSpan.FromSeconds(timeoutSeconds));
-        return new FlasherResponse(ResponseType.OK);
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Delay + timeoutSeconds };
     }
 
     public FlasherResponse AwaitCUReady(CancellationToken token) => AwaitCUState(GetCUReady, token);
@@ -62,7 +73,7 @@ public class Flasher : IFlasher, IDisposable
                 else
                     Thread.Sleep(200);
             }
-            return new FlasherResponse(ResponseType.Unsuccess) { ResponseMessage = cancellationRequestedMessage, };
+            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = FlasherMessages.CancellationRequested, };
         }
         catch (Exception ex)
         {
@@ -79,14 +90,20 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             if (cu.Inputs == inputs)
-                return new FlasherResponse(ResponseType.OK) { ResponseMessage = cu.Inputs.ToString() };
+                return new FlasherResponse(ResponseType.OK)
+                {
+                    ResponseMessage = FlasherMessages.ContactUnitState + cu.Inputs.ToString()
+                };
             else
-                return new FlasherResponse(ResponseType.Fail) { ResponseMessage = cu.Inputs.ToString() };
+                return new FlasherResponse(ResponseType.Fail)
+                {
+                    ResponseMessage = FlasherMessages.ContactUnitState + cu.Inputs.ToString()
+                };
 
         }
         catch (Exception ex)
         {
-            return new FlasherResponse(ResponseType.Unsuccess) { ResponseMessage = ex.Message };
+            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = ex.Message };
         }
     }
 
@@ -104,7 +121,8 @@ public class Flasher : IFlasher, IDisposable
 
             return new FlasherResponse(ResponseType.OK)
             {
-                ResponseMessage = (string?)((ManagementBaseObject)res["TargetInstance"])?["Caption"] ?? "",
+                ResponseMessage = FlasherMessages.DeviceFound
+                    + ((ManagementBaseObject)res["TargetInstance"])?["Caption"],
             };
         }
         catch (ManagementException ex)
@@ -123,7 +141,7 @@ public class Flasher : IFlasher, IDisposable
     public FlasherResponse CheckDeviceResponding() // ok 
     {
         var port = ModemPort.GetModemATPortNames().FirstOrDefault();
-        if (string.IsNullOrEmpty(port)) return new FlasherResponse(ResponseType.Fail) { ResponseMessage = modemPortNotFoundMessage, };
+        if (string.IsNullOrEmpty(port)) return new FlasherResponse(ResponseType.Fail) { ResponseMessage = FlasherMessages.ModemPortNotFound, };
 
         using var modemPort = new ModemPort(port);
         modemPort.Open();
@@ -161,12 +179,12 @@ public class Flasher : IFlasher, IDisposable
         }
 #pragma warning restore CA1416
 
-        return new FlasherResponse(ResponseType.Fail) { ResponseMessage = deviceNotFoundMessage };
+        return new FlasherResponse(ResponseType.Fail) { ResponseMessage = FlasherMessages.DeviceNotFound };
     }
 
     public FlasherResponse ExecuteFastbootBatch()
     {
-        return new(ResponseType.Unsuccess) { ResponseMessage = "TEST MODE", };
+        return new(ResponseType.Info) { ResponseMessage = "TEST MODE", };
     }
 
     public FlasherResponse FlasherState()
@@ -184,7 +202,7 @@ public class Flasher : IFlasher, IDisposable
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK);
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.LockCU };
     }
 
     public FlasherResponse UnlockCU() // ok 
@@ -218,12 +236,13 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             cu.PowerOffBoard();
+            cu.Cl15Off();
         }
         catch (Exception ex)
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK);
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.PowerOff };
     }
 
     public FlasherResponse TurnModemPowerOn() // ok 
@@ -231,12 +250,13 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             cu.PowerOnBoard();
+            cu.Cl15On();
         }
         catch (Exception ex)
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK);
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.PowerOn };
     }
 
     public FlasherResponse TurnOffADBInterface() => SwitchADB(adbOff);
@@ -290,6 +310,7 @@ public class Flasher : IFlasher, IDisposable
                 cu.Dispose();
             }
 
+            Adb("kill-server", 1);
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer
             // TODO: set large fields to null
             disposedValue = true;
@@ -297,11 +318,11 @@ public class Flasher : IFlasher, IDisposable
     }
 
     // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    // ~Flasher()
-    // {
-    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-    //     Dispose(disposing: false);
-    // }
+    ~Flasher()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: false);
+    }
 
     public void Dispose()
     {

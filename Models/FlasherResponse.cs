@@ -13,6 +13,6 @@ public class FlasherResponse
         ResponseType = ResponseType.Fail;
         ResponseMessage = string.Join(" ", ex.Message, ex.GetType().Name);
     }
-    public ResponseType ResponseType { get; set; } = ResponseType.Unsuccess;
+    public ResponseType ResponseType { get; set; } = ResponseType.NotFound;
     public string? ResponseMessage { get; set; } = string.Empty;
 }

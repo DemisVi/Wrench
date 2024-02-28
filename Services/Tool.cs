@@ -8,6 +8,7 @@ public abstract class Tool
 {
     private int errorExitCode = -1;
     public abstract string ToolPath { get; protected set; }
+    public virtual string WorkingDir { get; set; } = Environment.CurrentDirectory;
     public virtual string LastStdOut { get; protected set; } = string.Empty;
     public virtual string LastStdErr { get; protected set; } = string.Empty;
 
@@ -21,6 +22,7 @@ public abstract class Tool
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                WorkingDirectory = WorkingDir,
                 Arguments = command,
             },
         };

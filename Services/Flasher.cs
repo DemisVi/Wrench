@@ -9,6 +9,9 @@ using System.Threading;
 using System.Diagnostics;
 using System.Text;
 using DynamicData;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Wrench.Services;
 
@@ -21,11 +24,10 @@ public class Flasher : IFlasher, IDisposable
     private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Up;
     private readonly GpioInputs deviceCUSignalState = GpioInputs.Lodg;
     private const string adbOn = "AT+CUSBADB=1,1",
-        adbOff = "AT+CUSBADB=0,1";
-
-    private const int modemBaudRate = 115200,
-        waitTime = 500;
-
+        adbOff = "AT+CUSBADB=0,1",
+        factory = "factory.cfg";
+    private string workDir = string.Empty;
+    private Package? package;
 
     public Flasher()
     {
@@ -40,16 +42,49 @@ public class Flasher : IFlasher, IDisposable
         cu = new ContactUnit(ftSerialPort, ftDevice);
     }
 
+    public string WorkingDir
+    {
+        get { return workDir; }
+        private set
+        {
+            workDir = value;
+            adb.WorkingDir = value;
+            fastboot.WorkingDir = value;
+        }
+    }
+    public Package? Package
+    {
+        get => package;
+        set
+        {
+            package = value;
+            WorkingDir = value?.PackagePath ?? string.Empty;
+        }
+    }
+    public string AdbRebootBootloaderCommand { get; } = "reboot bootloader";
+    public IEnumerable<KeyValuePair<string, int>> FastbootCommandSequence { get; set; } = new KeyValuePair<string, int>[]
+    {
+        new("flash aboot appsboot.mbn", 2),
+        new("flash rpm rpm.mbn", 2),
+        new("flash sbl sbl1.mbn", 2),
+        new("flash tz tz.mbn", 2),
+        new("flash modem modem.img", 15),
+        new("flash boot boot.img", 3),
+        new("flash system system.img", 18),
+        new("flash recovery  recovery.img", 3),
+        new("flash recoveryfs recoveryfs.img", 4),
+    };
+    public string FastbootRebootCommand { get; } = "reboot";
     public int DeviceWaitTime { get; set; } = 20;
     public Func<string, int, FlasherResponse> Adb => delegate (string command, int timeout)
     {
         var res = adb.Run(command, timeout);
-        return new((ResponseType)res) { ResponseMessage = $"StdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
+        return new((ResponseType)res) { ResponseMessage = $"Adb {command}\n\tStdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
     };
     public Func<string, int, FlasherResponse> Fastboot => delegate (string command, int timeout)
     {
         var res = fastboot.Run(command, timeout);
-        return new((ResponseType)res) { ResponseMessage = $"StdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
+        return new((ResponseType)res) { ResponseMessage = $"Fastboot {command}\n\tStdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
     };
 
     public FlasherResponse Sleep(int timeoutSeconds) // ok 
@@ -296,7 +331,12 @@ public class Flasher : IFlasher, IDisposable
 
     public FlasherResponse UploadFactoryCFG()
     {
-        throw new NotImplementedException();
+        string path = string.Empty;
+        if (Package is not null)
+            path = Path.GetDirectoryName(Package.PackagePath)!;
+        var fac = Path.Combine(path, factory);
+
+        return new(ResponseType.Info) { ResponseMessage = fac + " " + File.Exists(fac) };
     }
 
     protected virtual void Dispose(bool disposing)

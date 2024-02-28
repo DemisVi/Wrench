@@ -111,6 +111,7 @@ public class ContactUnit : IContactUnit, IDisposable
 
     private void ReadGpio()
     {
+        _cuSerialPort.DiscardInBuffer();
         _cuSerialPort.Write(CuCommands.CuReadInputs, 0, CuCommands.CuReadInputs.Length);
         Thread.Sleep(20);
         var received = new byte[3];

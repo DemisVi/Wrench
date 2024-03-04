@@ -10,4 +10,5 @@ public enum ResponseType
     Fail = 1,
     Timeout = 2,
     NotFound = 4,
+    Canceled = 8,
 }

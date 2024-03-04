@@ -40,7 +40,8 @@
               </Button>
               <Button Classes="dockButton"
                 x:CompileBindings="false" 
-                Command="{Binding $parent[UserControl;1].DataContext.FireTool}">
+                Command="{Binding $parent[UserControl;1].DataContext.FireTool}"
+                HotKey="Ctrl+Enter">
                   <StackPanel Orientation="Horizontal">
                     <Image Classes="dockButtonImg" Source="{SvgImage /Assets/lightning.svg}"/>
                     <Label Content=" Запуск"/>
@@ -57,7 +58,8 @@
               <ComboBox Classes="dock" 
                 ItemsSource="{Binding FirmwareSources}" 
                 SelectedItem="{Binding SelectedSource}"
-                PlaceholderText="Выбор типа изделия">
+                PlaceholderText="Выбор типа изделия"
+                TabIndex="0">
                   <ComboBox.ItemTemplate>
                     <DataTemplate>
                       <StackPanel Orientation="Vertical">

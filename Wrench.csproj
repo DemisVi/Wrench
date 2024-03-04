@@ -26,6 +26,7 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.2" />
     <PackageReference Include="iot.device.bindings" Version="3.0.0" />
     <PackageReference Include="microsoft.extensions.hosting" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.2" />
     <PackageReference Include="system.device.gpio" Version="3.0.0" />
     <PackageReference Include="system.io.ports" Version="7.0.0" />
     <PackageReference Include="system.management" Version="7.0.2" />

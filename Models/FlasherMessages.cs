@@ -2,14 +2,23 @@ using System;
 
 public static class FlasherMessages
 {
-    public const string Message = "Message";
-    public const string ModemPortNotFound = "Modem Port not found";
-    public const string CancellationRequested = "Cancellation requested";
-    public const string DeviceNotFound = "Device not found";
-    public const string PowerOn = "Board powered on";
-    public const string PowerOff = "Board powered off";
-    public const string LockCU = "Lock Contact Unit";
-    public const string Delay = "Delay: ";
-    public const string DeviceFound = "Device found: ";
-    public const string ContactUnitState = "Contact unit state: ";
+    internal const string Message = "Message";
+    internal const string ModemPortNotFound = "Modem Port not found";
+    internal const string CancellationRequested = "Cancellation requested";
+    internal const string DeviceNotFound = "Device not found";
+    internal const string PowerOn = "Board powered on";
+    internal const string PowerOff = "Board powered off";
+    internal const string LockCU = "Lock Contact Unit: ";
+    internal const string UnlockCU = "Unlock Contact Unit: ";
+    internal const string Delay = "Delay: ";
+    internal const string DeviceFound = "Device found: ";
+    internal const string ContactUnitState = "Contact unit state: ";
+    internal const string CantReadAnswer = "Impossible to read answer =(";
+    internal const string FactoryUpdated = "'factory.cfg' updated";
+    internal const string FactoryDoesntExist = "'factory.cfg' doesn't exist";
+    internal const string FileNotFoundFormat = "File {0} doesn't exist";
+    internal const string FlashBaseFirmware = "<<< Flash base firmware >>>";
+    internal const string UploadFactory = "<<< Upload 'factory.cfg' >>>";
+    internal const string EnableADB = "<<< Enable ADB interface >>>";
+    internal const string DisableADB = "<<< Disable ADB interface >>>";
 }

@@ -15,6 +15,7 @@ public class StatusViewModel : ViewModelBase
     private TimeSpan elapsed;
     private Timer timeUpdater;
     private DateTime? currentTime;
+    private string serialNumber = string.Empty;
 
     public StatusViewModel()
     {
@@ -22,7 +23,7 @@ public class StatusViewModel : ViewModelBase
     }
     public string Label { get; set; } = "p-holder";
     public string ContactUnit { get; set; } = string.Empty;
-    public string SerialNumber { get; set; } = string.Empty;
+    public string SerialNumber { get => serialNumber; set => this.RaiseAndSetIfChanged(ref serialNumber, value); }
     public TimeSpan Elapsed { get => elapsed; set => this.RaiseAndSetIfChanged(ref elapsed, value); }
     public DateTime? CurrentTime { get => currentTime; set => this.RaiseAndSetIfChanged(ref currentTime, value); }
     public int Good { get; set; }

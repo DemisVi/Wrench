@@ -105,15 +105,20 @@ public class ContactUnit : IContactUnit, IDisposable
 
     private void WriteGpio()
     {
+        _cuSerialPort.DiscardInBuffer();
         _cuSerialPort.Write(CuCommands.CuWriteOutputs, 0, CuCommands.CuWriteOutputs.Length);
         _cuSerialPort.Write(new byte[] { (byte)Outputs }, 0, 1);
+        Thread.Sleep(100);
+        var received = new byte[3];
+        _cuSerialPort.Read(received, 0, received.Length);
+        _outputs = (GpioOutputs)received[2];
     }
 
     private void ReadGpio()
     {
         _cuSerialPort.DiscardInBuffer();
         _cuSerialPort.Write(CuCommands.CuReadInputs, 0, CuCommands.CuReadInputs.Length);
-        Thread.Sleep(20);
+        Thread.Sleep(100);
         var received = new byte[3];
         _cuSerialPort.Read(received, 0, received.Length);
         Inputs = (GpioInputs)received[2];

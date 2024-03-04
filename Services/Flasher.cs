@@ -21,11 +21,16 @@ public class Flasher : IFlasher, IDisposable
     private readonly ContactUnit cu;
     private readonly Adb adb;
     private readonly Fastboot fastboot;
-    private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Up;
-    private readonly GpioInputs deviceCUSignalState = GpioInputs.Lodg;
+    private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Down,
+        deviceCUSignalState = GpioInputs.Lodg,
+        deviceCUReleaseState = GpioInputs.None;
     private const string adbOn = "AT+CUSBADB=1,1",
         adbOff = "AT+CUSBADB=0,1",
-        factory = "factory.cfg";
+        factory = "factory.cfg",
+        adbPushFormat = "push \"{0}\" /data/",
+        adbKill = "kill-server", 
+        adbStart = "start-server";
+
     private string workDir = string.Empty;
     private Package? package;
 
@@ -97,6 +102,8 @@ public class Flasher : IFlasher, IDisposable
 
     public FlasherResponse AwaitCUSignal(CancellationToken token) => AwaitCUState(GetCUSignal, token);
 
+    internal FlasherResponse AwaitCURelease(CancellationToken token) => AwaitCUState(GetCURelease, token);
+
     public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token) // ok 
     {
         try
@@ -120,19 +127,22 @@ public class Flasher : IFlasher, IDisposable
 
     public FlasherResponse GetCUSignal() => GetCUState(deviceCUSignalState);
 
+    public FlasherResponse GetCURelease() => GetCUState(deviceCUReleaseState);
+
     public FlasherResponse GetCUState(GpioInputs inputs) // ok 
     {
         try
         {
-            if (cu.Inputs == inputs)
+            var ins = cu.Inputs;
+            if (ins == inputs)
                 return new FlasherResponse(ResponseType.OK)
                 {
-                    ResponseMessage = FlasherMessages.ContactUnitState + cu.Inputs.ToString()
+                    ResponseMessage = FlasherMessages.ContactUnitState + ins.ToString()
                 };
             else
                 return new FlasherResponse(ResponseType.Fail)
                 {
-                    ResponseMessage = FlasherMessages.ContactUnitState + cu.Inputs.ToString()
+                    ResponseMessage = FlasherMessages.ContactUnitState + ins.ToString()
                 };
 
         }
@@ -237,7 +247,7 @@ public class Flasher : IFlasher, IDisposable
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.LockCU };
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.LockCU + cu.Outputs };
     }
 
     public FlasherResponse UnlockCU() // ok 
@@ -250,7 +260,7 @@ public class Flasher : IFlasher, IDisposable
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK);
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.UnlockCU + cu.Outputs };
     }
 
     public FlasherResponse SignalReady() // ok
@@ -263,7 +273,33 @@ public class Flasher : IFlasher, IDisposable
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK);
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.UnlockCU + cu.Outputs };
+    }
+
+    internal FlasherResponse SignalDone()
+    {
+        try
+        {
+            cu.LEDGreen();
+        }
+        catch (Exception ex)
+        {
+            return new FlasherResponse(ex);
+        }
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.UnlockCU + cu.Outputs };
+    }
+
+    internal FlasherResponse SignalFail()
+    {
+        try
+        {
+            cu.LEDRed();
+        }
+        catch (Exception ex)
+        {
+            return new FlasherResponse(ex);
+        }
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.UnlockCU + cu.Outputs };
     }
 
     public FlasherResponse TurnModemPowerOff() // ok 
@@ -302,7 +338,7 @@ public class Flasher : IFlasher, IDisposable
         var portName = ModemPort.GetModemATPortNames().FirstOrDefault();
 
         if (portName is null or { Length: <= 0 })
-            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = "Modem Port not found" };
+            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = FlasherMessages.ModemPortNotFound };
 
         var port = new ModemPort(portName);
 
@@ -311,7 +347,7 @@ public class Flasher : IFlasher, IDisposable
             port.Open();
             port.WriteLine(req);
 
-            return new FlasherResponse(ResponseType.OK) { ResponseMessage = "Impossible to read answer. Nobody can!", };
+            return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.CantReadAnswer };
         }
         catch (Exception ex)
         {
@@ -326,17 +362,42 @@ public class Flasher : IFlasher, IDisposable
 
     public FlasherResponse UpdateCfgSN()
     {
-        throw new NotImplementedException();
+        var fac = GetFactoryPath();
+
+        if (File.Exists(fac))
+        {
+            try
+            {
+                var factory = new FactoryCFG(Path.GetDirectoryName(fac));
+                factory.UpdateFactory();
+            }
+            catch (Exception ex)
+            {
+                return new(ResponseType.Fail) { ResponseMessage = ex.Message };
+            }
+            return new(ResponseType.OK) { ResponseMessage = FlasherMessages.FactoryUpdated };
+        }
+        else
+            return new(ResponseType.Fail) { ResponseMessage = FlasherMessages.FactoryDoesntExist };
     }
 
     public FlasherResponse UploadFactoryCFG()
     {
+
+        var fac = GetFactoryPath();
+
+        if (File.Exists(fac))
+            return Adb(string.Format(adbPushFormat, fac), 1);
+        else
+            return new(ResponseType.Fail) { ResponseMessage = string.Format(FlasherMessages.FileNotFoundFormat, fac) };
+    }
+
+    protected string GetFactoryPath()
+    {
         string path = string.Empty;
         if (Package is not null)
             path = Path.GetDirectoryName(Package.PackagePath)!;
-        var fac = Path.Combine(path, factory);
-
-        return new(ResponseType.Info) { ResponseMessage = fac + " " + File.Exists(fac) };
+        return Path.Combine(path, factory);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -350,7 +411,7 @@ public class Flasher : IFlasher, IDisposable
                 cu.Dispose();
             }
 
-            Adb("kill-server", 1);
+            Adb(adbKill, 1);
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer
             // TODO: set large fields to null
             disposedValue = true;

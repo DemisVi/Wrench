@@ -71,7 +71,8 @@
                   x:CompileBindings="false" Content="{Binding Good}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="1"
                   x:CompileBindings="false" Content="{Binding Bad}"/>
-                <Label Classes="value" Grid.Row="0" Grid.Column="2" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="0" Grid.Column="2"
+                   Content="{Binding Coefficient, StringFormat=n2}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="2" Content="{Binding Label}"/>
               </Grid>
               <!-- CU and progress grid -->

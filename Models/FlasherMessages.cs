@@ -1,4 +1,5 @@
 using System;
+using Wrench.DataTypes;
 
 public static class FlasherMessages
 {
@@ -10,6 +11,10 @@ public static class FlasherMessages
     internal const string PowerOff = "Board powered off";
     internal const string LockCU = "Lock Contact Unit: ";
     internal const string UnlockCU = "Unlock Contact Unit: ";
+    internal const string CUReady = "Contact Unit ready: ";
+    internal const string Done = "Flashing done: ";
+    internal const string Busy = "Flashing in progress: ";
+    internal const string Fail = "Flashing fail: ";
     internal const string Delay = "Delay: ";
     internal const string DeviceFound = "Device found: ";
     internal const string ContactUnitState = "Contact unit state: ";
@@ -21,4 +26,7 @@ public static class FlasherMessages
     internal const string UploadFactory = "<<< Upload 'factory.cfg' >>>";
     internal const string EnableADB = "<<< Enable ADB interface >>>";
     internal const string DisableADB = "<<< Disable ADB interface >>>";
+    internal const string TimerStart = "Start operation timer...";
+    internal const string TimerStop = "Stop operation timer...";
+    internal const string TimerReset = "Reset operation timer...";
 }

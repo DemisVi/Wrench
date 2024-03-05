@@ -28,6 +28,7 @@ public class Flasher : IFlasher, IDisposable
         adbOff = "AT+CUSBADB=0,1",
         factory = "factory.cfg",
         adbPushFormat = "push \"{0}\" /data/",
+        adbSync = "shell sync",
         adbKill = "kill-server", 
         adbStart = "start-server";
 
@@ -89,7 +90,7 @@ public class Flasher : IFlasher, IDisposable
     public Func<string, int, FlasherResponse> Fastboot => delegate (string command, int timeout)
     {
         var res = fastboot.Run(command, timeout);
-        return new((ResponseType)res) { ResponseMessage = $"Fastboot {command}\n\tStdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
+        return new((ResponseType)res) { ResponseMessage = $"Fastboot {command}\n\tStdOut: {fastboot.LastStdOut}\n\tStdErr: {fastboot.LastStdErr}" };
     };
 
     public FlasherResponse Sleep(int timeoutSeconds) // ok 
@@ -273,7 +274,7 @@ public class Flasher : IFlasher, IDisposable
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.UnlockCU + cu.Outputs };
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.CUReady + cu.Outputs };
     }
 
     internal FlasherResponse SignalDone()
@@ -286,7 +287,20 @@ public class Flasher : IFlasher, IDisposable
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.UnlockCU + cu.Outputs };
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Done + cu.Outputs };
+    }
+
+    internal FlasherResponse SignalBusy()
+    {
+        try
+        {
+            cu.LEDBlue();
+        }
+        catch (Exception ex)
+        {
+            return new FlasherResponse(ex);
+        }
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Busy + cu.Outputs };
     }
 
     internal FlasherResponse SignalFail()
@@ -299,7 +313,7 @@ public class Flasher : IFlasher, IDisposable
         {
             return new FlasherResponse(ex);
         }
-        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.UnlockCU + cu.Outputs };
+        return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Fail + cu.Outputs };
     }
 
     public FlasherResponse TurnModemPowerOff() // ok 
@@ -387,7 +401,11 @@ public class Flasher : IFlasher, IDisposable
         var fac = GetFactoryPath();
 
         if (File.Exists(fac))
-            return Adb(string.Format(adbPushFormat, fac), 1);
+        {
+            var res = Adb(string.Format(adbPushFormat, fac), 1);
+            Adb(adbSync, 5);
+            return res;
+        }
         else
             return new(ResponseType.Fail) { ResponseMessage = string.Format(FlasherMessages.FileNotFoundFormat, fac) };
     }

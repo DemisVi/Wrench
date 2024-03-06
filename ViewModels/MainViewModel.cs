@@ -32,8 +32,8 @@ public class MainViewModel : ViewModelBase
     private CancellationTokenSource? cts;
     private bool isFlasherRunning;
     private const string baseFirmwarePrefix = "./base";
-    private const int BootUpTimeout = 10;
-    private const int ADBSwitchTimeout = 8;
+    private const int BootUpTimeout = 15;
+    private const int ADBSwitchTimeout = 10;
 
     public bool IsFlasherRunning { get => isFlasherRunning; private set => this.RaiseAndSetIfChanged(ref isFlasherRunning, value); }
     public ControlViewModel ControlViewModel { get; set; } = new();
@@ -105,9 +105,9 @@ public class MainViewModel : ViewModelBase
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Lock CU..." }) is null
                     || ExecuteWithLogging(() => flasher.SignalBusy()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => flasher.LockCU()) is not { ResponseType: ResponseType.OK }
-                    || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power off device..." }) is null
-                    || ExecuteWithLogging(() => flasher.TurnModemPowerOff()) is not { ResponseType: ResponseType.OK }
-                    || ExecuteWithLogging(() => flasher.Sleep(2)) is not { ResponseType: ResponseType.OK }
+                    // || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power off device..." }) is null
+                    // || ExecuteWithLogging(() => flasher.TurnModemPowerOff()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => flasher.Sleep(1)) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power on device..." }) is null
                     || ExecuteWithLogging(() => flasher.TurnModemPowerOn()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for device..." }) is null

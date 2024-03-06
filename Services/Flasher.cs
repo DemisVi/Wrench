@@ -23,7 +23,7 @@ public class Flasher : IFlasher, IDisposable
     private readonly Fastboot fastboot;
     private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Down,
         deviceCUSignalState = GpioInputs.Lodg,
-        deviceCUReleaseState = GpioInputs.None;
+        deviceCUReleaseState = GpioInputs.Pn1_Down;
     private const string adbOn = "AT+CUSBADB=1,1",
         adbOff = "AT+CUSBADB=0,1",
         factory = "factory.cfg",

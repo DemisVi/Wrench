@@ -73,7 +73,8 @@
                   x:CompileBindings="false" Content="{Binding Bad}"/>
                 <Label Classes="value" Grid.Row="0" Grid.Column="2"
                    Content="{Binding Coefficient, StringFormat=n2}"/>
-                <Label Classes="value" Grid.Row="1" Grid.Column="2" Content="{Binding Label}"/>
+                <Label Classes="value" Grid.Row="1" Grid.Column="2" 
+                  Content="{Binding TimePerBlock, StringFormat=mm\\:ss}"/>
               </Grid>
               <!-- CU and progress grid -->
               <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*">

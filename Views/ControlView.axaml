@@ -57,6 +57,8 @@
               </Button>
               <ComboBox Classes="dock" 
                 ItemsSource="{Binding FirmwareSources}" 
+                x:CompileBindings="false"
+                IsEnabled="{Binding !$parent[UserControl;1].DataContext.IsFlasherRunning}"
                 SelectedItem="{Binding SelectedSource}"
                 PlaceholderText="Выбор типа изделия"
                 TabIndex="0">

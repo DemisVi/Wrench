@@ -8,7 +8,7 @@
              x:DataType="vm:LogViewModel">
              
              <Grid>
-               <ScrollViewer Name="LogScrollViewer">
+               <ScrollViewer Name="logScrollViewer">
                   <ListBox ItemsSource="{Binding Log}"/>
                </ScrollViewer>
                <CheckBox Name="autoscroll" IsChecked="true" HorizontalAlignment="Right" VerticalAlignment="Top" />

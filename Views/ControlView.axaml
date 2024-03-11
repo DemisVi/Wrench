@@ -38,22 +38,30 @@
                   <Label Content=" Загрузить"/>
                 </StackPanel>
               </Button>
-              <Button Classes="dockButton">
-                <StackPanel Orientation="Horizontal">
-                  <Image Classes="dockButtonImg" Source="{SvgImage /Assets/lightning.svg}"/>
-                  <Label Content=" Запуск"/>
-                </StackPanel>
+              <Button Classes="dockButton"
+                x:CompileBindings="false" 
+                Command="{Binding $parent[UserControl;1].DataContext.FireTool}"
+                HotKey="Ctrl+Enter">
+                  <StackPanel Orientation="Horizontal">
+                    <Image Classes="dockButtonImg" Source="{SvgImage /Assets/lightning.svg}"/>
+                    <Label Content=" Запуск"/>
+                  </StackPanel>
               </Button>
-              <Button Classes="dockButton">
-                <StackPanel Orientation="Horizontal">
-                  <Image Classes="dockButtonImg" Source="{SvgImage /Assets/stop.svg}"/>
-                  <Label Content=" Завершить"/>
-                </StackPanel>
+              <Button Classes="dockButton"
+                x:CompileBindings="false" 
+                Command="{Binding $parent[UserControl;1].DataContext.PerformCancel}">
+                  <StackPanel Orientation="Horizontal">
+                    <Image Classes="dockButtonImg" Source="{SvgImage /Assets/stop.svg}"/>
+                    <Label Content=" Завершить"/>
+                  </StackPanel>
               </Button>
               <ComboBox Classes="dock" 
                 ItemsSource="{Binding FirmwareSources}" 
+                x:CompileBindings="false"
+                IsEnabled="{Binding !$parent[UserControl;1].DataContext.IsFlasherRunning}"
                 SelectedItem="{Binding SelectedSource}"
-                PlaceholderText="Выбор типа изделия">
+                PlaceholderText="Выбор типа изделия"
+                TabIndex="0">
                   <ComboBox.ItemTemplate>
                     <DataTemplate>
                       <StackPanel Orientation="Vertical">

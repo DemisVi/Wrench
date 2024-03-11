@@ -42,8 +42,8 @@ public class ContactUnit : IContactUnit, IDisposable
         _cuSerialPort = cuSerialPort;
         _cuFtDevice = ftDevice;
         using var gpio = _cuFtDevice.CreateGpioController();
-        _powerPin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS0"), PinMode.Output);
-        _cl15Pin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS2"), PinMode.Output);
+        _powerPin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS0"), PinMode.Output, PinValue.High);
+        _cl15Pin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS2"), PinMode.Output, PinValue.High);
         _cuSerialPort.Open();
     }
 
@@ -105,14 +105,20 @@ public class ContactUnit : IContactUnit, IDisposable
 
     private void WriteGpio()
     {
+        _cuSerialPort.DiscardInBuffer();
         _cuSerialPort.Write(CuCommands.CuWriteOutputs, 0, CuCommands.CuWriteOutputs.Length);
         _cuSerialPort.Write(new byte[] { (byte)Outputs }, 0, 1);
+        Thread.Sleep(100);
+        var received = new byte[3];
+        _cuSerialPort.Read(received, 0, received.Length);
+        _outputs = (GpioOutputs)received[2];
     }
 
     private void ReadGpio()
     {
+        _cuSerialPort.DiscardInBuffer();
         _cuSerialPort.Write(CuCommands.CuReadInputs, 0, CuCommands.CuReadInputs.Length);
-        Thread.Sleep(20);
+        Thread.Sleep(100);
         var received = new byte[3];
         _cuSerialPort.Read(received, 0, received.Length);
         Inputs = (GpioInputs)received[2];
@@ -126,6 +132,7 @@ public class ContactUnit : IContactUnit, IDisposable
             {
                 // TODO: dispose managed state (managed objects)
                 _cuSerialPort.Dispose();
+                _cuFtDevice.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer

@@ -16,10 +16,15 @@ public class MainWindowViewModel : ViewModelBase
     {
         MainViewModel = new();
         contentViewModel = MainViewModel;
-
-        var enableSelector = this.WhenAny(x => x.MainViewModel.ControlViewModel.SelectedSource, y => y.Value is not null);
+#if DEBUG
+        ShowPackageSelector = ReactiveCommand.Create(ExecuteShowPackageSelector);
+#else
+        var enableSelector = this.WhenAnyValue(x => x.MainViewModel.ControlViewModel.SelectedSource,
+                                          y => y.MainViewModel.IsFlasherRunning,
+                                          (x, y) => x is not null && y is not true);
 
         ShowPackageSelector = ReactiveCommand.Create(ExecuteShowPackageSelector, enableSelector);
+#endif
     }
     public ViewModelBase ContentViewModel
     {
@@ -28,7 +33,7 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     public ReactiveCommand<Unit, Unit> ShowPackageSelector { get; }
-    
+
     public MainViewModel MainViewModel { get; }
 
     public void ExecuteShowPackageSelector()

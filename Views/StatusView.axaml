@@ -6,6 +6,7 @@
              x:Class="Wrench.Views.StatusView"
              xmlns:vm="using:Wrench.ViewModels"
              x:DataType="vm:StatusViewModel"
+             Background="{Binding StatusColor}"
              >
 <!-- Background="{Binding IndicatorColor}" -->
             <UserControl.Styles>
@@ -74,7 +75,7 @@
                 <Label Classes="value" Grid.Row="0" Grid.Column="2"
                    Content="{Binding Coefficient, StringFormat=n2}"/>
                 <Label Classes="value" Grid.Row="1" Grid.Column="2" 
-                  Content="{Binding TimePerBlock, StringFormat=mm\\:ss}"/>
+                  Content="{Binding TimePerBlock, StringFormat=mm\\:ss}}"/>
               </Grid>
               <!-- CU and progress grid -->
               <Grid Grid.Row="1" RowDefinitions="*,*" ColumnDefinitions="*,*">

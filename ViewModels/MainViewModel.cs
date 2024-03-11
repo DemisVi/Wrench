@@ -32,8 +32,9 @@ public class MainViewModel : ViewModelBase
     private CancellationTokenSource? cts;
     private bool isFlasherRunning;
     private const string baseFirmwarePrefix = "./base";
-    private const int BootUpTimeout = 15;
-    private const int ADBSwitchTimeout = 10;
+    private const int BootUpTimeout = 15,
+        ADBSwitchTimeout = 10,
+        BootloaderRebootTimeout = 40;
 
     public bool IsFlasherRunning { get => isFlasherRunning; private set => this.RaiseAndSetIfChanged(ref isFlasherRunning, value); }
     public ControlViewModel ControlViewModel { get; set; } = new();
@@ -100,10 +101,12 @@ public class MainViewModel : ViewModelBase
 
                 if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for CU signal..." }) is null
                     || ExecuteWithLogging(() => flasher.SignalReady()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => SignalReady()) is null
                     || ExecuteWithLogging(() => flasher.AwaitCUReady(cts.Token)) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => StartStopwatch()) is null
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Lock CU..." }) is null
                     || ExecuteWithLogging(() => flasher.SignalBusy()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => SignalBusy()) is null
                     || ExecuteWithLogging(() => flasher.LockCU()) is not { ResponseType: ResponseType.OK }
                     // || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power off device..." }) is null
                     // || ExecuteWithLogging(() => flasher.TurnModemPowerOff()) is not { ResponseType: ResponseType.OK }
@@ -133,17 +136,21 @@ public class MainViewModel : ViewModelBase
                         continue;
                     }
                 }
+                ExecuteWithLogging(() => flasher.Sleep(2));
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Running android batch..." });
-                if (ExecuteWithLogging(() => flasher.Adb(flasher.AdbRebootBootloaderCommand, 1)) is not { ResponseType: ResponseType.OK })
+                if (ExecuteWithLogging(() => flasher.Adb(flasher.AdbRebootBootloaderCommand, BootloaderRebootTimeout)) is not { ResponseType: ResponseType.OK })
                 {
                     FailState();
                     continue;
                 }
                 ExecuteWithLogging(() => flasher.Sleep(2));
                 if (ExecuteWithLogging(() => ExecuteFastboot()) is not { ResponseType: ResponseType.OK })
+                {
+                    FailState();
                     continue;
-                ExecuteWithLogging(() => flasher.Sleep(1));
-                if (ExecuteWithLogging(() => flasher.Fastboot(flasher.FastbootRebootCommand, 1)) is not { ResponseType: ResponseType.OK })
+                }
+                ExecuteWithLogging(() => flasher.Sleep(2));
+                if (ExecuteWithLogging(() => flasher.Fastboot(flasher.FastbootRebootCommand, 2)) is not { ResponseType: ResponseType.OK })
                 {
                     FailState();
                     continue;
@@ -274,6 +281,22 @@ public class MainViewModel : ViewModelBase
                 ExecuteWithLogging(() => flasher.AwaitCURelease(cts!.Token));
                 ExecuteWithLogging(() => ResetStopwatch());
 
+            }
+
+            FlasherResponse SignalReady()
+            {
+                // Dispatcher.UIThread.Invoke(() => 
+                StatusViewModel.StatusColor = Brushes.LightYellow;
+                // );
+                return new(ResponseType.OK) { ResponseMessage = "Signal ready" };
+            }
+
+            FlasherResponse SignalBusy()
+            {
+                // Dispatcher.UIThread.Invoke(() => 
+                StatusViewModel.StatusColor = Brushes.LightBlue;
+                // );
+                return new(ResponseType.OK) { ResponseMessage = "Signal busy" };
             }
 
             FlasherResponse ExecuteFastboot()

@@ -213,6 +213,7 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             var res = searcher.Get();
+            Thread.Sleep(1000);
             if (res is not null and { Count: > 0 })
             {
                 var text = (string?)res.Cast<ManagementObject>()?.First()["Caption"];
@@ -359,6 +360,7 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             port.Open();
+            Thread.Sleep(100);
             port.WriteLine(req);
 
             return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.CantReadAnswer };

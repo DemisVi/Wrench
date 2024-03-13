@@ -17,10 +17,11 @@ public class StatusViewModel : ViewModelBase
     private double coefficient;
     private IImmutableSolidColorBrush statusColor = Brushes.Azure;
     private TimeSpan totalTime;
+    private Timer clockTimer;
 
     public StatusViewModel()
     {
-        new Timer((_) => CurrentTime = DateTime.Now, null, 0, 1000);
+        clockTimer = new Timer((_) => CurrentTime = DateTime.Now, null, 0, 1000);
         this.WhenAnyValue(x => x.Good, y => y.Bad).Subscribe(x => Coefficient = (double)x.Item1 / ((double)x.Item1 + (double)x.Item2));
         this.WhenAnyValue(x => x.Good).Subscribe(x => { TotalTime += Elapsed; this.RaisePropertyChanged(nameof(TimePerBlock)); });
         this.WhenAnyValue(x => x.Good).Subscribe(x => StatusColor = Brushes.LightGreen);

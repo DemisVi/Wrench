@@ -1,105 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using Avalonia.Media;
-using DynamicData;
-using Iot.Device.FtCommon;
-using ReactiveUI;
-using Wrench.Models;
-using Wrench.Services;
-using Wrench.ViewModels;
-using Wrench.Views;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using Avalonia.Threading;
-using System.Threading;
-using Wrench.DataTypes;
+using System;
 using System.IO;
-using System.Text.Json;
-using System.Net.Http;
-using Avalonia;
-using Microsoft.Toolkit.Mvvm.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
+using Wrench.DataTypes;
+using Wrench.Models;
 using Wrench.Extensions;
-using Iot.Device.Rfid;
 
-namespace Wrench.ViewModels;
+using Timer = System.Timers.Timer;
 
-public class MainViewModel : ViewModelBase
+namespace Wrench.Services;
+
+public class FlasherController
 {
-    private Package? package;
-    private CancellationTokenSource? cts;
-    private bool isFlasherRunning;
     private const string baseFirmwarePrefix = "./base";
     private const int BootUpTimeout = 15,
         ADBSwitchTimeout = 10,
         BootloaderRebootTimeout = 40;
 
-    public bool IsFlasherRunning { get => isFlasherRunning; private set => this.RaiseAndSetIfChanged(ref isFlasherRunning, value); }
-    public ControlViewModel ControlViewModel { get; set; } = new();
-    public StatusViewModel StatusViewModel { get; set; } = new();
-    public LogViewModel LogViewModel { get; set; } = new();
-    public ReactiveCommand<Unit, Unit> FireTool { get; set; }
-    public Package? Package { get => package; set => this.RaiseAndSetIfChanged(ref package, value); }
+    public bool IsFlasherRunning { get; private set; }
+    public CancellationTokenSource? Cts { get; set; }
+    public event FlasherControllerEventHandler? EventOccurred;
+    public Package? Package { get; set; }
 
-
-
-    public MainViewModel()
+    public void RunFlasher()
     {
-        var fts = Ftx232HDevice.GetFtx232H();
-        if (fts is { Count: > 0 })
-            StatusViewModel.ContactUnit = fts.First().SerialNumber.TrimEnd('A', 'B');
-#if DEBUG
-        FireTool = ReactiveCommand.Create(PerformFireTool);
-#else
-        FireTool = ReactiveCommand.Create(PerformFireTool, this.WhenAnyValue(x => x.Package,
-                                                                             y => y.IsFlasherRunning,
-                                                                             (x, y) => (Package?)x is not null && y is false));
-#endif
-        this.WhenAnyValue(x => x.Package).Subscribe(x => StatusViewModel.SerialNumber = ReadSerial(x));
-    }
-
-    private string ReadSerial(Package? x)
-    {
-        if (x is null) return string.Empty;
-        try
-        {
-            var fac = new FactoryCFG(Path.GetDirectoryName(x.PackagePath));
-            fac.ReadFactory();
-            var base34serial = fac.SerialNumber.ToString();
-            return $"{base34serial} ({base34serial.ToInt32()})";
-        }
-        catch (FileNotFoundException)
-        {
-            return string.Empty;
-        }
-    }
-
-    public void PerformFireTool()
-    {
-        cts = new CancellationTokenSource();
-        var controller = new FlasherController()
-        {
-            Cts = cts,
-            Package = Package,
-        };
-
-        controller.EventOccurred += ResolveFlasherControllerEvents;
-
-        controller.RunFlasher();
- 
-        /* IsFlasherRunning = true;
-        cts = new CancellationTokenSource();
+        Cts = new CancellationTokenSource();
         var opRes = new FlasherResponse();
-        var timer = new System.Timers.Timer(TimeSpan.FromSeconds(1));
-        timer.Elapsed += (_, _) => StatusViewModel.Elapsed += TimeSpan.FromSeconds(1);
+        var timer = new Timer(TimeSpan.FromSeconds(1));
+        timer.Elapsed += (_, _) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.ProgressTimerElapsed));
 
         Task.Factory.StartNew(() =>
         {
             using Flasher flasher = new();
             flasher.Package = Package;
+
+            EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
 
             Log("START:");
             Log("-= 4 seconds pause for FTDI =-");
@@ -107,21 +42,19 @@ public class MainViewModel : ViewModelBase
             ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Start adb server..." });
             ExecuteWithLogging(() => flasher.Adb("start-server", 6));
 
-            while (!cts.IsCancellationRequested)
+            while (!Cts.IsCancellationRequested)
             {
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = FlasherMessages.FlashBaseFirmware });
 
                 if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for CU signal..." }) is null
                     || ExecuteWithLogging(() => flasher.SignalReady()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => SignalReady()) is null
-                    || ExecuteWithLogging(() => flasher.AwaitCUReady(cts.Token)) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => flasher.AwaitCUReady(Cts.Token)) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => StartStopwatch()) is null
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Lock CU..." }) is null
                     || ExecuteWithLogging(() => flasher.SignalBusy()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => SignalBusy()) is null
                     || ExecuteWithLogging(() => flasher.LockCU()) is not { ResponseType: ResponseType.OK }
-                    // || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power off device..." }) is null
-                    // || ExecuteWithLogging(() => flasher.TurnModemPowerOff()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => flasher.Sleep(1)) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power on device..." }) is null
                     || ExecuteWithLogging(() => flasher.TurnModemPowerOn()) is not { ResponseType: ResponseType.OK }
@@ -258,7 +191,7 @@ public class MainViewModel : ViewModelBase
             {
                 try
                 {
-                    StatusViewModel.Elapsed = TimeSpan.Zero;
+                    EventOccurred?.Invoke(this, new(FlasherControllerEventType.ProgressTimerReset));
                     return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.TimerReset, };
                 }
                 catch (Exception ex)
@@ -272,12 +205,11 @@ public class MainViewModel : ViewModelBase
                 ExecuteWithLogging(() => flasher.TurnModemPowerOff());
                 ExecuteWithLogging(() => flasher.UnlockCU());
                 ExecuteWithLogging(() => StopStopwatch());
-                StatusViewModel.SerialNumber = ReadSerial(Package);
-                StatusViewModel.Good++;
+                EventOccurred?.Invoke(this, new(FlasherControllerEventType.SuccessState) { Payload = ReadSerial(Package) });
                 Log("Some success ;]");
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting Contact Unit release..." });
                 ExecuteWithLogging(() => flasher.SignalDone());
-                ExecuteWithLogging(() => flasher.AwaitCURelease(cts.Token));
+                ExecuteWithLogging(() => flasher.AwaitCURelease(Cts.Token));
                 ExecuteWithLogging(() => ResetStopwatch());
             }
 
@@ -286,26 +218,24 @@ public class MainViewModel : ViewModelBase
                 ExecuteWithLogging(() => flasher.TurnModemPowerOff());
                 ExecuteWithLogging(() => flasher.UnlockCU());
                 ExecuteWithLogging(() => StopStopwatch());
-                StatusViewModel.Bad++;
+                EventOccurred?.Invoke(this, new(FlasherControllerEventType.FailState));
                 Log("FAIL!");
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting Contact Unit release..." });
                 ExecuteWithLogging(() => flasher.SignalFail());
-                ExecuteWithLogging(() => flasher.AwaitCURelease(cts!.Token));
+                ExecuteWithLogging(() => flasher.AwaitCURelease(Cts!.Token));
                 ExecuteWithLogging(() => ResetStopwatch());
 
             }
 
             FlasherResponse SignalReady()
             {
-                StatusViewModel.StatusColor = Brushes.LightYellow;
+                EventOccurred?.Invoke(this, new(FlasherControllerEventType.SignalReady));
                 return new(ResponseType.OK) { ResponseMessage = "Signal ready" };
             }
 
             FlasherResponse SignalBusy()
             {
-                // Dispatcher.UIThread.Invoke(() => 
-                StatusViewModel.StatusColor = Brushes.LightBlue;
-                // );
+                EventOccurred?.Invoke(this, new(FlasherControllerEventType.SignalBusy));
                 return new(ResponseType.OK) { ResponseMessage = "Signal busy" };
             }
 
@@ -319,9 +249,9 @@ public class MainViewModel : ViewModelBase
                 return new(ResponseType.OK) { ResponseMessage = nameof(flasher.FastbootCommandSequence) };
             }
 
-            Dispatcher.UIThread.Invoke(() => IsFlasherRunning = false);
+            EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false }); // Dispatcher.UIThread.Invoke(() => IsFlasherRunning = false);
         },
-            cts.Token);
+            Cts.Token);
 
         FlasherResponse ExecuteWithLogging(Func<FlasherResponse> func)
         {
@@ -332,42 +262,23 @@ public class MainViewModel : ViewModelBase
         }
 
         void Report(TimeSpan span) => Log(string.Join(": ", DateTime.Now.ToString("T"), $"[{span:ss':'fff}]", opRes.ResponseType, opRes.ResponseMessage));
-        void Log(string str) => Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(str)); */
+        void Log(string str) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.LogMessage) { Payload = str });/* Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(str)); */
     }
 
-    private void ResolveFlasherControllerEvents(object sender, FlasherControllerEventArgs e)
+    private string ReadSerial(Package? x)
     {
-        Action execute = e.EventType switch
+        if (x is null) return string.Empty;
+        try
         {
-            FlasherControllerEventType.ProgressTimerElapsed => ProgressTimerElapsedHandler,
-            FlasherControllerEventType.ProgressTimerReset => ProgressTimerResetHandler,
-            FlasherControllerEventType.SuccessState => SuccessStateHandler,
-            FlasherControllerEventType.FailState => FailStateHandler,
-            FlasherControllerEventType.SignalReady => SignalReadyHandler,
-            FlasherControllerEventType.SignalBusy => SignalBusyHandler,
-            FlasherControllerEventType.LogMessage => delegate () { LogMessageHandler(e); },
-            FlasherControllerEventType.FlasherStateChanged => delegate () { FlasherStateChangedHandler(e); },
-            _ => delegate () { return; },
-        };
-
-        execute.Invoke();
+            var fac = new FactoryCFG(Path.GetDirectoryName(x.PackagePath));
+            fac.ReadFactory();
+            var base34serial = fac.SerialNumber.ToString();
+            return $"{base34serial} ({base34serial.ToInt32()})";
+        }
+        catch (FileNotFoundException)
+        {
+            return string.Empty;
+        }
     }
 
-    private void ProgressTimerElapsedHandler() => Dispatcher.UIThread.Invoke(() => StatusViewModel.Elapsed += TimeSpan.FromSeconds(1));
-    private void ProgressTimerResetHandler() => Dispatcher.UIThread.Invoke(() => StatusViewModel.Elapsed = TimeSpan.Zero);
-    private void SuccessStateHandler() => Dispatcher.UIThread.Invoke(() =>
-    {
-        StatusViewModel.SerialNumber = ReadSerial(Package);
-        StatusViewModel.Good++;
-    });
-    private void FailStateHandler() => Dispatcher.UIThread.Invoke(() => StatusViewModel.Bad++);
-    private void SignalReadyHandler() => Dispatcher.UIThread.Invoke(() => StatusViewModel.StatusColor = Brushes.LightYellow);
-    private void SignalBusyHandler() => Dispatcher.UIThread.Invoke(() => StatusViewModel.StatusColor = Brushes.LightBlue);
-    private void LogMessageHandler(FlasherControllerEventArgs e) => Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(e.Payload as string ?? ""));
-    private void FlasherStateChangedHandler(FlasherControllerEventArgs e) => Dispatcher.UIThread.Invoke(() => IsFlasherRunning = (bool)e.Payload!);
-
-    public void PerformCancel()
-    {
-        cts?.Cancel();
-    }
 }

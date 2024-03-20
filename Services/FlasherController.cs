@@ -28,11 +28,12 @@ public class FlasherController
         if (Cts is null or { IsCancellationRequested: true }) throw new NullReferenceException($"{nameof(Cts)} is null or Cancellation requested");
 
         var opRes = new FlasherResponse();
-        var timer = new Timer(TimeSpan.FromSeconds(1));
-        timer.Elapsed += (_, _) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.ProgressTimerElapsed));
 
         Task.Factory.StartNew(() =>
         {
+            using var timer = new Timer(TimeSpan.FromSeconds(1));
+            timer.Elapsed += (_, _) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.ProgressTimerElapsed));
+            
             if (Package is null)
             {
                 Log($"{nameof(Package)} is null. Terminating.");

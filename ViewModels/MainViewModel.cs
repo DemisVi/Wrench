@@ -27,11 +27,12 @@ using Iot.Device.Rfid;
 
 namespace Wrench.ViewModels;
 
-public class MainViewModel : ViewModelBase
+public class MainViewModel : ViewModelBase, IDisposable
 {
     private Package? package;
     private CancellationTokenSource? cts;
     private bool isFlasherRunning;
+    private bool disposedValue;
     private const string baseFirmwarePrefix = "./base";
     private const int BootUpTimeout = 15,
         ADBSwitchTimeout = 10,
@@ -79,11 +80,18 @@ public class MainViewModel : ViewModelBase
 
     public void PerformFireTool()
     {
+
+        var flasher = Package?.DeviceType switch
+        {
+            DeviceType.SimComFull or DeviceType.SimComRetro or DeviceType.SimComSimple => new Flasher(),
+            _ => null,
+        };
         cts = new CancellationTokenSource();
         var controller = new FlasherController()
         {
             Cts = cts,
             Package = Package,
+            Flasher = flasher,
         };
 
         controller.EventOccurred += ResolveFlasherControllerEvents;
@@ -369,5 +377,36 @@ public class MainViewModel : ViewModelBase
     public void PerformCancel()
     {
         cts?.Cancel();
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects)
+                cts?.Dispose();
+                FireTool.Dispose();
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+            // TODO: set large fields to null
+            disposedValue = true;
+        }
+    }
+
+    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    // ~MainViewModel()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

@@ -21,17 +21,36 @@ public class FlasherController
     public CancellationTokenSource? Cts { get; set; }
     public event FlasherControllerEventHandler? EventOccurred;
     public Package? Package { get; set; }
+    public Flasher? Flasher { get; set; }
 
     public void RunFlasher()
     {
-        Cts = new CancellationTokenSource();
+        if (Cts is null or { IsCancellationRequested: true }) throw new NullReferenceException($"{nameof(Cts)} is null or Cancellation requested");
+
         var opRes = new FlasherResponse();
         var timer = new Timer(TimeSpan.FromSeconds(1));
         timer.Elapsed += (_, _) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.ProgressTimerElapsed));
 
         Task.Factory.StartNew(() =>
         {
-            using Flasher flasher = new();
+            if (Package is null)
+            {
+                Log($"{nameof(Package)} is null. Terminating.");
+                return;
+            }
+
+            using var flasher = Flasher ?? Package?.DeviceType switch
+            {
+                DeviceType.SimComFull or DeviceType.SimComRetro or DeviceType.SimComSimple => new Flasher(),
+                _ => null,
+            };
+
+            if (flasher is null)
+            {
+                Log($"{nameof(flasher)} is null. Terminating");
+                return;
+            }
+
             flasher.Package = Package;
 
             EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
@@ -41,6 +60,9 @@ public class FlasherController
             ExecuteWithLogging(() => flasher.Sleep(4));
             ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Start adb server..." });
             ExecuteWithLogging(() => flasher.Adb("start-server", 6));
+
+            if (Cts.IsCancellationRequested)
+                Log($"Cancellation requested. {nameof(Cts)} Token is {Cts.IsCancellationRequested}");
 
             while (!Cts.IsCancellationRequested)
             {

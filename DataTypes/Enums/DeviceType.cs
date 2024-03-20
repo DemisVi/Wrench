@@ -11,4 +11,5 @@ public enum DeviceType
     SimComSimple = 4,
     TelitRetro = 8,
     TelitSimple = 16,
+    SimComTechno = 32,
 }

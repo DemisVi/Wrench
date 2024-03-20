@@ -103,7 +103,7 @@ public class Flasher : IFlasher, IDisposable
 
     public FlasherResponse AwaitCUSignal(CancellationToken token) => AwaitCUState(GetCUSignal, token);
 
-    internal FlasherResponse AwaitCURelease(CancellationToken token) => AwaitCUState(GetCURelease, token);
+    public FlasherResponse AwaitCURelease(CancellationToken token) => AwaitCUState(GetCURelease, token);
 
     public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token) // ok 
     {
@@ -278,7 +278,7 @@ public class Flasher : IFlasher, IDisposable
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.CUReady + cu.Outputs };
     }
 
-    internal FlasherResponse SignalDone()
+    public FlasherResponse SignalDone()
     {
         try
         {
@@ -291,7 +291,7 @@ public class Flasher : IFlasher, IDisposable
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Done + cu.Outputs };
     }
 
-    internal FlasherResponse SignalBusy()
+    public FlasherResponse SignalBusy()
     {
         try
         {
@@ -304,7 +304,7 @@ public class Flasher : IFlasher, IDisposable
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Busy + cu.Outputs };
     }
 
-    internal FlasherResponse SignalFail()
+    public FlasherResponse SignalFail()
     {
         try
         {

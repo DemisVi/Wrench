@@ -21,7 +21,7 @@ public class FlasherController
     public CancellationTokenSource? Cts { get; set; }
     public event FlasherControllerEventHandler? EventOccurred;
     public Package? Package { get; set; }
-    public Flasher? Flasher { get; set; }
+    public IFlasher? Flasher { get; set; }
 
     public void RunFlasher()
     {

@@ -1,17 +1,28 @@
 using System;
-using Wrench.Models;
+using System.Collections.Generic;
 using System.Threading;
+using Wrench.Models;
 using Wrench.DataTypes;
 
 namespace Wrench.Services;
 
-public interface IFlasher
+public interface IFlasher : IDisposable
 {
+    public Package? Package { get; set; }
+    public Func<string, int, FlasherResponse> Adb { get; }
+    public Func<string, int, FlasherResponse> Fastboot { get; }
+    public string AdbRebootBootloaderCommand { get; }
+    public IEnumerable<KeyValuePair<string, int>> FastbootCommandSequence { get; set; }
+    public string FastbootRebootCommand { get; }
     public FlasherResponse Sleep(int timeoutSeconds);
     public FlasherResponse SignalReady();
+    public FlasherResponse SignalBusy();
+    public FlasherResponse SignalFail();
+    public FlasherResponse SignalDone();
     public FlasherResponse GetCUReady();
     public FlasherResponse AwaitCUReady(CancellationToken token);
     public FlasherResponse AwaitCUSignal(CancellationToken token);
+    public FlasherResponse AwaitCURelease(CancellationToken token);
     public FlasherResponse LockCU();
     public FlasherResponse UnlockCU();
     public FlasherResponse TurnModemPowerOn();

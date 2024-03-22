@@ -24,6 +24,7 @@ using Avalonia;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Wrench.Extensions;
 using Iot.Device.Rfid;
+using System.Device.Gpio;
 
 namespace Wrench.ViewModels;
 
@@ -33,6 +34,7 @@ public class MainViewModel : ViewModelBase, IDisposable
     private CancellationTokenSource? cts;
     private bool isFlasherRunning;
     private bool disposedValue;
+    private FlasherController? controller;
     private const string baseFirmwarePrefix = "./base";
     private const int BootUpTimeout = 15,
         ADBSwitchTimeout = 10,
@@ -88,7 +90,7 @@ public class MainViewModel : ViewModelBase, IDisposable
             _ => null,
         };
         cts = new CancellationTokenSource();
-        var controller = new FlasherController()
+        controller = new FlasherController()
         {
             Cts = cts,
             Package = Package,
@@ -148,6 +150,7 @@ public class MainViewModel : ViewModelBase, IDisposable
                 // TODO: dispose managed state (managed objects)
                 cts?.Dispose();
                 FireTool.Dispose();
+                controller?.Dispose();
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer

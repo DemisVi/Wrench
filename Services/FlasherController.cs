@@ -10,12 +10,19 @@ using Timer = System.Timers.Timer;
 
 namespace Wrench.Services;
 
-public class FlasherController
+public class FlasherController : IDisposable
 {
     private const string baseFirmwarePrefix = "./base";
     private const int BootUpTimeout = 15,
         ADBSwitchTimeout = 10,
         BootloaderRebootTimeout = 40;
+    private bool disposedValue;
+    private Timer timer = new(TimeSpan.FromSeconds(1));
+
+    public FlasherController()
+    {
+        timer.Elapsed += (_, _) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.ProgressTimerElapsed));
+    }
 
     public bool IsFlasherRunning { get; private set; }
     public CancellationTokenSource? Cts { get; set; }
@@ -31,36 +38,27 @@ public class FlasherController
 
         Task.Factory.StartNew(() =>
         {
-            using var timer = new Timer(TimeSpan.FromSeconds(1));
-            timer.Elapsed += (_, _) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.ProgressTimerElapsed));
-            
             if (Package is null)
             {
                 Log($"{nameof(Package)} is null. Terminating.");
                 return;
             }
 
-            using var flasher = Flasher ?? Package?.DeviceType switch
+            if (Flasher is null)
             {
-                DeviceType.SimComFull or DeviceType.SimComRetro or DeviceType.SimComSimple => new Flasher(),
-                _ => null,
-            };
-
-            if (flasher is null)
-            {
-                Log($"{nameof(flasher)} is null. Terminating");
+                Log($"{nameof(Flasher)} is null. Terminating");
                 return;
             }
 
-            flasher.Package = Package;
+            Flasher.Package = Package;
 
             EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
 
             Log("START:");
             Log("-= 4 seconds pause for FTDI =-");
-            ExecuteWithLogging(() => flasher.Sleep(4));
+            ExecuteWithLogging(() => Flasher.Sleep(4));
             ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Start adb server..." });
-            ExecuteWithLogging(() => flasher.Adb("start-server", 6));
+            ExecuteWithLogging(() => Flasher.Adb("start-server", 6));
 
             if (Cts.IsCancellationRequested)
                 Log($"Cancellation requested. {nameof(Cts)} Token is {Cts.IsCancellationRequested}");
@@ -70,55 +68,55 @@ public class FlasherController
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = FlasherMessages.FlashBaseFirmware });
 
                 if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for CU signal..." }) is null
-                    || ExecuteWithLogging(() => flasher.SignalReady()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.SignalReady()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => SignalReady()) is null
-                    || ExecuteWithLogging(() => flasher.AwaitCUReady(Cts.Token)) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.AwaitCUReady(Cts.Token)) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => StartStopwatch()) is null
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Lock CU..." }) is null
-                    || ExecuteWithLogging(() => flasher.SignalBusy()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.SignalBusy()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => SignalBusy()) is null
-                    || ExecuteWithLogging(() => flasher.LockCU()) is not { ResponseType: ResponseType.OK }
-                    || ExecuteWithLogging(() => flasher.Sleep(1)) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.LockCU()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.Sleep(1)) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power on device..." }) is null
-                    || ExecuteWithLogging(() => flasher.TurnModemPowerOn()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.TurnModemPowerOn()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for device..." }) is null
-                    || ExecuteWithLogging(() => flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting device boot up..." }) is null
-                    || ExecuteWithLogging(() => flasher.Sleep(BootUpTimeout)) is not { ResponseType: ResponseType.OK }
+                    || ExecuteWithLogging(() => Flasher.Sleep(BootUpTimeout)) is not { ResponseType: ResponseType.OK }
                     || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check device response..." }) is null
-                    || ExecuteWithLogging(() => flasher.CheckDeviceResponding()) is not { ResponseType: ResponseType.OK })
+                    || ExecuteWithLogging(() => Flasher.CheckDeviceResponding()) is not { ResponseType: ResponseType.OK })
                 {
                     FailState();
                     continue;
                 }
                 else if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check device is ADB..." }) is null
-                         || ExecuteWithLogging(() => flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
+                         || ExecuteWithLogging(() => Flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
                 {
                     if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Turning on ADB interface..." }) is null
-                        || ExecuteWithLogging(() => flasher.TurnOnADBInterface()) is not { ResponseType: ResponseType.OK }
-                        || ExecuteWithLogging(() => flasher.Sleep(ADBSwitchTimeout)) is not { ResponseType: ResponseType.OK }
+                        || ExecuteWithLogging(() => Flasher.TurnOnADBInterface()) is not { ResponseType: ResponseType.OK }
+                        || ExecuteWithLogging(() => Flasher.Sleep(ADBSwitchTimeout)) is not { ResponseType: ResponseType.OK }
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check if ADB is connected..." }) is null
-                        || ExecuteWithLogging(() => flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
+                        || ExecuteWithLogging(() => Flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
                     {
                         FailState();
                         continue;
                     }
                 }
-                ExecuteWithLogging(() => flasher.Sleep(2));
+                ExecuteWithLogging(() => Flasher.Sleep(2));
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Running android batch..." });
-                if (ExecuteWithLogging(() => flasher.Adb(flasher.AdbRebootBootloaderCommand, BootloaderRebootTimeout)) is not { ResponseType: ResponseType.OK })
+                if (ExecuteWithLogging(() => Flasher.Adb(Flasher.AdbRebootBootloaderCommand, BootloaderRebootTimeout)) is not { ResponseType: ResponseType.OK })
                 {
                     FailState();
                     continue;
                 }
-                ExecuteWithLogging(() => flasher.Sleep(2));
+                ExecuteWithLogging(() => Flasher.Sleep(2));
                 if (ExecuteWithLogging(() => ExecuteFastboot()) is not { ResponseType: ResponseType.OK })
                 {
                     FailState();
                     continue;
                 }
-                ExecuteWithLogging(() => flasher.Sleep(2));
-                if (ExecuteWithLogging(() => flasher.Fastboot(flasher.FastbootRebootCommand, 2)) is not { ResponseType: ResponseType.OK })
+                ExecuteWithLogging(() => Flasher.Sleep(2));
+                if (ExecuteWithLogging(() => Flasher.Fastboot(Flasher.FastbootRebootCommand, 2)) is not { ResponseType: ResponseType.OK })
                 {
                     FailState();
                     continue;
@@ -126,21 +124,21 @@ public class FlasherController
                 if (Package is not null and { DeviceType: DeviceType.SimComSimple })
                 {
                     if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for device..." }) is null
-                        || ExecuteWithLogging(() => flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
+                        || ExecuteWithLogging(() => Flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check device is ADB..." }) is null
-                        || ExecuteWithLogging(() => flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
+                        || ExecuteWithLogging(() => Flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
                     {
                         ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = FlasherMessages.EnableADB });
 
                         if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting device boot up..." }) is null
-                            || ExecuteWithLogging(() => flasher.Sleep(BootUpTimeout)) is not { ResponseType: ResponseType.OK }
+                            || ExecuteWithLogging(() => Flasher.Sleep(BootUpTimeout)) is not { ResponseType: ResponseType.OK }
                             || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check device response..." }) is null
-                            || ExecuteWithLogging(() => flasher.CheckDeviceResponding()) is not { ResponseType: ResponseType.OK }
+                            || ExecuteWithLogging(() => Flasher.CheckDeviceResponding()) is not { ResponseType: ResponseType.OK }
                             || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Turning on ADB interface..." }) is null
-                            || ExecuteWithLogging(() => flasher.TurnOnADBInterface()) is not { ResponseType: ResponseType.OK }
-                            || ExecuteWithLogging(() => flasher.Sleep(ADBSwitchTimeout)) is not { ResponseType: ResponseType.OK }
+                            || ExecuteWithLogging(() => Flasher.TurnOnADBInterface()) is not { ResponseType: ResponseType.OK }
+                            || ExecuteWithLogging(() => Flasher.Sleep(ADBSwitchTimeout)) is not { ResponseType: ResponseType.OK }
                             || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check if ADB is connected..." }) is null
-                            || ExecuteWithLogging(() => flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
+                            || ExecuteWithLogging(() => Flasher.CheckADBDevice()) is not { ResponseType: ResponseType.OK })
                         {
                             FailState();
                             continue;
@@ -149,12 +147,12 @@ public class FlasherController
                     ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = FlasherMessages.UploadFactory });
 
                     if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Upload 'factory.cfg'..." }) is null
-                        || ExecuteWithLogging(() => flasher.Sleep(2)) is null
-                        || ExecuteWithLogging(() => flasher.UploadFactoryCFG()) is not { ResponseType: ResponseType.OK }
+                        || ExecuteWithLogging(() => Flasher.Sleep(2)) is null
+                        || ExecuteWithLogging(() => Flasher.UploadFactoryCFG()) is not { ResponseType: ResponseType.OK }
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Update 'factory.cfg'..." }) is null
-                        || ExecuteWithLogging(() => flasher.UpdateCfgSN()) is not { ResponseType: ResponseType.OK }
+                        || ExecuteWithLogging(() => Flasher.UpdateCfgSN()) is not { ResponseType: ResponseType.OK }
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Turning off ADB interface..." }) is null
-                        || ExecuteWithLogging(() => flasher.TurnOffADBInterface()) is not { ResponseType: ResponseType.OK })
+                        || ExecuteWithLogging(() => Flasher.TurnOffADBInterface()) is not { ResponseType: ResponseType.OK })
                     {
                         FailState();
                         continue;
@@ -164,16 +162,16 @@ public class FlasherController
                          || Package is not null and { DeviceType: DeviceType.SimComFull })
                 {
                     if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for device..." }) is null
-                        || ExecuteWithLogging(() => flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
+                        || ExecuteWithLogging(() => Flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check device is ADB..." }) is null
-                        || ExecuteWithLogging(() => flasher.CheckADBDevice()) is { ResponseType: ResponseType.OK })
+                        || ExecuteWithLogging(() => Flasher.CheckADBDevice()) is { ResponseType: ResponseType.OK })
                     {
                         if (ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting device boot up..." }) is null
-                            || ExecuteWithLogging(() => flasher.Sleep(BootUpTimeout)) is not { ResponseType: ResponseType.OK }
+                            || ExecuteWithLogging(() => Flasher.Sleep(BootUpTimeout)) is not { ResponseType: ResponseType.OK }
                             || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Check device response..." }) is null
-                            || ExecuteWithLogging(() => flasher.CheckDeviceResponding()) is not { ResponseType: ResponseType.OK }
+                            || ExecuteWithLogging(() => Flasher.CheckDeviceResponding()) is not { ResponseType: ResponseType.OK }
                             || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Turning off ADB interface..." }) is null
-                            || ExecuteWithLogging(() => flasher.TurnOffADBInterface()) is not { ResponseType: ResponseType.OK })
+                            || ExecuteWithLogging(() => Flasher.TurnOffADBInterface()) is not { ResponseType: ResponseType.OK })
                         {
                             FailState();
                             continue;
@@ -225,27 +223,27 @@ public class FlasherController
 
             void SuccessState()
             {
-                ExecuteWithLogging(() => flasher.TurnModemPowerOff());
-                ExecuteWithLogging(() => flasher.UnlockCU());
+                ExecuteWithLogging(() => Flasher.TurnModemPowerOff());
+                ExecuteWithLogging(() => Flasher.UnlockCU());
                 ExecuteWithLogging(() => StopStopwatch());
                 EventOccurred?.Invoke(this, new(FlasherControllerEventType.SuccessState) { Payload = ReadSerial(Package) });
                 Log("Some success ;]");
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting Contact Unit release..." });
-                ExecuteWithLogging(() => flasher.SignalDone());
-                ExecuteWithLogging(() => flasher.AwaitCURelease(Cts.Token));
+                ExecuteWithLogging(() => Flasher.SignalDone());
+                ExecuteWithLogging(() => Flasher.AwaitCURelease(Cts.Token));
                 ExecuteWithLogging(() => ResetStopwatch());
             }
 
             void FailState()
             {
-                ExecuteWithLogging(() => flasher.TurnModemPowerOff());
-                ExecuteWithLogging(() => flasher.UnlockCU());
+                ExecuteWithLogging(() => Flasher.TurnModemPowerOff());
+                ExecuteWithLogging(() => Flasher.UnlockCU());
                 ExecuteWithLogging(() => StopStopwatch());
                 EventOccurred?.Invoke(this, new(FlasherControllerEventType.FailState));
                 Log("FAIL!");
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting Contact Unit release..." });
-                ExecuteWithLogging(() => flasher.SignalFail());
-                ExecuteWithLogging(() => flasher.AwaitCURelease(Cts!.Token));
+                ExecuteWithLogging(() => Flasher.SignalFail());
+                ExecuteWithLogging(() => Flasher.AwaitCURelease(Cts!.Token));
                 ExecuteWithLogging(() => ResetStopwatch());
 
             }
@@ -264,15 +262,16 @@ public class FlasherController
 
             FlasherResponse ExecuteFastboot()
             {
-                foreach (var command in flasher.FastbootCommandSequence)
+                foreach (var command in Flasher.FastbootCommandSequence)
                 {
-                    if (ExecuteWithLogging(() => flasher.Fastboot(command.Key, command.Value)) is not { ResponseType: ResponseType.OK })
+                    if (ExecuteWithLogging(() => Flasher.Fastboot(command.Key, command.Value)) is not { ResponseType: ResponseType.OK })
                         return new(ResponseType.Fail) { ResponseMessage = command.Key };
                 }
-                return new(ResponseType.OK) { ResponseMessage = nameof(flasher.FastbootCommandSequence) };
+                return new(ResponseType.OK) { ResponseMessage = nameof(Flasher.FastbootCommandSequence) };
             }
 
             EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false }); // Dispatcher.UIThread.Invoke(() => IsFlasherRunning = false);
+            Flasher.Dispose();
         },
             Cts.Token);
 
@@ -304,4 +303,35 @@ public class FlasherController
         }
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects)
+                Flasher?.Dispose();
+                timer.Dispose();
+                Cts?.Dispose();
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+            // TODO: set large fields to null
+            disposedValue = true;
+        }
+    }
+
+    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+    // ~FlasherController()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }

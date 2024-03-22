@@ -14,6 +14,7 @@ public class ContactUnit : IContactUnit, IDisposable
     private GpioOutputs _outputs;
     private GpioInputs _inputs;
     private Ftx232HDevice _cuFtDevice;
+    private readonly GpioController gpio;
     private FtSerialPort _cuSerialPort;
     private GpioPin _powerPin;
     private GpioPin _cl15Pin;
@@ -41,7 +42,7 @@ public class ContactUnit : IContactUnit, IDisposable
     {
         _cuSerialPort = cuSerialPort;
         _cuFtDevice = ftDevice;
-        using var gpio = _cuFtDevice.CreateGpioController();
+        gpio = _cuFtDevice.CreateGpioController();
         _powerPin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS0"), PinMode.Output, PinValue.High);
         _cl15Pin = gpio.OpenPin(Ft2232HDevice.GetPinNumberFromString("ADBUS2"), PinMode.Output, PinValue.High);
         _cuSerialPort.Open();
@@ -131,6 +132,7 @@ public class ContactUnit : IContactUnit, IDisposable
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects)
+                gpio.Dispose();
                 _cuSerialPort.Dispose();
                 _cuFtDevice.Dispose();
             }

@@ -16,7 +16,7 @@
     },
     {
         "Name":"SimCom Технолабс",
-        "SubfolderName": "./SimCom_Techno",
+        "SubfolderName": "./SimCom_techno",
         "DeviceType": 32
     }
 ]

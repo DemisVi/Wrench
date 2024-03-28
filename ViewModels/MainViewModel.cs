@@ -83,9 +83,9 @@ public class MainViewModel : ViewModelBase, IDisposable
     public void PerformFireTool()
     {
 
-        var flasher = Package?.DeviceType switch
+        IFlasher? flasher = Package?.DeviceType switch
         {
-            DeviceType.SimComFull or DeviceType.SimComRetro or DeviceType.SimComSimple => new Flasher(),
+            DeviceType.SimComFull or DeviceType.SimComRetro or DeviceType.SimComSimple => new SimComFlasher(),
             DeviceType.SimComTechno => new TechnolabsFlasher(),
             _ => null,
         };
@@ -172,8 +172,4 @@ public class MainViewModel : ViewModelBase, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-}
-
-internal class TechnolabsFlasher : Flasher
-{
 }

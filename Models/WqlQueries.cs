@@ -77,6 +77,13 @@ public static class WqlQueries
         "TargetInstance ISA 'Win32_PnPEntity' " +
         "AND TargetInstance.ClassGuid = '{36fc9e60-c465-11cf-8056-444553540000}'");
         
+    public static WqlEventQuery CreationSimcomWTPTP = new(
+        "SELECT * FROM __InstanceCreationEvent "
+        + "WITHIN 1 WHERE "
+        + "TargetInstance ISA 'Win32_PnPEntity' "
+        + "AND (TargetInstance.Caption LIKE '%WTP_WinUSB%' "
+        + "OR TargetInstance.DeviceID LIKE '%VID_2ECC&PID_3002%')");
+
 
 
 #pragma warning restore CA1416

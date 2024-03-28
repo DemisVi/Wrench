@@ -15,27 +15,18 @@ using System.IO;
 
 namespace Wrench.Services;
 
-public class Flasher : IFlasher, IDisposable
+public class TechnolabsFlasher : IFlasher, IDisposable
 {
     private bool disposedValue;
     private readonly ContactUnit cu;
-    private readonly Adb adb;
-    private readonly Fastboot fastboot;
     private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Down,
         deviceCUSignalState = GpioInputs.Lodg,
         deviceCUReleaseState = GpioInputs.Pn1_Down;
-    private const string adbOn = "AT+CUSBADB=1,1",
-        adbOff = "AT+CUSBADB=0,1",
-        factory = "factory.cfg",
-        adbPushFormat = "push \"{0}\" /data/",
-        adbSync = "shell sync",
-        adbKill = "kill-server", 
-        adbStart = "start-server";
 
     private string workDir = string.Empty;
     private Package? package;
 
-    public Flasher()
+    public TechnolabsFlasher()
     {
         var ftDevice = new Ft2232HDevice(
             Ftx232HDevice.GetFtx232H().First(
@@ -43,8 +34,6 @@ public class Flasher : IFlasher, IDisposable
         var ftPortName = FtSerialPort.GetPortNames().First();
         var ftSerialPort = new FtSerialPort(ftPortName);
 
-        adb = new Adb();
-        fastboot = new Fastboot();
         cu = new ContactUnit(ftSerialPort, ftDevice);
     }
 
@@ -54,8 +43,6 @@ public class Flasher : IFlasher, IDisposable
         private set
         {
             workDir = value;
-            adb.WorkingDir = value;
-            fastboot.WorkingDir = value;
         }
     }
     public Package? Package
@@ -67,31 +54,17 @@ public class Flasher : IFlasher, IDisposable
             WorkingDir = value?.PackagePath ?? string.Empty;
         }
     }
-    public string AdbRebootBootloaderCommand { get; } = "reboot bootloader";
-    public IEnumerable<KeyValuePair<string, int>> FastbootCommandSequence { get; set; } = new KeyValuePair<string, int>[]
-    {
-        new("flash aboot appsboot.mbn", 2),
-        new("flash rpm rpm.mbn", 2),
-        new("flash sbl sbl1.mbn", 2),
-        new("flash tz tz.mbn", 2),
-        new("flash modem modem.img", 15),
-        new("flash boot boot.img", 3),
-        new("flash system system.img", 18),
-        new("flash recovery  recovery.img", 3),
-        new("flash recoveryfs recoveryfs.img", 4),
-    };
-    public string FastbootRebootCommand { get; } = "reboot";
     public int DeviceWaitTime { get; set; } = 20;
-    public Func<string, int, FlasherResponse> Adb => delegate (string command, int timeout)
-    {
-        var res = adb.Run(command, timeout);
-        return new((ResponseType)res) { ResponseMessage = $"Adb {command}\n\tStdOut: {adb.LastStdOut}\n\tStdErr: {adb.LastStdErr}" };
-    };
-    public Func<string, int, FlasherResponse> Fastboot => delegate (string command, int timeout)
-    {
-        var res = fastboot.Run(command, timeout);
-        return new((ResponseType)res) { ResponseMessage = $"Fastboot {command}\n\tStdOut: {fastboot.LastStdOut}\n\tStdErr: {fastboot.LastStdErr}" };
-    };
+
+    public Func<string, int, FlasherResponse> Adb => throw new NotImplementedException();
+
+    public Func<string, int, FlasherResponse> Fastboot => throw new NotImplementedException();
+
+    public string AdbRebootBootloaderCommand => throw new NotImplementedException();
+
+    public IEnumerable<KeyValuePair<string, int>> FastbootCommandSequence { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    public string FastbootRebootCommand => throw new NotImplementedException();
 
     public FlasherResponse Sleep(int timeoutSeconds) // ok 
     {
@@ -104,8 +77,8 @@ public class Flasher : IFlasher, IDisposable
     public FlasherResponse AwaitCUSignal(CancellationToken token) => AwaitCUState(GetCUSignal, token);
 
     public FlasherResponse AwaitCURelease(CancellationToken token) => AwaitCUState(GetCURelease, token);
-
-    public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token) // ok 
+    
+    public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token) // ok
     {
         try
         {
@@ -138,7 +111,7 @@ public class Flasher : IFlasher, IDisposable
             if (ins == inputs)
                 return new FlasherResponse(ResponseType.OK)
                 {
-                    ResponseMessage = FlasherMessages.ContactUnitState + ins.ToString()
+        ResponseMessage = FlasherMessages.ContactUnitState + ins.ToString()
                 };
             else
                 return new FlasherResponse(ResponseType.Fail)
@@ -153,7 +126,7 @@ public class Flasher : IFlasher, IDisposable
         }
     }
 
-    public FlasherResponse AwaitDeviceAttach() // ok 
+    public FlasherResponse AwaitDeviceAttach()
     {
 #pragma warning disable CA1416
 
@@ -184,54 +157,19 @@ public class Flasher : IFlasher, IDisposable
 
     }
 
-    public FlasherResponse CheckDeviceResponding() // ok 
+    public FlasherResponse CheckDeviceResponding()
     {
-        var port = ModemPort.GetModemATPortNames().FirstOrDefault();
-        if (string.IsNullOrEmpty(port)) return new FlasherResponse(ResponseType.Fail) { ResponseMessage = FlasherMessages.ModemPortNotFound, };
-
-        using var modemPort = new ModemPort(port);
-        modemPort.Open();
-        modemPort.DiscardInBuffer();
-        modemPort.WriteLine("AT");
-        Thread.Sleep(200);
-        var response = modemPort.ReadExisting().Replace('\n', ' ').Replace('\r', ' ');
-
-        modemPort.Dispose();
-
-        if (!response.Contains("OK", StringComparison.OrdinalIgnoreCase))
-            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = response };
-        else
-            return new FlasherResponse(ResponseType.OK) { ResponseMessage = response };
+        throw new NotImplementedException();
     }
 
-    public FlasherResponse CheckADBDevice() // ok 
+    public FlasherResponse CheckADBDevice()
     {
-#pragma warning disable CA1416
-
-        using var searcher = new ManagementObjectSearcher(WqlQueries.ObjectAndroidDevice);
-
-        try
-        {
-            var res = searcher.Get();
-            Thread.Sleep(1000);
-            if (res is not null and { Count: > 0 })
-            {
-                var text = (string?)res.Cast<ManagementObject>()?.First()["Caption"];
-                return new FlasherResponse() { ResponseMessage = text, ResponseType = ResponseType.OK };
-            }
-        }
-        catch (Exception ex)
-        {
-            return new FlasherResponse(ex);
-        }
-#pragma warning restore CA1416
-
-        return new FlasherResponse(ResponseType.Fail) { ResponseMessage = FlasherMessages.DeviceNotFound };
+        throw new NotImplementedException();
     }
 
     public FlasherResponse ExecuteFastbootBatch()
     {
-        return new(ResponseType.Info) { ResponseMessage = "TEST MODE", };
+        throw new NotImplementedException();
     }
 
     public FlasherResponse FlasherState()
@@ -283,10 +221,10 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             cu.LEDGreen();
-        }
-        catch (Exception ex)
-        {
-            return new FlasherResponse(ex);
+    }
+catch (Exception ex)
+    {
+        return new FlasherResponse(ex);
         }
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Done + cu.Outputs };
     }
@@ -296,10 +234,10 @@ public class Flasher : IFlasher, IDisposable
         try
         {
             cu.LEDBlue();
-        }
-        catch (Exception ex)
-        {
-            return new FlasherResponse(ex);
+    }
+catch (Exception ex)
+    {
+        return new FlasherResponse(ex);
         }
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Busy + cu.Outputs };
     }
@@ -317,7 +255,7 @@ public class Flasher : IFlasher, IDisposable
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Fail + cu.Outputs };
     }
 
-    public FlasherResponse TurnModemPowerOff() // ok 
+public FlasherResponse TurnModemPowerOff() // ok 
     {
         try
         {
@@ -345,79 +283,24 @@ public class Flasher : IFlasher, IDisposable
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.PowerOn };
     }
 
-    public FlasherResponse TurnOffADBInterface() => SwitchADB(adbOff);
-
-    public FlasherResponse TurnOnADBInterface() => SwitchADB(adbOn);
-    protected FlasherResponse SwitchADB(string req) // Piece of shit
+    public FlasherResponse TurnOffADBInterface()
     {
-        var portName = ModemPort.GetModemATPortNames().FirstOrDefault();
+        throw new NotImplementedException();
+    }
 
-        if (portName is null or { Length: <= 0 })
-            return new FlasherResponse(ResponseType.Fail) { ResponseMessage = FlasherMessages.ModemPortNotFound };
-
-        var port = new ModemPort(portName);
-
-        try
-        {
-            port.Open();
-            Thread.Sleep(100);
-            port.WriteLine(req);
-
-            return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.CantReadAnswer };
-        }
-        catch (Exception ex)
-        {
-            return new FlasherResponse(ex);
-        }
-        finally
-        {
-            port.Close();
-        }
-
+    public FlasherResponse TurnOnADBInterface()
+    {
+        throw new NotImplementedException();
     }
 
     public FlasherResponse UpdateCfgSN()
     {
-        var fac = GetFactoryPath();
-
-        if (File.Exists(fac))
-        {
-            try
-            {
-                var factory = new FactoryCFG(Path.GetDirectoryName(fac));
-                factory.UpdateFactory();
-            }
-            catch (Exception ex)
-            {
-                return new(ResponseType.Fail) { ResponseMessage = ex.Message };
-            }
-            return new(ResponseType.OK) { ResponseMessage = FlasherMessages.FactoryUpdated };
-        }
-        else
-            return new(ResponseType.Fail) { ResponseMessage = FlasherMessages.FactoryDoesntExist };
+        throw new NotImplementedException();
     }
 
     public FlasherResponse UploadFactoryCFG()
     {
-
-        var fac = GetFactoryPath();
-
-        if (File.Exists(fac))
-        {
-            var res = Adb(string.Format(adbPushFormat, fac), 1);
-            Adb(adbSync, 5);
-            return res;
-        }
-        else
-            return new(ResponseType.Fail) { ResponseMessage = string.Format(FlasherMessages.FileNotFoundFormat, fac) };
-    }
-
-    protected string GetFactoryPath()
-    {
-        string path = string.Empty;
-        if (Package is not null)
-            path = Path.GetDirectoryName(Package.PackagePath)!;
-        return Path.Combine(path, factory);
+        throw new NotImplementedException();
     }
 
     protected virtual void Dispose(bool disposing)
@@ -431,7 +314,6 @@ public class Flasher : IFlasher, IDisposable
                 cu.Dispose();
             }
 
-            Adb(adbKill, 1);
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer
             // TODO: set large fields to null
             disposedValue = true;
@@ -439,11 +321,11 @@ public class Flasher : IFlasher, IDisposable
     }
 
     // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    ~Flasher()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: false);
-    }
+    // ~TechnolabsFlasher()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
 
     public void Dispose()
     {

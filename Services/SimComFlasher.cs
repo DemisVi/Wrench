@@ -439,11 +439,11 @@ public class SimComFlasher : IFlasher, IDisposable
     }
 
     // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-    ~SimComFlasher()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: false);
-    }
+    // ~SimComFlasher()
+    // {
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+    //     Dispose(disposing: false);
+    // }
 
     public void Dispose()
     {

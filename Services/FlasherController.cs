@@ -7,6 +7,8 @@ using Wrench.Models;
 using Wrench.Extensions;
 
 using Timer = System.Timers.Timer;
+using Microsoft.VisualBasic;
+using System.Linq;
 
 namespace Wrench.Services;
 
@@ -16,6 +18,7 @@ public class FlasherController : IDisposable
     private const int BootUpTimeout = 15,
         ADBSwitchTimeout = 10,
         BootloaderRebootTimeout = 40;
+    private const int SWDConsoleTimeout = 60;
     private bool disposedValue;
     private Timer timer = new(TimeSpan.FromSeconds(1));
 
@@ -286,6 +289,20 @@ public class FlasherController : IDisposable
                 Log("-= 4 seconds pause for FTDI =-");
                 ExecuteWithLogging(() => Flasher.Sleep(4));
 
+                string file;
+
+                try
+                {
+                    file = Directory.EnumerateFiles(Package.PackagePath, "*H_Nor.blf").First();
+                }
+                catch (Exception ex)
+                {
+                    Log(ex.Message);
+                    return;
+                }
+
+                var swdconsoleCommand = string.Join(" ", "-f", file);
+
                 if (Cts.IsCancellationRequested)
                     Log($"Cancellation requested. {nameof(Cts)} Token is {Cts.IsCancellationRequested}");
 
@@ -306,7 +323,9 @@ public class FlasherController : IDisposable
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Power on device..." }) is null
                         || ExecuteWithLogging(() => Flasher.TurnModemPowerOn()) is not { ResponseType: ResponseType.OK }
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for device..." }) is null
-                        || ExecuteWithLogging(() => Flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK })
+                        || ExecuteWithLogging(() => Flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
+                        || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Writing to device..." }) is null
+                        || ExecuteWithLogging(() => Flasher.SWDConsole(swdconsoleCommand, SWDConsoleTimeout, Log)) is not { ResponseType: ResponseType.OK })
                     {
                         FailState();
                         continue;
@@ -397,7 +416,7 @@ public class FlasherController : IDisposable
                 Flasher.Dispose();
             }
             ,
-            _ => delegate () { }
+            _ => Task.CompletedTask.Wait
             ,
         },
                 Cts.Token);

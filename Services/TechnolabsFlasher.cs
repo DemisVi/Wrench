@@ -19,6 +19,7 @@ public class TechnolabsFlasher : IFlasher, IDisposable
 {
     private bool disposedValue;
     private readonly ContactUnit cu;
+    private readonly SWDConsole swdconsole;
     private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Down,
         deviceCUSignalState = GpioInputs.Lodg,
         deviceCUReleaseState = GpioInputs.Pn1_Down;
@@ -34,6 +35,8 @@ public class TechnolabsFlasher : IFlasher, IDisposable
         var ftPortName = FtSerialPort.GetPortNames().First();
         var ftSerialPort = new FtSerialPort(ftPortName);
 
+        swdconsole = new SWDConsole();
+
         cu = new ContactUnit(ftSerialPort, ftDevice);
     }
 
@@ -42,6 +45,7 @@ public class TechnolabsFlasher : IFlasher, IDisposable
         get { return workDir; }
         private set
         {
+            swdconsole.WorkingDir = value;
             workDir = value;
         }
     }
@@ -54,8 +58,14 @@ public class TechnolabsFlasher : IFlasher, IDisposable
             WorkingDir = value?.PackagePath ?? string.Empty;
         }
     }
-    public int DeviceWaitTime { get; set; } = 20;
+    public int DeviceWaitTime { get; set; } = 111;
 
+    public Func<string, int, Action<string>?, FlasherResponse> SWDConsole => delegate (string command, int timeout, Action<string>? log)
+    {
+        swdconsole.Log ??= log;
+        var res = swdconsole.Run(command, timeout);
+        return new((ResponseType)res) { ResponseMessage = $"SWDConsole {command}\n\tStdOut: {swdconsole.LastStdOut}\n\tStdErr: {swdconsole.LastStdErr}" };
+    };
     public Func<string, int, FlasherResponse> Adb => throw new NotImplementedException();
 
     public Func<string, int, FlasherResponse> Fastboot => throw new NotImplementedException();

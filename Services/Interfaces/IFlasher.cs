@@ -11,6 +11,7 @@ public interface IFlasher : IDisposable
     public Package? Package { get; set; }
     public Func<string, int, FlasherResponse> Adb { get; }
     public Func<string, int, FlasherResponse> Fastboot { get; }
+    public Func<string, int, Action<string>?, FlasherResponse> SWDConsole { get; }
     public string AdbRebootBootloaderCommand { get; }
     public IEnumerable<KeyValuePair<string, int>> FastbootCommandSequence { get; set; }
     public string FastbootRebootCommand { get; }

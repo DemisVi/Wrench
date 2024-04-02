@@ -3,8 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Avalonia.Logging;
+using Iot.Device.Rfid;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
 
 namespace Wrench.Services;
@@ -13,13 +16,19 @@ public class SWDConsole : Tool
 {
     private IEnumerable<string> outputMessageFilter = new string[] {
         "successfully",
-        "USB device",
+        "failed",
+        "Enter into Fbf package",
+        "Add an WTPTP device",
+        // "USB device",
         "file name",
     };
+    private string PercentageString { get; } = "percentage";
     private const int StdoutReadTimeout = 1000;
     private int errorExitCode = -1;
+    private string progressZero = "0";
     public override string ToolPath { get; protected set; } = "SWDConsole";
     public Action<string>? Log { get; set; }
+    public Action<int>? OnProgressChanged { get; set; }
     public override int Run(string command = "", int timeout = 2)
     {
         using var process = new Process()
@@ -36,7 +45,8 @@ public class SWDConsole : Tool
         };
 
         process.OutputDataReceived += StdOutDataReceivedFilterHandler;
-        
+        // process.OutputDataReceived += (_, e) => System.Console.WriteLine(DateTime.Now.ToString("T") + e.Data);
+
         try
         {
             process.Start();
@@ -44,8 +54,10 @@ public class SWDConsole : Tool
             process.WaitForExit(TimeSpan.FromSeconds(timeout));
 
             Thread.Sleep(StdoutReadTimeout);
-            
+
             process.CancelOutputRead();
+
+            ProgressChanged(progressZero);
 
             if (!process.HasExited) process.Kill();
 
@@ -71,5 +83,17 @@ public class SWDConsole : Tool
         foreach (var i in outputMessageFilter)
             if (e.Data is not null && e.Data.Contains(i))
                 Log?.Invoke(e.Data);
+
+        if (e.Data is not null && e.Data.Contains(PercentageString)) ProgressChanged(e.Data);
+    }
+
+    private void ProgressChanged(string processOutput)
+    {
+        if (OnProgressChanged is not null && int.TryParse(
+                processOutput.Split(
+                    " ",
+                    StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries).LastOrDefault(), out var progress))
+            OnProgressChanged.Invoke(progress);
     }
 }

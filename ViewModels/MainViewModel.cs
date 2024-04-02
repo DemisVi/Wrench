@@ -35,6 +35,7 @@ public class MainViewModel : ViewModelBase, IDisposable
     private bool isFlasherRunning;
     private bool disposedValue;
     private FlasherController? controller;
+    private int flasherProgress;
     private const string baseFirmwarePrefix = "./base";
     private const int BootUpTimeout = 15,
         ADBSwitchTimeout = 10,
@@ -46,8 +47,7 @@ public class MainViewModel : ViewModelBase, IDisposable
     public LogViewModel LogViewModel { get; set; } = new();
     public ReactiveCommand<Unit, Unit> FireTool { get; set; }
     public Package? Package { get => package; set => this.RaiseAndSetIfChanged(ref package, value); }
-
-
+    public int FlasherProgress { get => flasherProgress; private set => this.RaiseAndSetIfChanged(ref flasherProgress, value); }
 
     public MainViewModel()
     {
@@ -62,6 +62,7 @@ public class MainViewModel : ViewModelBase, IDisposable
                                                                              (x, y) => (Package?)x is not null && y is false));
 #endif
         this.WhenAnyValue(x => x.Package).Subscribe(x => StatusViewModel.SerialNumber = ReadSerial(x));
+        this.WhenAnyValue(x => x.FlasherProgress).Subscribe(x => LogViewModel.FlasherProgress = x);
     }
 
     private string ReadSerial(Package? x)
@@ -112,12 +113,10 @@ public class MainViewModel : ViewModelBase, IDisposable
             FlasherControllerEventType.FailState => FailStateHandler,
             FlasherControllerEventType.SignalReady => SignalReadyHandler,
             FlasherControllerEventType.SignalBusy => SignalBusyHandler,
-            FlasherControllerEventType.LogMessage => delegate () { LogMessageHandler(e); }
-            ,
-            FlasherControllerEventType.FlasherStateChanged => delegate () { FlasherStateChangedHandler(e); }
-            ,
-            _ => delegate () { return; }
-            ,
+            FlasherControllerEventType.LogMessage => delegate () { LogMessageHandler(e); },
+            FlasherControllerEventType.FlasherStateChanged => delegate () { FlasherStateChangedHandler(e); },
+            FlasherControllerEventType.FlasherProgressChanged => delegate () { FlasherProgressChanged(e); },
+            _ => delegate () { return; },
         };
 
         execute.Invoke();
@@ -135,6 +134,11 @@ public class MainViewModel : ViewModelBase, IDisposable
     private void SignalBusyHandler() => Dispatcher.UIThread.Invoke(() => StatusViewModel.StatusColor = Brushes.LightBlue);
     private void LogMessageHandler(FlasherControllerEventArgs e) => Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(e.Payload as string ?? ""));
     private void FlasherStateChangedHandler(FlasherControllerEventArgs e) => Dispatcher.UIThread.Invoke(() => IsFlasherRunning = (bool)e.Payload!);
+    private void FlasherProgressChanged(FlasherControllerEventArgs e)
+    {
+        System.Console.WriteLine(e.Payload);
+        Dispatcher.UIThread.Invoke(() => FlasherProgress = (int)e.Payload!);
+    }
 
     public void PerformCancel()
     {

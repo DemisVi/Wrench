@@ -12,5 +12,6 @@ public enum FlasherControllerEventType
     SignalReady,
     SignalBusy,
     LogMessage,
-    FlasherStateChanged
+    FlasherStateChanged,
+    FlasherProgressChanged
 }

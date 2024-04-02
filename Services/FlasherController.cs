@@ -51,15 +51,19 @@ public class FlasherController : IDisposable
             return;
         }
 
+        Flasher.Package = Package;
+
+        EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
+
         Task.Factory.StartNew(Flasher switch
         {
-            SimComFlasher => delegate ()
+            SimComFlasher f => delegate ()
             {
-                Flasher.Package = Package;
+                // Flasher.Package = Package;
 
-                EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
+                // EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
 
-                Log("START:");
+                Log($"START: {f.GetType().Name}");
                 Log("-= 4 seconds pause for FTDI =-");
                 ExecuteWithLogging(() => Flasher.Sleep(4));
                 ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Start adb server..." });
@@ -279,21 +283,23 @@ public class FlasherController : IDisposable
                 Flasher.Dispose();
             }
             ,
-            TechnolabsFlasher => delegate ()
+            TechnolabsFlasher f => delegate ()
             {
-                Flasher.Package = Package;
+                // Flasher.Package = Package;
 
-                EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
+                // EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
 
-                Log("START:");
+                Log($"START: {f.GetType().Name}");
                 Log("-= 4 seconds pause for FTDI =-");
                 ExecuteWithLogging(() => Flasher.Sleep(4));
 
                 string file;
+                string file2;
 
                 try
                 {
                     file = Directory.EnumerateFiles(Package.PackagePath, "*H_Nor.blf").First();
+                    file2 = Directory.EnumerateFiles(Package.PackagePath, "*.zip").First();
                 }
                 catch (Exception ex)
                 {
@@ -302,6 +308,7 @@ public class FlasherController : IDisposable
                 }
 
                 var swdconsoleCommand = string.Join(" ", "-f", file);
+                var swdconsoleCommand2 = string.Join(" ", "-d", file2);
 
                 if (Cts.IsCancellationRequested)
                     Log($"Cancellation requested. {nameof(Cts)} Token is {Cts.IsCancellationRequested}");
@@ -325,7 +332,7 @@ public class FlasherController : IDisposable
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Waiting for device..." }) is null
                         || ExecuteWithLogging(() => Flasher.AwaitDeviceAttach()) is not { ResponseType: ResponseType.OK }
                         || ExecuteWithLogging(() => new(ResponseType.Info) { ResponseMessage = "Writing to device..." }) is null
-                        || ExecuteWithLogging(() => Flasher.SWDConsole(swdconsoleCommand, SWDConsoleTimeout, Log)) is not { ResponseType: ResponseType.OK })
+                        || ExecuteWithLogging(() => Flasher.SWDConsole(swdconsoleCommand2, SWDConsoleTimeout, Log, Progress)) is not { ResponseType: ResponseType.OK })
                     {
                         FailState();
                         continue;
@@ -431,6 +438,7 @@ public class FlasherController : IDisposable
 
         void Report(TimeSpan span) => Log(string.Join(": ", DateTime.Now.ToString("T"), $"[{span:ss':'fff}]", opRes.ResponseType, opRes.ResponseMessage));
         void Log(string str) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.LogMessage) { Payload = str });/* Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(str)); */
+        void Progress(int progress) => EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherProgressChanged) { Payload = progress });
     }
 
     private string ReadSerial(Package? x)

@@ -58,11 +58,12 @@ public class TechnolabsFlasher : IFlasher, IDisposable
             WorkingDir = value?.PackagePath ?? string.Empty;
         }
     }
-    public int DeviceWaitTime { get; set; } = 111;
+    public int DeviceWaitTime { get; set; } = 10;
 
-    public Func<string, int, Action<string>?, FlasherResponse> SWDConsole => delegate (string command, int timeout, Action<string>? log)
+    public Func<string, int, Action<string>?, Action<int>?, FlasherResponse> SWDConsole => delegate (string command, int timeout, Action<string>? log, Action<int>? progress)
     {
         swdconsole.Log ??= log;
+        swdconsole.OnProgressChanged ??= progress;
         var res = swdconsole.Run(command, timeout);
         return new((ResponseType)res) { ResponseMessage = $"SWDConsole {command}\n\tStdOut: {swdconsole.LastStdOut}\n\tStdErr: {swdconsole.LastStdErr}" };
     };
@@ -140,7 +141,7 @@ public class TechnolabsFlasher : IFlasher, IDisposable
     {
 #pragma warning disable CA1416
 
-        using var watcher = new ManagementEventWatcher(WqlQueries.CreationSimCom);
+        using var watcher = new ManagementEventWatcher(WqlQueries.CreationSimcomWTPTP);
         watcher.Options.Timeout = TimeSpan.FromSeconds(DeviceWaitTime);
         try
         {

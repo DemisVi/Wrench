@@ -93,7 +93,7 @@ public class SimComFlasher : IFlasher, IDisposable
         return new((ResponseType)res) { ResponseMessage = $"Fastboot {command}\n\tStdOut: {fastboot.LastStdOut}\n\tStdErr: {fastboot.LastStdErr}" };
     };
 
-    public Func<string, int, Action<string>?, FlasherResponse> SWDConsole => throw new NotImplementedException();
+    public Func<string, int, Action<string>?, Action<int>?, FlasherResponse> SWDConsole => throw new NotImplementedException();
 
     public FlasherResponse Sleep(int timeoutSeconds) // ok 
     {

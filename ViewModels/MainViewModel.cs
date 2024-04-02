@@ -134,11 +134,7 @@ public class MainViewModel : ViewModelBase, IDisposable
     private void SignalBusyHandler() => Dispatcher.UIThread.Invoke(() => StatusViewModel.StatusColor = Brushes.LightBlue);
     private void LogMessageHandler(FlasherControllerEventArgs e) => Dispatcher.UIThread.Invoke(() => LogViewModel.Log.Add(e.Payload as string ?? ""));
     private void FlasherStateChangedHandler(FlasherControllerEventArgs e) => Dispatcher.UIThread.Invoke(() => IsFlasherRunning = (bool)e.Payload!);
-    private void FlasherProgressChanged(FlasherControllerEventArgs e)
-    {
-        System.Console.WriteLine(e.Payload);
-        Dispatcher.UIThread.Invoke(() => FlasherProgress = (int)e.Payload!);
-    }
+    private void FlasherProgressChanged(FlasherControllerEventArgs e) => Dispatcher.UIThread.Invoke(() => FlasherProgress = (int)e.Payload!);
 
     public void PerformCancel()
     {

@@ -1,14 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using Avalonia.Logging;
-using Iot.Device.Rfid;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Extensions.Logging;
 
 namespace Wrench.Services;
 

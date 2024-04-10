@@ -23,7 +23,6 @@ public interface IFlasher : IDisposable
     public FlasherResponse SignalDone();
     public FlasherResponse GetCUReady();
     public FlasherResponse AwaitCUReady(CancellationToken token);
-    public FlasherResponse AwaitCUSignal(CancellationToken token);
     public FlasherResponse AwaitCURelease(CancellationToken token);
     public FlasherResponse LockCU();
     public FlasherResponse UnlockCU();
@@ -38,7 +37,6 @@ public interface IFlasher : IDisposable
     public FlasherResponse UploadFactoryCFG();
     public FlasherResponse FlasherState();
     public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token);
-    public FlasherResponse GetCUSignal();
     public FlasherResponse GetCURelease();
     public FlasherResponse GetCUState(GpioInputs inputs);
     public FlasherResponse CheckADBDevice();

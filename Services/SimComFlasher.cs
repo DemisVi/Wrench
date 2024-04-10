@@ -21,8 +21,7 @@ public class SimComFlasher : IFlasher, IDisposable
     private readonly ContactUnit cu;
     private readonly Adb adb;
     private readonly Fastboot fastboot;
-    private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Down,
-        deviceCUSignalState = GpioInputs.Lodg,
+    private readonly GpioInputs deviceCUReadyState = Constants.deviceCUReadyState,
         deviceCUReleaseState = GpioInputs.Pn1_Down;
     private const string adbOn = "AT+CUSBADB=1,1",
         adbOff = "AT+CUSBADB=0,1",
@@ -103,8 +102,6 @@ public class SimComFlasher : IFlasher, IDisposable
 
     public FlasherResponse AwaitCUReady(CancellationToken token) => AwaitCUState(GetCUReady, token);
 
-    public FlasherResponse AwaitCUSignal(CancellationToken token) => AwaitCUState(GetCUSignal, token);
-
     public FlasherResponse AwaitCURelease(CancellationToken token) => AwaitCUState(GetCURelease, token);
 
     public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token) // ok 
@@ -127,8 +124,6 @@ public class SimComFlasher : IFlasher, IDisposable
     }
 
     public FlasherResponse GetCUReady() => GetCUState(deviceCUReadyState);
-
-    public FlasherResponse GetCUSignal() => GetCUState(deviceCUSignalState);
 
     public FlasherResponse GetCURelease() => GetCUState(deviceCUReleaseState);
 

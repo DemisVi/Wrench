@@ -20,10 +20,8 @@ public class TechnolabsFlasher : IFlasher, IDisposable
     private bool disposedValue;
     private readonly ContactUnit cu;
     private readonly SWDConsole swdconsole;
-    private readonly GpioInputs deviceCUReadyState = GpioInputs.Lodg | GpioInputs.Device | GpioInputs.Pn1_Down,
-        deviceCUSignalState = GpioInputs.Lodg,
+    private readonly GpioInputs deviceCUReadyState = Constants.deviceCUReadyState,
         deviceCUReleaseState = GpioInputs.Pn1_Down;
-
     private string workDir = string.Empty;
     private Package? package;
 
@@ -85,10 +83,8 @@ public class TechnolabsFlasher : IFlasher, IDisposable
 
     public FlasherResponse AwaitCUReady(CancellationToken token) => AwaitCUState(GetCUReady, token);
 
-    public FlasherResponse AwaitCUSignal(CancellationToken token) => AwaitCUState(GetCUSignal, token);
-
     public FlasherResponse AwaitCURelease(CancellationToken token) => AwaitCUState(GetCURelease, token);
-    
+
     public FlasherResponse AwaitCUState(Func<FlasherResponse> func, CancellationToken token) // ok
     {
         try
@@ -110,8 +106,6 @@ public class TechnolabsFlasher : IFlasher, IDisposable
 
     public FlasherResponse GetCUReady() => GetCUState(deviceCUReadyState);
 
-    public FlasherResponse GetCUSignal() => GetCUState(deviceCUSignalState);
-
     public FlasherResponse GetCURelease() => GetCUState(deviceCUReleaseState);
 
     public FlasherResponse GetCUState(GpioInputs inputs) // ok 
@@ -122,7 +116,7 @@ public class TechnolabsFlasher : IFlasher, IDisposable
             if (ins == inputs)
                 return new FlasherResponse(ResponseType.OK)
                 {
-        ResponseMessage = FlasherMessages.ContactUnitState + ins.ToString()
+                    ResponseMessage = FlasherMessages.ContactUnitState + ins.ToString()
                 };
             else
                 return new FlasherResponse(ResponseType.Fail)
@@ -232,10 +226,10 @@ public class TechnolabsFlasher : IFlasher, IDisposable
         try
         {
             cu.LEDGreen();
-    }
-catch (Exception ex)
-    {
-        return new FlasherResponse(ex);
+        }
+        catch (Exception ex)
+        {
+            return new FlasherResponse(ex);
         }
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Done + cu.Outputs };
     }
@@ -245,10 +239,10 @@ catch (Exception ex)
         try
         {
             cu.LEDBlue();
-    }
-catch (Exception ex)
-    {
-        return new FlasherResponse(ex);
+        }
+        catch (Exception ex)
+        {
+            return new FlasherResponse(ex);
         }
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Busy + cu.Outputs };
     }
@@ -266,7 +260,7 @@ catch (Exception ex)
         return new FlasherResponse(ResponseType.OK) { ResponseMessage = FlasherMessages.Fail + cu.Outputs };
     }
 
-public FlasherResponse TurnModemPowerOff() // ok 
+    public FlasherResponse TurnModemPowerOff() // ok 
     {
         try
         {

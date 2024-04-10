@@ -52,6 +52,10 @@
             
             <!-- main grid -->
             <Grid RowDefinitions="*,*">
+              <Label Content="{Binding Department}" 
+                Opacity="80" FontSize="22" Grid.Row="1" 
+                Foreground="Gray"
+                HorizontalAlignment="Right" VerticalAlignment="Center"/>
             <!-- labels grid -->
               <Grid Grid.Row="0" RowDefinitions="*,*" ColumnDefinitions="3*,*,*">
                 <Label Classes="label" Grid.Row="0" Grid.Column="0">Модель:</Label>

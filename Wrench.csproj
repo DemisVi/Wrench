@@ -9,6 +9,10 @@
     <ApplicationIcon>Assets\\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <PropertyGroup>
+      <!-- <DefineConstants>$(DefineConstants);OOO</DefineConstants> -->
+  </PropertyGroup>
+
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />

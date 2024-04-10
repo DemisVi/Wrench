@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using ReactiveUI;
 using Avalonia.Media;
+using Wrench.DataTypes;
 
 namespace Wrench.ViewModels;
 
@@ -28,6 +29,7 @@ public class StatusViewModel : ViewModelBase
         this.WhenAnyValue(x => x.Bad).Subscribe(x => StatusColor = Brushes.Pink);
     }
 
+    public string Department => Constants.DepartmentName;
     public string ContactUnit { get; set; } = string.Empty;
     public string SerialNumber { get => serialNumber; set => this.RaiseAndSetIfChanged(ref serialNumber, value); }
     public TimeSpan Elapsed { get => elapsed; set => this.RaiseAndSetIfChanged(ref elapsed, value); }

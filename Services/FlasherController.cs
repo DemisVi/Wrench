@@ -2,13 +2,12 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using Wrench.DataTypes;
 using Wrench.Models;
 using Wrench.Extensions;
 
 using Timer = System.Timers.Timer;
-using Microsoft.VisualBasic;
-using System.Linq;
 
 namespace Wrench.Services;
 
@@ -53,16 +52,12 @@ public class FlasherController : IDisposable
 
         Flasher.Package = Package;
 
-        EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
+        EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = true });
 
         Task.Factory.StartNew(Flasher switch
         {
             SimComFlasher f => delegate ()
             {
-                // Flasher.Package = Package;
-
-                // EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
-
                 Log($"START: {f.GetType().Name}");
                 Log("-= 4 seconds pause for FTDI =-");
                 ExecuteWithLogging(() => Flasher.Sleep(4));
@@ -285,9 +280,6 @@ public class FlasherController : IDisposable
             ,
             TechnolabsFlasher f => delegate ()
             {
-                // Flasher.Package = Package;
-
-                // EventOccurred?.Invoke(this, new(FlasherControllerEventType.FlasherStateChanged) { Payload = false });
 
                 Log($"START: {f.GetType().Name}");
                 Log("-= 4 seconds pause for FTDI =-");

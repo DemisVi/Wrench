@@ -15,7 +15,7 @@ public class ControlViewModel : ViewModelBase
 
     public ControlViewModel()
     {
-        SelectedSource = FirmwareSources.FirstOrDefault(x => x.DeviceType == DataTypes.DeviceType.SimComTechno);
+        SelectedSource = FirmwareSources.FirstOrDefault(x => x.DeviceType == DataTypes.DeviceType.SimComRetro);
     }
 
     public bool AllowPackageSelector { get; set; } = true;

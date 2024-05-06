@@ -451,7 +451,9 @@ $RECYCLE.BIN/
 /Data
 /base
 platform-tools/**
+publish
 publish/**
+publish_ooo
 publish_ooo/**
 /SimCom_simple/**
 /SimCom_simple

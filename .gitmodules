@@ -1,3 +1,3 @@
 [submodule "ServiceClasses"]
 	path = ServiceClasses
-	url = https://github.com/DemisVi/ServiceClasses.git
+	url = git@192.168.98.82:opp/ServiceClasses.git

@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Wrench.sln",
+                "${workspaceFolder}/Wrench.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -19,11 +19,36 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/Wrench.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+                "${workspaceFolder}/Wrench.csproj",
+                "-c=Release",
+                "--sc=false",
+                "-p:publishsinglefile=true",
+                "-o=./publish"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish ooo",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Wrench.csproj",
+                "-c=Release",
+                "--sc=false",
+                "-p:publishsinglefile=true",
+                "-p:DefineConstants=OOO",
+                "-o=./publish_ooo"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish both",
+            "dependsOn": [
+                "publish",
+                "publish ooo"
+            ],
+            "dependsOrder": "sequence",
         },
         {
             "label": "watch",
@@ -33,7 +58,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/Wrench.sln"
+                "${workspaceFolder}/Wrench.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
